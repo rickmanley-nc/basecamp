@@ -1,0 +1,127 @@
+[
+  {
+    "name": "roadmap",
+    "color": "6f42c1",
+    "description": "Planned roadmap work."
+  },
+  {
+    "name": "priority:high",
+    "color": "d73a4a",
+    "description": "Important or blocking work."
+  },
+  {
+    "name": "priority:medium",
+    "color": "fbca04",
+    "description": "Normal priority planned work."
+  },
+  {
+    "name": "priority:low",
+    "color": "0e8a16",
+    "description": "Useful but not urgent."
+  },
+  {
+    "name": "type:architecture",
+    "color": "5319e7",
+    "description": "Architecture decision, boundary, or technical design."
+  },
+  {
+    "name": "type:feature",
+    "color": "1d76db",
+    "description": "User-visible product functionality."
+  },
+  {
+    "name": "type:docs",
+    "color": "0075ca",
+    "description": "Documentation."
+  },
+  {
+    "name": "type:testing",
+    "color": "c5def5",
+    "description": "Automated or manual validation."
+  },
+  {
+    "name": "area:product",
+    "color": "bfdadc",
+    "description": "Product requirements, roadmap, and planning."
+  },
+  {
+    "name": "area:web",
+    "color": "0052cc",
+    "description": "Primary web application."
+  },
+  {
+    "name": "area:mobile",
+    "color": "0b7285",
+    "description": "Mobile companion application."
+  },
+  {
+    "name": "area:server",
+    "color": "006b75",
+    "description": "API, jobs, and server services."
+  },
+  {
+    "name": "area:domain",
+    "color": "5a32a3",
+    "description": "Shared preparedness domain model."
+  },
+  {
+    "name": "area:database",
+    "color": "5319e7",
+    "description": "Schema, migrations, repositories, and data import/export."
+  },
+  {
+    "name": "area:api",
+    "color": "0366d6",
+    "description": "API contracts and client libraries."
+  },
+  {
+    "name": "area:ui",
+    "color": "c2e0c6",
+    "description": "Basecamp UI package and design system."
+  },
+  {
+    "name": "area:content",
+    "color": "bfe5bf",
+    "description": "Structured preparedness content and seed data."
+  },
+  {
+    "name": "area:gamification",
+    "color": "ffdf5d",
+    "description": "XP, badges, outposts, milestones, and scoring."
+  },
+  {
+    "name": "area:sync",
+    "color": "d4c5f9",
+    "description": "Offline sync and conflict resolution."
+  },
+  {
+    "name": "area:infra",
+    "color": "b60205",
+    "description": "Self-hosting, operations, backups, and deployment."
+  },
+  {
+    "name": "accessibility",
+    "color": "7057ff",
+    "description": "Accessibility behavior or validation."
+  },
+  {
+    "name": "offline",
+    "color": "0052cc",
+    "description": "Offline operation or local-first behavior."
+  },
+  {
+    "name": "security",
+    "color": "d93f0b",
+    "description": "Security, privacy, or sensitive data handling."
+  },
+  {
+    "name": "release",
+    "color": "0e8a16",
+    "description": "Release planning or release notes."
+  },
+  {
+    "name": "ignore-for-release",
+    "color": "ededed",
+    "description": "Exclude from generated release notes."
+  }
+]

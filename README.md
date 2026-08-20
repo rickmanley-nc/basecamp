@@ -37,9 +37,12 @@ tests/       Cross-package test fixtures and integration tests
 ## Architecture Docs
 
 - [Product Architecture And Plan](docs/product/architecture-and-plan.md)
+- [Roadmap](docs/product/roadmap.md)
 - [Data Model](docs/architecture/data-model.md)
 - [Kaizen UI Integration](docs/ui/kaizen-integration.md)
 - [Development Workflow](docs/development/workflow.md)
+- [GitHub Planning Workflow](docs/development/github-planning.md)
+- [Release Process](docs/development/releases.md)
 - [Self-Hosting And Backups](docs/ops/self-hosting-and-backups.md)
 - [Seed Dataset](packages/content/seed/basecamp-seed-v0.json)
 
@@ -57,6 +60,12 @@ the root check validates required repository documents and the seed dataset.
 
 ```bash
 pnpm check
+```
+
+Roadmap labels, milestones, and issues can be synced to GitHub with:
+
+```bash
+pnpm roadmap:sync -- --repo rickmanley-nc/basecamp --write
 ```
 
 When using the Codex desktop bundled runtime, make sure its Node and pnpm paths

@@ -1,0 +1,58 @@
+[
+  {
+    "title": "M0 - Foundation",
+    "state": "closed",
+    "dueOn": "2026-08-20T23:59:59Z",
+    "release": "v0.1.0",
+    "description": "Architecture, monorepo scaffold, seed data, CI baseline, and roadmap planning foundation."
+  },
+  {
+    "title": "M1 - Running Vertical Slice",
+    "state": "open",
+    "dueOn": "2026-09-03T23:59:59Z",
+    "release": "v0.2.0",
+    "description": "First local web/server/domain/content slice that runs and loads seed data."
+  },
+  {
+    "title": "M2 - Readiness And Quest Core",
+    "state": "open",
+    "dueOn": "2026-09-17T23:59:59Z",
+    "release": "v0.3.0",
+    "description": "User-controlled quests, category paths, dependency graph, readiness scoring, recommendations, badges, and outposts."
+  },
+  {
+    "title": "M3 - Inventory, BOMs And Maintenance",
+    "state": "open",
+    "dueOn": "2026-10-01T23:59:59Z",
+    "release": "v0.4.0",
+    "description": "Inventory, durable assets, QR tags, BOMs, acquisition rollups, and recurring maintenance."
+  },
+  {
+    "title": "M4 - Mobile And Offline Sync",
+    "state": "open",
+    "dueOn": "2026-10-22T23:59:59Z",
+    "release": "v0.5.0",
+    "description": "Mobile foundation, Quick Capture, scanning, offline read models, command outbox, and sync API."
+  },
+  {
+    "title": "M5 - Drills, Skills And Validation",
+    "state": "open",
+    "dueOn": "2026-11-12T23:59:59Z",
+    "release": "v0.6.0",
+    "description": "Drills, skills, evidence, validation ceilings, follow-up quests, and readiness reports."
+  },
+  {
+    "title": "M6 - Self-Hosting Beta",
+    "state": "open",
+    "dueOn": "2026-12-03T23:59:59Z",
+    "release": "v0.7.0",
+    "description": "Linux self-hosted beta with deployment, backups, restore, updates, security hardening, and observability."
+  },
+  {
+    "title": "v1.0 - MVP Readiness",
+    "state": "open",
+    "dueOn": "2027-01-15T23:59:59Z",
+    "release": "v1.0.0",
+    "description": "Complete MVP for real household preparedness use across web, mobile, sync, validation, and self-hosting."
+  }
+]

@@ -11,12 +11,18 @@ const requiredFiles = [
   "pnpm-workspace.yaml",
   "docs/product/architecture-and-plan.md",
   "docs/architecture/data-model.md",
+  "docs/product/roadmap.md",
   "docs/ui/kaizen-integration.md",
   "docs/development/workflow.md",
+  "docs/development/github-planning.md",
+  "docs/development/releases.md",
   "docs/ops/self-hosting-and-backups.md",
   "docs/adr/0001-monorepo-typescript-react.md",
   "docs/adr/0002-basecamp-ui-kaizen-adapter.md",
   "docs/adr/0003-local-first-self-hosted-sync.md",
+  ".github/roadmap/labels.json",
+  ".github/roadmap/milestones.json",
+  ".github/roadmap/issues.json",
   "apps/web/package.json",
   "apps/mobile/package.json",
   "apps/server/package.json",
@@ -37,6 +43,21 @@ for (const file of requiredFiles) {
     await access(path.join(root, file));
   } catch {
     failures.push(`Missing required file: ${file}`);
+  }
+}
+
+const jsonFiles = [
+  ".github/roadmap/labels.json",
+  ".github/roadmap/milestones.json",
+  ".github/roadmap/issues.json",
+  "packages/content/seed/basecamp-seed-v0.json"
+];
+
+for (const file of jsonFiles) {
+  try {
+    JSON.parse(await readFile(path.join(root, file), "utf8"));
+  } catch (error) {
+    failures.push(`${file} is not valid JSON: ${error.message}`);
   }
 }
 

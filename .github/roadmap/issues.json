@@ -1,0 +1,250 @@
+[
+  {
+    "title": "Bootstrap architecture foundation",
+    "state": "closed",
+    "milestone": "M0 - Foundation",
+    "labels": ["roadmap", "type:architecture", "type:docs", "priority:high", "area:product"],
+    "body": "## Outcome\n\nThe Basecamp repository has the initial monorepo skeleton, product architecture, data model, Kaizen UI strategy, seed content, and CI repository check.\n\n## Acceptance Criteria\n\n- Monorepo structure exists.\n- Product architecture is documented.\n- Seed content exists as structured data.\n- CI repository check passes.\n\n## Validation\n\n- `pnpm check` passes.\n\n## Release\n\n- v0.1.0"
+  },
+  {
+    "title": "Establish GitHub roadmap, milestones, issues, and release plan",
+    "state": "closed",
+    "milestone": "M0 - Foundation",
+    "labels": ["roadmap", "type:docs", "priority:high", "area:product", "release"],
+    "body": "## Outcome\n\nGitHub becomes the live planning system for Basecamp so the next work is visible through issues, milestones, and releases.\n\n## Acceptance Criteria\n\n- Roadmap document exists.\n- GitHub planning workflow is documented.\n- Release process is documented.\n- Milestone and issue seed data exists.\n- Roadmap sync script exists.\n\n## Validation\n\n- `pnpm check` passes.\n\n## Release\n\n- v0.1.0"
+  },
+  {
+    "title": "Define initial TypeScript domain model package",
+    "milestone": "M1 - Running Vertical Slice",
+    "labels": ["roadmap", "type:feature", "priority:high", "area:domain"],
+    "body": "## Outcome\n\n`@basecamp/domain` exports the first typed model for categories, levels, quests, accomplishments, inventory references, evidence references, and maintenance references.\n\n## Acceptance Criteria\n\n- Domain types cover the seed dataset concepts.\n- Types distinguish owned, configured, tested, validated, and maintained states.\n- User-controlled pursuit states are represented.\n- Type examples or fixtures exist.\n\n## Validation\n\n- Type checks pass.\n- Seed data can be mapped into domain types."
+  },
+  {
+    "title": "Add structured content validation for seed data",
+    "milestone": "M1 - Running Vertical Slice",
+    "labels": ["roadmap", "type:testing", "priority:high", "area:content"],
+    "body": "## Outcome\n\nSeed content is validated beyond basic JSON parsing so broken quests, categories, levels, dependencies, badges, outposts, and milestones fail CI.\n\n## Acceptance Criteria\n\n- Validator checks IDs, references, duplicate IDs, required fields, and dependency targets.\n- Validator checks quests have validation criteria.\n- Validator runs through `pnpm check`.\n- Errors are readable for content authors.\n\n## Validation\n\n- Add at least one fixture or targeted test for invalid content."
+  },
+  {
+    "title": "Select web and server framework stack ADR",
+    "milestone": "M1 - Running Vertical Slice",
+    "labels": ["roadmap", "type:architecture", "priority:high", "area:web", "area:server"],
+    "body": "## Outcome\n\nThe first running stack is chosen intentionally instead of by habit.\n\n## Acceptance Criteria\n\n- ADR evaluates Next.js, Vite plus Fastify, Remix, and server-only alternatives.\n- Recommendation covers Kaizen compatibility, self-hosting, local network use, mobile sync, testing, and deployment complexity.\n- Migration path is documented.\n\n## Validation\n\n- ADR is linked from architecture docs."
+  },
+  {
+    "title": "Implement server health and seed content API",
+    "milestone": "M1 - Running Vertical Slice",
+    "labels": ["roadmap", "type:feature", "priority:high", "area:server", "area:api", "area:content"],
+    "body": "## Outcome\n\n`apps/server` exposes a minimal API that proves the server can start and serve structured Basecamp seed content.\n\n## Acceptance Criteria\n\n- Health endpoint exists.\n- Seed categories, levels, and quests can be read through a typed API.\n- API contracts live in or flow through `@basecamp/api`.\n- No UI feature depends on raw content JSON paths.\n\n## Validation\n\n- Server test or smoke check passes."
+  },
+  {
+    "title": "Implement web shell and dashboard skeleton",
+    "milestone": "M1 - Running Vertical Slice",
+    "labels": ["roadmap", "type:feature", "priority:high", "area:web", "area:ui", "accessibility"],
+    "body": "## Outcome\n\n`apps/web` starts locally and renders the first Basecamp dashboard shell using the approved UI boundary.\n\n## Acceptance Criteria\n\n- Web app starts with documented command.\n- Dashboard shell shows Readiness Score placeholder, category levels, active quests, recommended next, and maintenance placeholder.\n- Feature code imports from `@basecamp/ui` rather than Kaizen directly.\n- Basic keyboard and semantic structure are present.\n\n## Validation\n\n- Local smoke check or web test confirms the dashboard route renders."
+  },
+  {
+    "title": "Build initial Basecamp UI Kaizen adapter spike",
+    "milestone": "M1 - Running Vertical Slice",
+    "labels": ["roadmap", "type:architecture", "priority:high", "area:ui", "accessibility"],
+    "body": "## Outcome\n\n`@basecamp/ui` proves the Kaizen adapter boundary with a small set of real components and documented rules.\n\n## Acceptance Criteria\n\n- Initial components include Button, Card or Panel, StatusBadge, ProgressRing or equivalent, and PageShell.\n- Kaizen direct imports are isolated to `packages/ui`.\n- CSS/token strategy is documented after inspecting installed package assets.\n- Accessibility defaults are described.\n\n## Validation\n\n- Component exports can be imported by `apps/web`."
+  },
+  {
+    "title": "Add database tool decision and first migration baseline",
+    "milestone": "M1 - Running Vertical Slice",
+    "labels": ["roadmap", "type:architecture", "priority:high", "area:database"],
+    "body": "## Outcome\n\nBasecamp has a chosen database migration/query approach and the first schema baseline.\n\n## Acceptance Criteria\n\n- ADR evaluates Drizzle, Prisma, Kysely, and SQL migration alternatives.\n- Initial migration covers categories, levels, quest templates, and seed import tracking.\n- Local database setup is documented.\n\n## Validation\n\n- Migration can be applied from a clean local database."
+  },
+  {
+    "title": "Add seed import workflow",
+    "milestone": "M1 - Running Vertical Slice",
+    "labels": ["roadmap", "type:feature", "priority:medium", "area:content", "area:database"],
+    "body": "## Outcome\n\nStructured seed content can be imported into the local development database in a repeatable way.\n\n## Acceptance Criteria\n\n- Import command exists.\n- Import is idempotent for stable IDs.\n- Imported content version is recorded.\n- Clear error messages are produced for invalid content.\n\n## Validation\n\n- Clean import and repeated import both pass."
+  },
+  {
+    "title": "Add vertical-slice smoke test",
+    "milestone": "M1 - Running Vertical Slice",
+    "labels": ["roadmap", "type:testing", "priority:medium", "area:web", "area:server"],
+    "body": "## Outcome\n\nCI can prove the first web/server/content slice still works.\n\n## Acceptance Criteria\n\n- Smoke test starts or exercises the server and web shell as appropriate.\n- Test confirms categories and quests render or are reachable.\n- Test runs from `pnpm check` or a documented CI job.\n\n## Validation\n\n- CI passes with the new smoke check."
+  },
+  {
+    "title": "Document local developer setup for the running slice",
+    "milestone": "M1 - Running Vertical Slice",
+    "labels": ["roadmap", "type:docs", "priority:medium", "area:product"],
+    "body": "## Outcome\n\nA developer can clone the repo, install dependencies, run checks, and start the first app without asking what to do next.\n\n## Acceptance Criteria\n\n- README quickstart is updated.\n- Required runtime versions are explicit.\n- Database setup is documented if introduced.\n- Common troubleshooting notes are included.\n\n## Validation\n\n- Follow docs from a clean checkout or fresh local environment."
+  },
+  {
+    "title": "Implement quest lifecycle and active backlog model",
+    "milestone": "M2 - Readiness And Quest Core",
+    "labels": ["roadmap", "type:feature", "priority:high", "area:domain", "area:web"],
+    "body": "## Outcome\n\nUsers can start, save, pause, resume, snooze, abandon, complete, and reopen quests without Basecamp forcing a single path.\n\n## Acceptance Criteria\n\n- Quest statuses are modeled and persisted.\n- Multiple active quests are supported.\n- Saved and deferred quest lists are supported.\n- User actions are auditable enough for future sync.\n\n## Validation\n\n- Unit tests cover lifecycle transitions."
+  },
+  {
+    "title": "Implement category progression paths",
+    "milestone": "M2 - Readiness And Quest Core",
+    "labels": ["roadmap", "type:feature", "priority:high", "area:web", "area:domain", "area:ui", "accessibility"],
+    "body": "## Outcome\n\nEach category can display a progression path with levels, nodes, node states, and accessible fallback navigation.\n\n## Acceptance Criteria\n\n- Path nodes represent accomplishments, skills, builds, tests, drills, milestones, and outposts.\n- Node states include completed, current, available, locked, deferred, failed validation, and maintenance required.\n- Keyboard/screen-reader usable list representation exists.\n\n## Validation\n\n- Tests or story fixtures cover core node states."
+  },
+  {
+    "title": "Implement dependency graph resolver",
+    "milestone": "M2 - Readiness And Quest Core",
+    "labels": ["roadmap", "type:feature", "priority:high", "area:domain", "area:gamification"],
+    "body": "## Outcome\n\nBasecamp can lock specific dependent work without locking unrelated preparedness activities.\n\n## Acceptance Criteria\n\n- Dependency types include knowledge, skill, equipment, supply, tool, machinery, drill, validation, and optional recommendation.\n- Resolver explains why an item is locked or available.\n- Resolver handles missing dependencies gracefully.\n\n## Validation\n\n- Unit tests cover available, locked, and unrelated unlocked paths."
+  },
+  {
+    "title": "Implement readiness score v1",
+    "milestone": "M2 - Readiness And Quest Core",
+    "labels": ["roadmap", "type:feature", "priority:high", "area:gamification", "area:domain"],
+    "body": "## Outcome\n\nBasecamp calculates initial category and overall readiness scores that distinguish owning gear from validated capability.\n\n## Acceptance Criteria\n\n- Category score includes knowledge, supplies/equipment, configuration, practice, validation, maintenance, and redundancy weights.\n- Overall score identifies critical gaps.\n- Validation ceilings prevent purchase-only high scores.\n- Deferred categories are visible without being treated as errors.\n\n## Validation\n\n- Unit tests cover purchase-only, configured, tested, validated, and maintenance-stale cases."
+  },
+  {
+    "title": "Implement recommendation engine v1",
+    "milestone": "M2 - Readiness And Quest Core",
+    "labels": ["roadmap", "type:feature", "priority:high", "area:gamification", "area:domain"],
+    "body": "## Outcome\n\nBasecamp recommends a small set of useful next choices while preserving user control.\n\n## Acceptance Criteria\n\n- Recommendations consider probability, consequence, capability gap, dependency importance, friction, user interests, deferred categories, downstream unlocks, and quick wins.\n- Output can show best risk reduction, quick win, build project, skill, drill, or maintenance.\n- Recommendation does not automatically activate a quest.\n\n## Validation\n\n- Tests cover deferred category suppression and quick-win ranking."
+  },
+  {
+    "title": "Implement XP, badge, outpost, and milestone progress v1",
+    "milestone": "M2 - Readiness And Quest Core",
+    "labels": ["roadmap", "type:feature", "priority:medium", "area:gamification", "area:content"],
+    "body": "## Outcome\n\nBasecamp tracks motivational progress without confusing XP with readiness.\n\n## Acceptance Criteria\n\n- XP events are recorded with source and reason.\n- Badge tier progress can be calculated from seed definitions.\n- Outpost and milestone requirements can be evaluated.\n- Purchase-only actions earn limited XP.\n\n## Validation\n\n- Tests cover badge progress and outpost requirement evaluation."
+  },
+  {
+    "title": "Implement category hold and defer controls",
+    "milestone": "M2 - Readiness And Quest Core",
+    "labels": ["roadmap", "type:feature", "priority:medium", "area:web", "area:domain"],
+    "body": "## Outcome\n\nUsers can intentionally hold a completed level or defer a category without Basecamp repeatedly pushing it.\n\n## Acceptance Criteria\n\n- Category pursuit states are user-editable.\n- Recommendation engine respects later, paused, and not currently pursuing states.\n- Dashboard still shows gaps clearly.\n\n## Validation\n\n- Tests cover recommendation suppression for deferred categories."
+  },
+  {
+    "title": "Implement inventory, locations, assets, kits, and QR tag data model",
+    "milestone": "M3 - Inventory, BOMs And Maintenance",
+    "labels": ["roadmap", "type:feature", "priority:high", "area:database", "area:domain"],
+    "body": "## Outcome\n\nBasecamp can represent consumables, durable assets, locations, kits/loadouts, and Basecamp QR asset tags.\n\n## Acceptance Criteria\n\n- Model covers inventory items, lots, assets, locations, kits, kit items, and asset tags.\n- States include owned, located, installed, configured, tested, in service, maintenance due, failed, retired, and expired.\n- Inventory events are modeled rather than only overwriting totals.\n\n## Validation\n\n- Migration and model tests cover core inventory scenarios."
+  },
+  {
+    "title": "Implement BOM and acquisition rollup v1",
+    "milestone": "M3 - Inventory, BOMs And Maintenance",
+    "labels": ["roadmap", "type:feature", "priority:high", "area:database", "area:domain"],
+    "body": "## Outcome\n\nBasecamp can derive what the user needs to buy, make, build, replenish, or substitute from active quests and BOMs.\n\n## Acceptance Criteria\n\n- BOM items include functional requirement, quantity, specification, required/optional state, cost, replacement interval, and alternatives.\n- Acquisition needs are derived from active quests and inventory.\n- User does not manually maintain a separate shopping list.\n\n## Validation\n\n- Tests cover already owned, need to purchase, need to make, optional, and substitute cases."
+  },
+  {
+    "title": "Implement recurring maintenance policies and completion events",
+    "milestone": "M3 - Inventory, BOMs And Maintenance",
+    "labels": ["roadmap", "type:feature", "priority:high", "area:database", "area:web"],
+    "body": "## Outcome\n\nBasecamp tracks recurring maintenance and lets normal completion happen with approximately one interaction.\n\n## Acceptance Criteria\n\n- Maintenance policies define recurrence and scope.\n- Completion events recalculate next due date.\n- Failure or issue events can create suggested follow-up quests.\n- Dashboard can show upcoming and overdue maintenance.\n\n## Validation\n\n- Tests cover next due calculation and failure follow-up creation."
+  },
+  {
+    "title": "Implement web quick inventory entry flow",
+    "milestone": "M3 - Inventory, BOMs And Maintenance",
+    "labels": ["roadmap", "type:feature", "priority:medium", "area:web", "area:ui"],
+    "body": "## Outcome\n\nUsers can add common inventory without long forms.\n\n## Acceptance Criteria\n\n- Search-first flow supports item, quantity, location, expiration if relevant, and notes.\n- Smart defaults reduce fields.\n- Added inventory updates relevant quest/BOM progress.\n- Bulk entry path is considered for common supplies.\n\n## Validation\n\n- Manual workflow count is documented for the implemented flow."
+  },
+  {
+    "title": "Design and implement QR asset tag generation",
+    "milestone": "M3 - Inventory, BOMs And Maintenance",
+    "labels": ["roadmap", "type:feature", "priority:medium", "area:web", "area:ui"],
+    "body": "## Outcome\n\nBasecamp can generate QR tags for assets such as radios, generators, batteries, bins, kits, fuel containers, and tools.\n\n## Acceptance Criteria\n\n- QR code maps to a stable Basecamp asset identifier.\n- Printed tag layout is usable.\n- Scanning a tag can open the asset workflow.\n- Offline/local network behavior is documented.\n\n## Validation\n\n- QR generation and lookup are tested or manually verified."
+  },
+  {
+    "title": "Implement mobile app foundation",
+    "milestone": "M4 - Mobile And Offline Sync",
+    "labels": ["roadmap", "type:feature", "priority:high", "area:mobile", "offline"],
+    "body": "## Outcome\n\n`apps/mobile` starts as a real mobile companion app with navigation for Home, Capture, Scan, Quests, Inventory, and Offline.\n\n## Acceptance Criteria\n\n- Mobile stack ADR is finalized.\n- App shell runs locally.\n- Shared domain/API packages are consumable.\n- Mobile design-system boundary is documented.\n\n## Validation\n\n- Mobile app starts in local simulator or documented environment."
+  },
+  {
+    "title": "Implement Quick Capture command parser v1",
+    "milestone": "M4 - Mobile And Offline Sync",
+    "labels": ["roadmap", "type:feature", "priority:high", "area:mobile", "area:domain", "offline"],
+    "body": "## Outcome\n\nBasecamp can turn natural entries like `Bought four gallons of water` or `Changed generator oil` into confirmation cards.\n\n## Acceptance Criteria\n\n- Deterministic parser handles inventory, maintenance, drill, skill, failure, and quest progress examples.\n- Parser produces a user-confirmable command.\n- No SaaS AI dependency is required for normal operation.\n\n## Validation\n\n- Tests cover the core examples from the product brief."
+  },
+  {
+    "title": "Implement barcode and QR scanning mobile workflows",
+    "milestone": "M4 - Mobile And Offline Sync",
+    "labels": ["roadmap", "type:feature", "priority:high", "area:mobile", "offline"],
+    "body": "## Outcome\n\nMobile scanning reduces inventory and asset maintenance friction.\n\n## Acceptance Criteria\n\n- Barcode scan can create or update an inventory confirmation flow.\n- QR scan opens the matching Basecamp asset.\n- Asset actions include inspect, maintain, move, adjust quantity, report issue, and view instructions where supported.\n- Offline behavior is defined.\n\n## Validation\n\n- Scanner workflow is manually verified on a device or simulator path."
+  },
+  {
+    "title": "Implement offline read model and command outbox",
+    "milestone": "M4 - Mobile And Offline Sync",
+    "labels": ["roadmap", "type:feature", "priority:high", "area:sync", "area:mobile", "offline"],
+    "body": "## Outcome\n\nMobile can keep critical information available offline and queue field actions for later sync.\n\n## Acceptance Criteria\n\n- Offline read model includes active quests, inventory, plans, critical BOMs, maintenance, and references.\n- Command outbox is durable.\n- Commands include client ID, local sequence, timestamp, entity version, and intent.\n\n## Validation\n\n- Tests cover queued commands and retry behavior."
+  },
+  {
+    "title": "Implement sync API v1 and conflict policies",
+    "milestone": "M4 - Mobile And Offline Sync",
+    "labels": ["roadmap", "type:feature", "priority:high", "area:sync", "area:server", "offline"],
+    "body": "## Outcome\n\nThe server can accept idempotent offline commands, return sync cursors, and resolve common conflicts predictably.\n\n## Acceptance Criteria\n\n- Sync endpoint accepts command batches.\n- Server validates command identity and idempotency.\n- Merge policies exist for inventory quantity events, maintenance events, quest status, and evidence.\n- User-visible conflicts are modeled.\n\n## Validation\n\n- Sync tests cover duplicate commands, clean replay, and at least two conflict types."
+  },
+  {
+    "title": "Implement drill templates, runs, and follow-up quests",
+    "milestone": "M5 - Drills, Skills And Validation",
+    "labels": ["roadmap", "type:feature", "priority:high", "area:domain", "area:web", "area:gamification"],
+    "body": "## Outcome\n\nUsers can run structured drills, record lightweight results, and turn failures into improvement quests.\n\n## Acceptance Criteria\n\n- Drill templates include scenario and success criteria.\n- Drill runs capture result, failures, lessons, evidence, and follow-up actions.\n- Failed criteria can create suggested quests.\n- Drill completion affects readiness validation.\n\n## Validation\n\n- Tests cover drill success and failed-drill follow-up generation."
+  },
+  {
+    "title": "Implement skill progression and training records",
+    "milestone": "M5 - Drills, Skills And Validation",
+    "labels": ["roadmap", "type:feature", "priority:high", "area:domain", "area:web"],
+    "body": "## Outcome\n\nBasecamp tracks skills independently from equipment and uses practice/training evidence in readiness.\n\n## Acceptance Criteria\n\n- Skill states include untrained, familiar, practiced, competent, validated, and advanced.\n- Training records can include course, date, expiration, and evidence.\n- Skills can satisfy dependencies and contribute to scoring.\n\n## Validation\n\n- Tests cover skill state progression and expiration impact."
+  },
+  {
+    "title": "Implement evidence and photo capture model",
+    "milestone": "M5 - Drills, Skills And Validation",
+    "labels": ["roadmap", "type:feature", "priority:medium", "area:database", "area:mobile", "area:web"],
+    "body": "## Outcome\n\nEvidence supports validation without making the user write long reports.\n\n## Acceptance Criteria\n\n- Evidence can link to quests, accomplishments, skills, drills, assets, maintenance, and inventory events.\n- Photo/document metadata is modeled.\n- Offline upload retry behavior is considered.\n- Evidence deletion/versioning policy is documented.\n\n## Validation\n\n- Tests or fixtures cover evidence links to multiple entity types."
+  },
+  {
+    "title": "Implement validation ceilings in readiness scoring",
+    "milestone": "M5 - Drills, Skills And Validation",
+    "labels": ["roadmap", "type:feature", "priority:high", "area:gamification"],
+    "body": "## Outcome\n\nReadiness scores cannot rise unrealistically from untested owned gear.\n\n## Acceptance Criteria\n\n- Each relevant category has a validation ceiling rule.\n- Purchase-only, configured-only, and validated states produce meaningfully different scores.\n- Drill failure can reduce or cap readiness until follow-up work is done.\n\n## Validation\n\n- Tests cover score caps and recovery after validation."
+  },
+  {
+    "title": "Implement reports and gap analysis v1",
+    "milestone": "M5 - Drills, Skills And Validation",
+    "labels": ["roadmap", "type:feature", "priority:medium", "area:web", "area:gamification"],
+    "body": "## Outcome\n\nUsers can see critical gaps, deferred areas, validation gaps, maintenance issues, and next useful choices.\n\n## Acceptance Criteria\n\n- Report identifies critical category gaps.\n- Report distinguishes intentional deferral from unknown gaps.\n- Report shows validation gaps separately from acquisition gaps.\n- Report can suggest follow-up quests.\n\n## Validation\n\n- Fixture profile produces expected report sections."
+  },
+  {
+    "title": "Implement Docker Compose self-hosting baseline",
+    "milestone": "M6 - Self-Hosting Beta",
+    "labels": ["roadmap", "type:feature", "priority:high", "area:infra", "security"],
+    "body": "## Outcome\n\nA user can run Basecamp on a Linux host with documented container services.\n\n## Acceptance Criteria\n\n- Compose file includes web, server, database, storage path, and reverse proxy or documented proxy option.\n- Persistent volumes are defined.\n- Environment configuration is documented with safe defaults.\n- Local network operation does not require internet after setup.\n\n## Validation\n\n- Fresh compose deployment starts and health checks pass."
+  },
+  {
+    "title": "Implement backup and restore automation",
+    "milestone": "M6 - Self-Hosting Beta",
+    "labels": ["roadmap", "type:feature", "priority:high", "area:infra", "security"],
+    "body": "## Outcome\n\nBasecamp can be backed up and restored with confidence.\n\n## Acceptance Criteria\n\n- Backup includes database, evidence files, config, version, and seed/content version.\n- Restore procedure is documented.\n- Backup integrity check exists.\n- Stale or failed backup status can be surfaced.\n\n## Validation\n\n- Restore drill succeeds from a fresh deployment."
+  },
+  {
+    "title": "Implement release packaging and upgrade process",
+    "milestone": "M6 - Self-Hosting Beta",
+    "labels": ["roadmap", "type:docs", "priority:medium", "area:infra", "release"],
+    "body": "## Outcome\n\nBasecamp releases are installable, upgradeable, and understandable.\n\n## Acceptance Criteria\n\n- Release checklist is implemented in docs and scripts where useful.\n- Upgrade steps cover migrations and backup-before-upgrade.\n- Release notes include known limitations and validation.\n- Rollback guidance is documented.\n\n## Validation\n\n- Dry-run release process is documented or tested."
+  },
+  {
+    "title": "Implement security hardening baseline",
+    "milestone": "M6 - Self-Hosting Beta",
+    "labels": ["roadmap", "type:architecture", "priority:high", "area:infra", "security"],
+    "body": "## Outcome\n\nBasecamp has a sensible self-hosted security baseline for sensitive preparedness data.\n\n## Acceptance Criteria\n\n- Authentication and authorization approach is documented and implemented for beta needs.\n- Secrets are kept out of git and documented through env/config files.\n- Export, backup, admin, and restore actions are audited.\n- Remote access guidance favors VPN or secure reverse proxy patterns.\n\n## Validation\n\n- Security checklist passes for beta deployment."
+  },
+  {
+    "title": "Implement health checks and observability baseline",
+    "milestone": "M6 - Self-Hosting Beta",
+    "labels": ["roadmap", "type:feature", "priority:medium", "area:infra", "area:server"],
+    "body": "## Outcome\n\nThe self-hosted deployment exposes enough health information to operate safely.\n\n## Acceptance Criteria\n\n- Health endpoints cover web, server, database, storage, migrations, and backup recency.\n- Logs are useful without exposing sensitive data.\n- Basic operational dashboard or status endpoint is available.\n\n## Validation\n\n- Compose health checks pass and fail clearly when dependencies are unavailable."
+  },
+  {
+    "title": "Implement data export and import baseline",
+    "milestone": "M6 - Self-Hosting Beta",
+    "labels": ["roadmap", "type:feature", "priority:medium", "area:database", "area:infra"],
+    "body": "## Outcome\n\nUsers retain ownership of Basecamp data and can export/import it in useful formats.\n\n## Acceptance Criteria\n\n- Structured JSON export exists.\n- CSV exports exist for major operational data where useful.\n- Evidence files are included or referenced in a portable archive.\n- Import validates version compatibility.\n\n## Validation\n\n- Export from one local deployment can be imported into another."
+  },
+  {
+    "title": "Define v1.0 MVP readiness criteria",
+    "milestone": "v1.0 - MVP Readiness",
+    "labels": ["roadmap", "type:architecture", "priority:high", "area:product", "release"],
+    "body": "## Outcome\n\nThe team has an explicit, testable definition for when Basecamp is a real MVP instead of an endless prototype.\n\n## Acceptance Criteria\n\n- Required web workflows are listed.\n- Required mobile workflows are listed.\n- Required offline/sync behavior is listed.\n- Required self-hosting and backup behavior is listed.\n- Required content coverage and validation behavior are listed.\n- Non-goals for v1.0 are listed.\n\n## Validation\n\n- v1.0 readiness checklist is linked from the roadmap and release docs."
+  }
+]
