@@ -19,7 +19,10 @@ build verification.
 ## Branches
 
 - `main` should remain releasable.
-- Feature branches should be short-lived.
+- Feature branches should be short-lived and named `codex/i<number>-short-slug`
+  when tied to a GitHub issue.
+- Remote branches should be deleted automatically after merge.
+- Local merged branches should be deleted after `main` is updated.
 - Keep unrelated changes out of a PR.
 
 ## Pull Requests
@@ -33,6 +36,13 @@ Every PR should describe:
 - Offline/sync impact.
 - Accessibility impact.
 - Kaizen/UI boundary impact for web changes.
+
+Passing roadmap PRs should be squash-merged by the agent by default. The user
+reviews milestone outcomes and releases rather than merging every PR manually.
+
+Pause for user review only when a PR changes product direction, introduces
+security or infrastructure risk, fails validation in a non-obvious way, or
+intentionally defers acceptance criteria.
 
 ## Issues And Projects
 
