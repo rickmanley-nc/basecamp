@@ -2,6 +2,7 @@
   "name": "basecamp",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "description": "Self-hosted preparedness platform for quests, readiness, inventory, skills, drills, maintenance, and offline field use.",
   "license": "Apache-2.0",
   "packageManager": "pnpm@11.7.0",
@@ -10,12 +11,21 @@
     "pnpm": ">=11.0.0"
   },
   "scripts": {
-    "check": "pnpm check:repo && pnpm typecheck",
+    "build": "pnpm -r --if-present build",
+    "check": "pnpm check:repo && pnpm validate && pnpm typecheck && pnpm test && pnpm build",
     "check:repo": "node scripts/check-repo.mjs",
     "roadmap:sync": "node scripts/sync-github-roadmap.mjs",
-    "typecheck": "pnpm -r --if-present typecheck"
+    "test": "vitest run",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "validate": "pnpm -r --if-present validate"
   },
   "devDependencies": {
-    "typescript": "7.0.2"
+    "@types/node": "26.2.0",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
+    "jsdom": "30.0.1",
+    "tsx": "4.23.12",
+    "typescript": "7.0.2",
+    "vitest": "4.1.11"
   }
 }

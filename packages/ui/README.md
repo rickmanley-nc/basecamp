@@ -16,3 +16,16 @@ Initial Kaizen package checked on 2026-08-20:
 - Unstyled React primitives
 - React peer dependencies: `^18.0.0 || ^19.0.0`
 - CLI bin: `kui-sync-skills`
+
+## M1 Components
+
+- `PageShell`
+- `Button`
+- `Panel`
+- `StatusBadge`
+- `ProgressRing`
+- `Metric`
+- `QuestListItem`
+
+The `Button` adapter wraps the Kaizen primitive. The remaining M1 components are
+Basecamp-owned compositions and styles exposed from the UI package.

@@ -55,12 +55,29 @@ tests/       Cross-package test fixtures and integration tests
 
 ## Development
 
-Basecamp uses a pnpm monorepo. Until the application packages are implemented,
-the root check validates required repository documents and the seed dataset.
+Basecamp uses a pnpm monorepo. The root check validates repository documents,
+seed content, package type checks, smoke tests, and the web build.
 
 ```bash
+pnpm install
 pnpm check
 ```
+
+Run the M1 local database seed import:
+
+```bash
+pnpm --filter @basecamp/database db:reset
+```
+
+Run the M1 server and web app in separate terminals:
+
+```bash
+pnpm --filter @basecamp/server dev
+pnpm --filter @basecamp/web dev
+```
+
+Server: `http://127.0.0.1:4317`  
+Web: `http://127.0.0.1:4318`
 
 Roadmap labels, milestones, and issues can be synced to GitHub with:
 

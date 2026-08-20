@@ -10,3 +10,6 @@ Core test priorities:
 - Sync and conflict resolution.
 - Database migrations, seed data, backup, and restore.
 - Accessibility and offline web/mobile workflows.
+
+M1 includes smoke tests for seed validation, database seed import, server routes,
+and the first web dashboard render.

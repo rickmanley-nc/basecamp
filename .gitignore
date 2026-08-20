@@ -24,3 +24,4 @@ coverage/
 *.sqlite3
 data/
 backups/
+var/

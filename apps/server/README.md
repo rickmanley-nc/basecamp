@@ -10,3 +10,13 @@ Responsibilities:
 - Database migrations and seed orchestration through `@basecamp/database`.
 - Local-network availability with no mandatory SaaS dependency.
 - Backup, restore, export, audit, and health endpoints.
+
+## M1 Routes
+
+```bash
+pnpm --filter @basecamp/server dev
+```
+
+- `GET /health`
+- `GET /api/seed`
+- `GET /api/dashboard`
