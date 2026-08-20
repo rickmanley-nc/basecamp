@@ -10,15 +10,14 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "baseUrl": ".",
     "paths": {
-      "@basecamp/api": ["packages/api/src/index.ts"],
-      "@basecamp/content": ["packages/content/src/index.ts"],
-      "@basecamp/database": ["packages/database/src/index.ts"],
-      "@basecamp/domain": ["packages/domain/src/index.ts"],
-      "@basecamp/gamification": ["packages/gamification/src/index.ts"],
-      "@basecamp/sync": ["packages/sync/src/index.ts"],
-      "@basecamp/ui": ["packages/ui/src/index.ts"]
+      "@basecamp/api": ["./packages/api/src/index.ts"],
+      "@basecamp/content": ["./packages/content/src/index.ts"],
+      "@basecamp/database": ["./packages/database/src/index.ts"],
+      "@basecamp/domain": ["./packages/domain/src/index.ts"],
+      "@basecamp/gamification": ["./packages/gamification/src/index.ts"],
+      "@basecamp/sync": ["./packages/sync/src/index.ts"],
+      "@basecamp/ui": ["./packages/ui/src/index.ts"]
     }
   }
 }

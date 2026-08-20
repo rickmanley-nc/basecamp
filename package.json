@@ -10,8 +10,12 @@
     "pnpm": ">=11.0.0"
   },
   "scripts": {
-    "check": "pnpm check:repo",
+    "check": "pnpm check:repo && pnpm typecheck",
     "check:repo": "node scripts/check-repo.mjs",
-    "roadmap:sync": "node scripts/sync-github-roadmap.mjs"
+    "roadmap:sync": "node scripts/sync-github-roadmap.mjs",
+    "typecheck": "pnpm -r --if-present typecheck"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2"
   }
 }
