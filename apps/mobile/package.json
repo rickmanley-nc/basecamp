@@ -1,0 +1,7 @@
+{
+  "name": "@basecamp/mobile",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Basecamp mobile companion for capture, scanning, field use, and offline reference.",
+  "license": "Apache-2.0"
+}

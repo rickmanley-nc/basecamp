@@ -1,0 +1,6 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+  - "tests"
+allowBuilds:
+  '@nvidia/foundations-react-core': true

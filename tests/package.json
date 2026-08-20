@@ -1,0 +1,7 @@
+{
+  "name": "@basecamp/tests",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Basecamp cross-package tests and fixtures.",
+  "license": "Apache-2.0"
+}

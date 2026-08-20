@@ -1,0 +1,7 @@
+{
+  "name": "@basecamp/server",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Basecamp API, sync, jobs, and application services.",
+  "license": "Apache-2.0"
+}

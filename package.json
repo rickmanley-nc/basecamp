@@ -1,0 +1,16 @@
+{
+  "name": "basecamp",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Self-hosted preparedness platform for quests, readiness, inventory, skills, drills, maintenance, and offline field use.",
+  "license": "Apache-2.0",
+  "packageManager": "pnpm@11.7.0",
+  "engines": {
+    "node": ">=24.0.0",
+    "pnpm": ">=11.0.0"
+  },
+  "scripts": {
+    "check": "pnpm check:repo",
+    "check:repo": "node scripts/check-repo.mjs"
+  }
+}

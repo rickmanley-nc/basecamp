@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "baseUrl": ".",
+    "paths": {
+      "@basecamp/api": ["packages/api/src/index.ts"],
+      "@basecamp/content": ["packages/content/src/index.ts"],
+      "@basecamp/database": ["packages/database/src/index.ts"],
+      "@basecamp/domain": ["packages/domain/src/index.ts"],
+      "@basecamp/gamification": ["packages/gamification/src/index.ts"],
+      "@basecamp/sync": ["packages/sync/src/index.ts"],
+      "@basecamp/ui": ["packages/ui/src/index.ts"]
+    }
+  }
+}
