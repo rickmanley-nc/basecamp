@@ -1,0 +1,570 @@
+{
+  "schemaVersion": "0.1.0",
+  "generatedOn": "2026-08-20",
+  "categories": [
+    {
+      "id": "water",
+      "name": "Water",
+      "description": "Storage, purification, shutoff knowledge, conservation, and outage validation.",
+      "criticality": "critical",
+      "defaultPursuitState": "active"
+    },
+    {
+      "id": "food",
+      "name": "Food",
+      "description": "Shelf-stable food, rotation, preparation, preservation, and cooking resilience.",
+      "criticality": "critical",
+      "defaultPursuitState": "interested"
+    },
+    {
+      "id": "shelter",
+      "name": "Shelter",
+      "description": "Thermal comfort, temporary shelter, weather protection, and habitability.",
+      "criticality": "critical",
+      "defaultPursuitState": "interested"
+    },
+    {
+      "id": "medical",
+      "name": "Medical",
+      "description": "First aid, trauma supplies, training, medication planning, and response drills.",
+      "criticality": "critical",
+      "defaultPursuitState": "active"
+    },
+    {
+      "id": "power",
+      "name": "Power",
+      "description": "Backup electricity, charging, fuel, critical loads, and grid-down validation.",
+      "criticality": "critical",
+      "defaultPursuitState": "active"
+    },
+    {
+      "id": "communications",
+      "name": "Communications",
+      "description": "Plans, contacts, radios, backup charging, and tested communication paths.",
+      "criticality": "critical",
+      "defaultPursuitState": "active"
+    },
+    {
+      "id": "navigation",
+      "name": "Navigation",
+      "description": "Maps, compass, routes, GPS fallback, and local movement skills.",
+      "criticality": "important",
+      "defaultPursuitState": "later"
+    },
+    {
+      "id": "transportation",
+      "name": "Transportation",
+      "description": "Vehicle readiness, breakdown supplies, fuel planning, routes, and mobility.",
+      "criticality": "important",
+      "defaultPursuitState": "interested"
+    },
+    {
+      "id": "tools-repair",
+      "name": "Tools and Repair",
+      "description": "Hand tools, power tools, machinery, spares, and practical repair skills.",
+      "criticality": "important",
+      "defaultPursuitState": "interested"
+    },
+    {
+      "id": "sanitation",
+      "name": "Sanitation",
+      "description": "Waste, hygiene, cleaning, disease prevention, and water-limited routines.",
+      "criticality": "critical",
+      "defaultPursuitState": "interested"
+    },
+    {
+      "id": "home-resilience",
+      "name": "Home Resilience",
+      "description": "Utility shutoffs, fire safety, weather hardening, documents, and continuity.",
+      "criticality": "critical",
+      "defaultPursuitState": "active"
+    },
+    {
+      "id": "personal-safety",
+      "name": "Personal Safety",
+      "description": "Situational awareness, household safety, lighting, and emergency response habits.",
+      "criticality": "important",
+      "defaultPursuitState": "interested"
+    },
+    {
+      "id": "evacuation",
+      "name": "Evacuation",
+      "description": "Go-bags, routes, rally points, documents, pets, vehicles, and evacuation drills.",
+      "criticality": "critical",
+      "defaultPursuitState": "active"
+    },
+    {
+      "id": "community",
+      "name": "Community",
+      "description": "Neighbors, mutual aid, shared plans, communication trees, and local resources.",
+      "criticality": "important",
+      "defaultPursuitState": "later"
+    },
+    {
+      "id": "financial-preparedness",
+      "name": "Financial Preparedness",
+      "description": "Emergency cash, documents, insurance, records, and disruption planning.",
+      "criticality": "important",
+      "defaultPursuitState": "interested"
+    },
+    {
+      "id": "skills-training",
+      "name": "Skills and Training",
+      "description": "Preparedness skills independent of equipment ownership.",
+      "criticality": "important",
+      "defaultPursuitState": "active"
+    },
+    {
+      "id": "drills-validation",
+      "name": "Drills and Validation",
+      "description": "Structured tests that prove capability and reveal improvement quests.",
+      "criticality": "critical",
+      "defaultPursuitState": "active"
+    }
+  ],
+  "levels": [
+    {
+      "id": "level-0",
+      "number": 0,
+      "name": "Unprepared",
+      "duration": "No validated capability",
+      "description": "No demonstrated ability to handle this category during disruption."
+    },
+    {
+      "id": "level-1",
+      "number": 1,
+      "name": "24 Hours",
+      "duration": "Approximately one day",
+      "description": "Handle an ordinary disruption independently for about one day."
+    },
+    {
+      "id": "level-2",
+      "number": 2,
+      "name": "72 Hours",
+      "duration": "Three days",
+      "description": "Operate independently for three days."
+    },
+    {
+      "id": "level-3",
+      "number": 3,
+      "name": "2 Weeks",
+      "duration": "Fourteen days",
+      "description": "Operate comfortably during prolonged regional disruption."
+    },
+    {
+      "id": "level-4",
+      "number": 4,
+      "name": "30 Days",
+      "duration": "One month",
+      "description": "Maintain critical household capabilities for about one month."
+    },
+    {
+      "id": "level-5",
+      "number": 5,
+      "name": "Extended Resilience",
+      "duration": "Beyond one month",
+      "description": "Deep redundancy, repair capability, renewable resources, advanced skills, and community systems."
+    }
+  ],
+  "quests": [
+    {
+      "id": "water-calculate-household-requirements",
+      "title": "Calculate Household Water Requirements",
+      "categoryId": "water",
+      "targetLevel": 1,
+      "taxonomy": ["knowledge", "quick-win"],
+      "estimatedMinutes": 15,
+      "estimatedCostUsd": 0,
+      "xp": 25,
+      "priority": "high",
+      "whyItMatters": "Water planning starts with knowing the household's real daily need.",
+      "frictionGoal": {
+        "targetClicks": 3,
+        "manualFields": ["household members", "pets"],
+        "inferredFields": ["daily baseline", "three-day target"],
+        "automation": ["profile defaults", "calculated quantities"]
+      },
+      "accomplishments": [
+        "enter household count",
+        "review calculated daily water target",
+        "save 24-hour and 72-hour targets"
+      ],
+      "validation": "Household water requirement saved to profile."
+    },
+    {
+      "id": "water-store-24-hour-drinking-water",
+      "title": "Store 24-Hour Drinking Water",
+      "categoryId": "water",
+      "targetLevel": 1,
+      "taxonomy": ["acquire", "inventory"],
+      "estimatedMinutes": 20,
+      "estimatedCostUsd": 15,
+      "xp": 40,
+      "priority": "high",
+      "whyItMatters": "A one-day reserve covers many common water disruptions.",
+      "bom": [
+        {
+          "functionalRequirement": "Potable drinking water storage",
+          "quantity": "profile-derived",
+          "required": true,
+          "acceptableAlternatives": ["commercial sealed water", "sanitized water containers"]
+        }
+      ],
+      "validation": "Stored quantity meets or exceeds the saved 24-hour target."
+    },
+    {
+      "id": "home-label-utility-shutoffs",
+      "title": "Label Household Utility Shutoffs",
+      "categoryId": "home-resilience",
+      "targetLevel": 1,
+      "taxonomy": ["quick-win", "configure"],
+      "estimatedMinutes": 30,
+      "estimatedCostUsd": 10,
+      "xp": 35,
+      "priority": "high",
+      "whyItMatters": "Fast shutoff access reduces damage during leaks, fire, or utility problems.",
+      "validation": "Water, gas if present, and electrical shutoffs are identified and photographed."
+    },
+    {
+      "id": "water-build-72-hour-reserve",
+      "title": "Build 72-Hour Water Reserve",
+      "categoryId": "water",
+      "targetLevel": 2,
+      "taxonomy": ["acquire", "inventory", "build"],
+      "estimatedMinutes": 45,
+      "estimatedCostUsd": 45,
+      "xp": 80,
+      "priority": "high",
+      "dependencies": ["water-calculate-household-requirements"],
+      "whyItMatters": "A three-day reserve covers the standard baseline for regional disruption.",
+      "validation": "Inventory shows stored potable water meeting the 72-hour target with location and rotation date."
+    },
+    {
+      "id": "water-establish-basic-purification",
+      "title": "Establish Basic Water Purification",
+      "categoryId": "water",
+      "targetLevel": 2,
+      "taxonomy": ["acquire", "learn", "test"],
+      "estimatedMinutes": 60,
+      "estimatedCostUsd": 40,
+      "xp": 90,
+      "priority": "high",
+      "whyItMatters": "Purification extends stored water and provides redundancy when supply is uncertain.",
+      "validation": "Purification method is acquired, instructions are saved offline, and a practice run is recorded."
+    },
+    {
+      "id": "communications-add-handheld-radios",
+      "title": "Add Two Handheld Radios",
+      "categoryId": "communications",
+      "targetLevel": 1,
+      "taxonomy": ["acquire", "inventory"],
+      "estimatedMinutes": 20,
+      "estimatedCostUsd": 60,
+      "xp": 30,
+      "priority": "medium",
+      "whyItMatters": "Radios are useful only after they are tracked, charged, configured, and tested.",
+      "validation": "Two radios are inventoried with charging method and storage location."
+    },
+    {
+      "id": "communications-configure-local-channels",
+      "title": "Configure Local Radio Channels",
+      "categoryId": "communications",
+      "targetLevel": 2,
+      "taxonomy": ["configure", "learn"],
+      "estimatedMinutes": 45,
+      "estimatedCostUsd": 0,
+      "xp": 70,
+      "priority": "high",
+      "dependencies": ["communications-add-handheld-radios"],
+      "whyItMatters": "Radio ownership becomes useful only after configuration and shared channel plans.",
+      "validation": "Configured channel plan is documented and stored offline."
+    },
+    {
+      "id": "communications-test-two-location-radio",
+      "title": "Test Radio Communication Between Two Locations",
+      "categoryId": "communications",
+      "targetLevel": 2,
+      "taxonomy": ["test", "drill"],
+      "estimatedMinutes": 30,
+      "estimatedCostUsd": 0,
+      "xp": 100,
+      "priority": "high",
+      "dependencies": ["communications-configure-local-channels"],
+      "whyItMatters": "A successful test proves the communication plan works in the real environment.",
+      "validation": "Successful contact is logged with locations, channel, time, and lesson notes."
+    },
+    {
+      "id": "transportation-build-vehicle-emergency-kit",
+      "title": "Build Vehicle Emergency Kit",
+      "categoryId": "transportation",
+      "targetLevel": 2,
+      "taxonomy": ["build", "inventory", "loadout"],
+      "estimatedMinutes": 90,
+      "estimatedCostUsd": 125,
+      "xp": 110,
+      "priority": "medium",
+      "whyItMatters": "A vehicle kit supports breakdowns, weather delays, evacuation, and field work.",
+      "validation": "Kit inventory is complete, located in vehicle, and QR tagged."
+    },
+    {
+      "id": "evacuation-create-go-bag-inventory",
+      "title": "Create Go-Bag Inventory",
+      "categoryId": "evacuation",
+      "targetLevel": 2,
+      "taxonomy": ["inventory", "loadout", "build"],
+      "estimatedMinutes": 75,
+      "estimatedCostUsd": 100,
+      "xp": 100,
+      "priority": "high",
+      "whyItMatters": "A go-bag is useful when contents are known, accessible, and maintained.",
+      "validation": "Go-bag has inventory, location, owner, QR tag, and maintenance schedule."
+    },
+    {
+      "id": "medical-inspect-supplies",
+      "title": "Inspect Medical Supplies",
+      "categoryId": "medical",
+      "targetLevel": 1,
+      "taxonomy": ["maintenance", "inventory"],
+      "estimatedMinutes": 25,
+      "estimatedCostUsd": 0,
+      "xp": 45,
+      "priority": "high",
+      "whyItMatters": "Medical supplies must be present, findable, unexpired, and usable.",
+      "validation": "Medical kit inspection recorded with expired or missing items converted into acquisition needs."
+    },
+    {
+      "id": "skills-record-first-aid-cpr-training",
+      "title": "Record First Aid/CPR Training",
+      "categoryId": "skills-training",
+      "targetLevel": 2,
+      "taxonomy": ["learn", "skill"],
+      "estimatedMinutes": 10,
+      "estimatedCostUsd": 0,
+      "xp": 70,
+      "priority": "medium",
+      "whyItMatters": "Training should improve readiness only when it is tracked and current.",
+      "validation": "Course, date, expiration if any, and evidence are recorded."
+    },
+    {
+      "id": "power-test-generator-thirty-minutes",
+      "title": "Test Generator For 30 Minutes",
+      "categoryId": "power",
+      "targetLevel": 2,
+      "taxonomy": ["test", "maintenance"],
+      "estimatedMinutes": 40,
+      "estimatedCostUsd": 5,
+      "xp": 90,
+      "priority": "high",
+      "whyItMatters": "Backup power must be tested before an outage reveals failures.",
+      "validation": "Generator run duration, load, fuel, issues, and next maintenance due date are recorded."
+    },
+    {
+      "id": "power-create-critical-load-list",
+      "title": "Create Critical Load List",
+      "categoryId": "power",
+      "targetLevel": 2,
+      "taxonomy": ["knowledge", "configure"],
+      "estimatedMinutes": 35,
+      "estimatedCostUsd": 0,
+      "xp": 55,
+      "priority": "high",
+      "whyItMatters": "Knowing critical loads prevents overloading backup systems and clarifies what power must support.",
+      "validation": "Critical loads list is saved with estimated watts and priority."
+    },
+    {
+      "id": "drill-one-hour-power-outage",
+      "title": "Complete One-Hour Power Outage Drill",
+      "categoryId": "drills-validation",
+      "targetLevel": 2,
+      "taxonomy": ["drill", "validation"],
+      "estimatedMinutes": 75,
+      "estimatedCostUsd": 0,
+      "xp": 120,
+      "priority": "high",
+      "dependencies": ["power-create-critical-load-list"],
+      "whyItMatters": "A short drill exposes gaps before a real outage.",
+      "validation": "Drill result captures success criteria, failures, lessons, and follow-up quests."
+    },
+    {
+      "id": "navigation-learn-compass-basics",
+      "title": "Learn Compass Navigation Basics",
+      "categoryId": "navigation",
+      "targetLevel": 1,
+      "taxonomy": ["learn", "practice", "skill"],
+      "estimatedMinutes": 60,
+      "estimatedCostUsd": 20,
+      "xp": 70,
+      "priority": "low",
+      "whyItMatters": "GPS can fail; map and compass basics provide a durable fallback.",
+      "validation": "Compass use practice is logged with a simple route or bearing exercise."
+    },
+    {
+      "id": "home-run-fire-safety-check",
+      "title": "Run Home Fire Safety Check",
+      "categoryId": "home-resilience",
+      "targetLevel": 1,
+      "taxonomy": ["maintenance", "inspection", "quick-win"],
+      "estimatedMinutes": 30,
+      "estimatedCostUsd": 0,
+      "xp": 65,
+      "priority": "high",
+      "whyItMatters": "Fire prevention and detection are foundational home resilience capabilities.",
+      "validation": "Smoke/CO detectors, extinguishers, exits, and hazards are checked."
+    },
+    {
+      "id": "financial-create-document-backup-packet",
+      "title": "Create Document Backup Packet",
+      "categoryId": "financial-preparedness",
+      "targetLevel": 2,
+      "taxonomy": ["configure", "offline-reference"],
+      "estimatedMinutes": 90,
+      "estimatedCostUsd": 0,
+      "xp": 90,
+      "priority": "medium",
+      "whyItMatters": "Critical records support evacuation, insurance, recovery, and continuity.",
+      "validation": "Important documents are cataloged with secure physical and digital backup locations."
+    }
+  ],
+  "badges": [
+    {
+      "id": "water-guardian",
+      "name": "Water Guardian",
+      "categoryId": "water",
+      "tiers": ["bronze", "silver", "gold", "platinum", "master"],
+      "artDirection": "Water droplet, shield, filtration element, and subtle topographic linework.",
+      "readinessBias": "validation"
+    },
+    {
+      "id": "grid-down",
+      "name": "Grid Down",
+      "categoryId": "power",
+      "tiers": ["bronze", "silver", "gold", "platinum", "master"],
+      "artDirection": "Lightning bolt, battery, darkened utility infrastructure, and measured load markings.",
+      "readinessBias": "test"
+    },
+    {
+      "id": "radio-operator",
+      "name": "Radio Operator",
+      "categoryId": "communications",
+      "tiers": ["bronze", "silver", "gold", "platinum", "master"],
+      "artDirection": "Handheld radio, signal waves, mountain silhouette, and channel markers.",
+      "readinessBias": "configuration_and_drill"
+    },
+    {
+      "id": "pathfinder",
+      "name": "Pathfinder",
+      "categoryId": "navigation",
+      "tiers": ["bronze", "silver", "gold", "platinum", "master"],
+      "artDirection": "Compass, bearing line, route marker, and topographic contours.",
+      "readinessBias": "practice"
+    },
+    {
+      "id": "field-medic",
+      "name": "Field Medic",
+      "categoryId": "medical",
+      "tiers": ["bronze", "silver", "gold", "platinum", "master"],
+      "artDirection": "Medical mark, trauma bag, shield, and inspection tag.",
+      "readinessBias": "training_and_supplies"
+    },
+    {
+      "id": "maker",
+      "name": "Maker",
+      "categoryId": "tools-repair",
+      "tiers": ["bronze", "silver", "gold", "platinum", "master"],
+      "artDirection": "Gear, wrench, fabrication grid, and repair marks.",
+      "readinessBias": "build_and_repair"
+    },
+    {
+      "id": "quartermaster",
+      "name": "Quartermaster",
+      "categoryId": "evacuation",
+      "tiers": ["bronze", "silver", "gold", "platinum", "master"],
+      "artDirection": "Supply crate, checklist, inventory tag, and loadout straps.",
+      "readinessBias": "inventory_and_maintenance"
+    },
+    {
+      "id": "outpost-builder",
+      "name": "Outpost Builder",
+      "categoryId": "drills-validation",
+      "tiers": ["bronze", "silver", "gold", "platinum", "master"],
+      "artDirection": "Flag marker, mountain route, validated checkmark, and category emblems.",
+      "readinessBias": "cross_category_validation"
+    }
+  ],
+  "outposts": [
+    {
+      "id": "water-outpost",
+      "name": "Water Outpost",
+      "categoryId": "water",
+      "requirements": [
+        "72-hour water reserve complete",
+        "purification method tested",
+        "water shutoff identified",
+        "rotation schedule active",
+        "water outage drill complete"
+      ]
+    },
+    {
+      "id": "power-outpost",
+      "name": "Power Outpost",
+      "categoryId": "power",
+      "requirements": [
+        "critical load list complete",
+        "backup power source tested",
+        "fuel or charging plan documented",
+        "maintenance schedule active",
+        "power outage drill complete"
+      ]
+    },
+    {
+      "id": "communications-outpost",
+      "name": "Communications Outpost",
+      "categoryId": "communications",
+      "requirements": [
+        "required radio equipment inventoried",
+        "radios configured",
+        "backup charging established",
+        "communication plan documented",
+        "two-location communication test complete"
+      ]
+    }
+  ],
+  "milestones": [
+    {
+      "id": "seventy-two-hour-ready",
+      "name": "72-Hour Ready",
+      "description": "Validated baseline capability across critical categories for three days.",
+      "requirements": ["water level 2", "food level 2", "medical level 1", "power level 1", "communications level 1", "sanitation level 1", "evacuation level 1"]
+    },
+    {
+      "id": "grid-independent",
+      "name": "Grid Independent",
+      "description": "Successfully operate critical household systems without grid electricity.",
+      "requirements": ["critical load list", "backup power tested", "power outage drill"]
+    },
+    {
+      "id": "ready-to-evacuate",
+      "name": "Ready to Evacuate",
+      "description": "Go-bags, vehicle kit, routes, rally points, navigation, communications, and evacuation drill are complete.",
+      "requirements": ["go-bag inventory", "vehicle kit", "routes", "rally points", "navigation fallback", "communications plan", "evacuation drill"]
+    },
+    {
+      "id": "outpost-network",
+      "name": "Outpost Network",
+      "description": "Establish a defined number of validated category outposts.",
+      "requirements": ["three outposts earned"]
+    },
+    {
+      "id": "household-resilience",
+      "name": "Household Resilience",
+      "description": "Reach Level 3 across defined critical capabilities.",
+      "requirements": ["water level 3", "food level 3", "medical level 2", "power level 2", "communications level 2", "sanitation level 2"]
+    },
+    {
+      "id": "one-month-ready",
+      "name": "One Month Ready",
+      "description": "Reach Level 4 across critical preparedness capabilities.",
+      "requirements": ["water level 4", "food level 4", "medical level 3", "power level 3", "communications level 3", "sanitation level 3"]
+    }
+  ]
+}

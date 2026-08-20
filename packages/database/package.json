@@ -1,0 +1,7 @@
+{
+  "name": "@basecamp/database",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Basecamp database schema, migrations, seed workflow, and repositories.",
+  "license": "Apache-2.0"
+}

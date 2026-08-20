@@ -1,0 +1,7 @@
+{
+  "name": "@basecamp/web",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Primary self-hosted Basecamp web application.",
+  "license": "Apache-2.0"
+}
