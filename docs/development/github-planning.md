@@ -67,6 +67,35 @@ Active milestone order:
 
 M0 is historical after `v0.1.0`.
 
+## Autonomous Delivery Mode
+
+Basecamp development uses autonomous issue delivery by default.
+
+The agent should:
+
+- Pick the next unblocked issue from the active milestone.
+- Create a short-lived branch.
+- Open a PR for CI, review history, and issue linkage.
+- Wait for required checks.
+- Squash-merge passing PRs without waiting for user action.
+- Delete the remote branch after merge.
+- Delete the local branch after pulling `main`.
+- Continue to the next issue.
+
+The user should review at milestone and release boundaries rather than merging
+every implementation PR.
+
+Stop and ask before merging only when:
+
+- A product decision materially changes the roadmap or user experience.
+- A change introduces secrets, external accounts, billing, or infrastructure
+  exposure.
+- Safety, medical, legal, licensing, or security uncertainty needs explicit
+  judgment.
+- CI or validation fails and the fix is not straightforward.
+- The PR intentionally defers acceptance criteria.
+- The user explicitly asks to review that PR before merge.
+
 ## Pull Request Rules
 
 Every PR should:
@@ -83,6 +112,35 @@ Use closing keywords when the PR fully completes an issue:
 ```text
 Closes #123
 ```
+
+Repository merge settings:
+
+- Squash merge is enabled.
+- Merge commits are disabled.
+- Rebase merges are disabled.
+- Auto-merge is enabled.
+- Branch deletion after merge is enabled.
+
+Squash commits should use the PR title and PR body so issue links and validation
+notes remain in history.
+
+## Branch Rules
+
+Branches are temporary implementation handles, not durable project records.
+
+Branch naming:
+
+- Issue work: `codex/i<number>-short-slug`
+- Small workflow/docs follow-up: `codex/short-slug`
+- Avoid long descriptive branch names when the issue title already provides the
+  durable context.
+
+Branch cleanup:
+
+- Delete remote branches on merge.
+- Delete local branches after pulling the merge commit into `main`.
+- Do not preserve merged branches as historical artifacts; GitHub PRs and squash
+  commits are the history.
 
 ## Milestone Exit Review
 
