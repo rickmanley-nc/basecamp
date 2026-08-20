@@ -15,6 +15,12 @@ The current root check validates repository documentation, seed content, package
 type checks, smoke tests, and the web build. As application packages expand,
 `pnpm check` should continue to be the default confidence command.
 
+Public workflow text must follow
+[Privacy And Portability](./privacy-and-portability.md). Do not include local
+usernames, workstation home directories, or Codex cache paths in tracked files,
+PR descriptions, release notes, issues, or comments. Use repo-relative paths,
+anonymous placeholders, environment variables, or admin-controlled server paths.
+
 ## M1 Local Run
 
 Create the local development database:
@@ -59,6 +65,7 @@ Every PR should describe:
 
 - Summary.
 - Validation performed.
+- Confirmation that public text contains no personal workstation paths.
 - Preparedness/product impact.
 - Data model impact.
 - Offline/sync impact.

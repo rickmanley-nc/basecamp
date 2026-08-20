@@ -6,6 +6,10 @@
 
 -
 
+## Privacy And Portability
+
+- [ ] Public text uses repo-relative paths, placeholders, environment variables, or admin-controlled server paths instead of personal workstation paths.
+
 ## Preparedness/Product Impact
 
 -
