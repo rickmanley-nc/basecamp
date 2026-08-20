@@ -16,10 +16,12 @@ project clearer.
 4. Update roadmap and docs.
 5. Confirm migrations, seed data, backup impact, and export impact where
    relevant.
-6. Draft release notes.
-7. Tag the release.
-8. Create the GitHub Release.
-9. Close the milestone when appropriate.
+6. Confirm release notes and linked PR text contain no personal workstation
+   paths.
+7. Draft release notes.
+8. Tag the release.
+9. Create the GitHub Release.
+10. Close the milestone when appropriate.
 
 ## Release Notes Template
 

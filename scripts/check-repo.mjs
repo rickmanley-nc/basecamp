@@ -1,8 +1,11 @@
+import { execFile } from "node:child_process";
 import { access, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const execFileAsync = promisify(execFile);
 
 const requiredFiles = [
   "README.md",
@@ -15,6 +18,7 @@ const requiredFiles = [
   "docs/ui/kaizen-integration.md",
   "docs/development/workflow.md",
   "docs/development/github-planning.md",
+  "docs/development/privacy-and-portability.md",
   "docs/development/releases.md",
   "docs/ops/self-hosting-and-backups.md",
   "docs/adr/0001-monorepo-typescript-react.md",
@@ -39,6 +43,129 @@ const requiredFiles = [
 ];
 
 const failures = [];
+
+const hostPathPatterns = [
+  {
+    label: "macOS user home path",
+    pattern: /\/Users\/[A-Za-z0-9._-]+/g,
+    replacement: "/Users/<user>/... or $BASECAMP_HOME/..."
+  },
+  {
+    label: "Linux user home path",
+    pattern: /\/home\/[A-Za-z0-9._-]+/g,
+    replacement: "/home/<user>/... or $BASECAMP_HOME/..."
+  },
+  {
+    label: "Windows user profile path",
+    pattern: /[A-Za-z]:\\Users\\[A-Za-z0-9._-]+/g,
+    replacement: "C:\\Users\\<user>\\... or %BASECAMP_HOME%\\..."
+  },
+  {
+    label: "escaped Windows user profile path",
+    pattern: /[A-Za-z]:\\\\Users\\\\[A-Za-z0-9._-]+/g,
+    replacement: "C:\\\\Users\\\\<user>\\\\... or %BASECAMP_HOME%\\\\..."
+  }
+];
+
+function findHostPathLeaks(text, label) {
+  const leaks = [];
+
+  for (const { label: patternLabel, pattern, replacement } of hostPathPatterns) {
+    pattern.lastIndex = 0;
+
+    for (const match of text.matchAll(pattern)) {
+      leaks.push(
+        `Host-specific path leak in ${label}:${lineNumberFor(text, match.index)}: ` +
+          `${match[0]} (${patternLabel}; use ${replacement})`
+      );
+    }
+  }
+
+  return leaks;
+}
+
+function lineNumberFor(text, index) {
+  let line = 1;
+
+  for (let position = 0; position < index; position += 1) {
+    if (text[position] === "\n") {
+      line += 1;
+    }
+  }
+
+  return line;
+}
+
+async function listTrackedFiles() {
+  const { stdout } = await execFileAsync("git", ["ls-files", "-z"], {
+    cwd: root,
+    encoding: "utf8",
+    maxBuffer: 10 * 1024 * 1024
+  });
+
+  return stdout.split("\0").filter(Boolean);
+}
+
+async function checkTrackedFilesForHostPaths() {
+  let files;
+
+  try {
+    files = await listTrackedFiles();
+  } catch (error) {
+    failures.push(`Could not list tracked files for host path scan: ${error.message}`);
+    return;
+  }
+
+  for (const file of files) {
+    const buffer = await readFile(path.join(root, file));
+
+    if (buffer.includes(0)) {
+      continue;
+    }
+
+    const text = buffer.toString("utf8");
+
+    failures.push(...findHostPathLeaks(text, file));
+  }
+}
+
+async function checkGitHubEventForHostPaths() {
+  if (!process.env.GITHUB_EVENT_PATH) {
+    return;
+  }
+
+  let event;
+
+  try {
+    event = JSON.parse(await readFile(process.env.GITHUB_EVENT_PATH, "utf8"));
+  } catch (error) {
+    failures.push(`Could not read GitHub event for host path scan: ${error.message}`);
+    return;
+  }
+
+  const publicTexts = [];
+
+  if (event.pull_request) {
+    publicTexts.push(
+      ["pull request title", event.pull_request.title],
+      ["pull request body", event.pull_request.body]
+    );
+  }
+
+  if (event.release) {
+    publicTexts.push(["release name", event.release.name], ["release body", event.release.body]);
+  }
+
+  if (event.issue) {
+    publicTexts.push(["issue title", event.issue.title], ["issue body", event.issue.body]);
+  }
+
+  for (const [label, text] of publicTexts) {
+    if (typeof text === "string") {
+      failures.push(...findHostPathLeaks(text, label));
+    }
+  }
+}
 
 for (const file of requiredFiles) {
   try {
@@ -94,6 +221,9 @@ try {
 } catch (error) {
   failures.push(`Seed dataset is not valid JSON: ${error.message}`);
 }
+
+await checkTrackedFilesForHostPaths();
+await checkGitHubEventForHostPaths();
 
 if (failures.length > 0) {
   console.error("Basecamp repository check failed:");
