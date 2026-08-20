@@ -1,0 +1,222 @@
+:root {
+  --bc-bg: #f5f7f2;
+  --bc-surface: #ffffff;
+  --bc-surface-2: #eef2ea;
+  --bc-text: #18211b;
+  --bc-muted: #5b665c;
+  --bc-border: #d9dfd2;
+  --bc-accent: #2f6f4e;
+  --bc-warning: #b46a25;
+  --bc-radius: 8px;
+  color: var(--bc-text);
+  background: var(--bc-bg);
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+body {
+  margin: 0;
+  background: var(--bc-bg);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+.bc-shell {
+  min-height: 100vh;
+}
+
+.bc-appbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px 32px;
+  border-bottom: 1px solid var(--bc-border);
+  background: var(--bc-surface);
+}
+
+.bc-appbar h1 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.bc-kicker,
+.bc-muted {
+  margin: 0;
+  color: var(--bc-muted);
+}
+
+.bc-kicker {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.bc-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.bc-main {
+  display: grid;
+  gap: 20px;
+  padding: 24px 32px 40px;
+}
+
+.bc-dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.8fr) minmax(320px, 1.2fr);
+  gap: 20px;
+}
+
+.bc-panel {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--bc-border);
+  border-radius: var(--bc-radius);
+  background: var(--bc-surface);
+}
+
+.bc-panel-header {
+  display: grid;
+  gap: 4px;
+}
+
+.bc-panel-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.bc-panel-header p {
+  margin: 0;
+  color: var(--bc-muted);
+}
+
+.bc-button {
+  border-radius: 6px;
+}
+
+.bc-status {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 24px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.bc-status-ready,
+.bc-status-active {
+  color: #143d29;
+  background: #dcefe2;
+}
+
+.bc-status-later {
+  color: #5c4526;
+  background: #f4e7cf;
+}
+
+.bc-status-gap {
+  color: #6e2c2c;
+  background: #f3dada;
+}
+
+.bc-progress-ring {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  margin: 0;
+}
+
+.bc-progress-ring-visual {
+  display: grid;
+  place-items: center;
+  width: 132px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+
+.bc-progress-ring-visual span {
+  display: grid;
+  place-items: center;
+  width: 92px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--bc-surface);
+  font-size: 32px;
+  font-weight: 800;
+}
+
+.bc-metric-grid,
+.bc-category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.bc-metric,
+.bc-category-card {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--bc-border);
+  border-radius: var(--bc-radius);
+  background: var(--bc-surface-2);
+}
+
+.bc-metric span,
+.bc-metric small,
+.bc-list-item small {
+  color: var(--bc-muted);
+}
+
+.bc-metric strong {
+  font-size: 26px;
+}
+
+.bc-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bc-list-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--bc-border);
+}
+
+.bc-list-item:last-child {
+  border-bottom: 0;
+}
+
+@media (max-width: 820px) {
+  .bc-appbar,
+  .bc-main {
+    padding-inline: 18px;
+  }
+
+  .bc-appbar,
+  .bc-list-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .bc-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}

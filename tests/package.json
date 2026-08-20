@@ -3,5 +3,16 @@
   "version": "0.0.0",
   "private": true,
   "description": "Basecamp cross-package tests and fixtures.",
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "type": "module",
+  "dependencies": {
+    "@basecamp/api": "workspace:*",
+    "@basecamp/content": "workspace:*",
+    "@basecamp/database": "workspace:*",
+    "@basecamp/domain": "workspace:*",
+    "@basecamp/server": "workspace:*",
+    "@basecamp/web": "workspace:*",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  }
 }

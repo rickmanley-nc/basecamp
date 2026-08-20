@@ -20,6 +20,8 @@ const requiredFiles = [
   "docs/adr/0001-monorepo-typescript-react.md",
   "docs/adr/0002-basecamp-ui-kaizen-adapter.md",
   "docs/adr/0003-local-first-self-hosted-sync.md",
+  "docs/adr/0004-vite-react-fastify-vertical-slice.md",
+  "docs/adr/0005-sqlite-baseline-postgresql-target.md",
   ".github/roadmap/labels.json",
   ".github/roadmap/milestones.json",
   ".github/roadmap/issues.json",

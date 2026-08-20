@@ -11,10 +11,38 @@ pnpm install
 pnpm check
 ```
 
-The current root check validates repository documentation and seed JSON. As
-application packages are implemented, `pnpm check` should expand to type checks,
-unit tests, integration tests, content validation, accessibility checks, and
-build verification.
+The current root check validates repository documentation, seed content, package
+type checks, smoke tests, and the web build. As application packages expand,
+`pnpm check` should continue to be the default confidence command.
+
+## M1 Local Run
+
+Create the local development database:
+
+```bash
+pnpm --filter @basecamp/database db:reset
+```
+
+Run the server:
+
+```bash
+pnpm --filter @basecamp/server dev
+```
+
+Run the web app:
+
+```bash
+pnpm --filter @basecamp/web dev
+```
+
+Default local URLs:
+
+- Server: `http://127.0.0.1:4317`
+- Web: `http://127.0.0.1:4318`
+
+M1 uses Node's built-in `node:sqlite` for local seed import, which currently
+emits an experimental warning. PostgreSQL remains the production self-hosting
+target.
 
 ## Branches
 

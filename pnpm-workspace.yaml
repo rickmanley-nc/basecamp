@@ -4,3 +4,7 @@ packages:
   - "tests"
 allowBuilds:
   '@nvidia/foundations-react-core': true
+  esbuild: true
+minimumReleaseAgeExclude:
+  - '@vitejs/plugin-react@6.1.0'
+  - vite@8.2.2

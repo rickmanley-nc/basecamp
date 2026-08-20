@@ -149,6 +149,17 @@ Each component entry should include:
 - Example usage.
 - Do and do-not guidance.
 
+## M1 Adapter Status
+
+M1 proves the integration boundary without building the full catalog.
+
+- `@basecamp/ui` imports `@nvidia/foundations-react-core`.
+- `apps/web` imports only `@basecamp/ui`.
+- The initial `Button` adapter wraps the Kaizen Button primitive.
+- `PageShell`, `Panel`, `StatusBadge`, `ProgressRing`, `Metric`, and
+  `QuestListItem` are Basecamp-owned compositions.
+- CSS is bundled from `@basecamp/ui/styles.css`; no CDN assets are required.
+
 ## Agent Guidance Sync
 
 When Kaizen is installed in `packages/ui`, run:
