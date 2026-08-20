@@ -11,6 +11,7 @@
   },
   "scripts": {
     "check": "pnpm check:repo",
-    "check:repo": "node scripts/check-repo.mjs"
+    "check:repo": "node scripts/check-repo.mjs",
+    "roadmap:sync": "node scripts/sync-github-roadmap.mjs"
   }
 }

@@ -1,0 +1,40 @@
+changelog:
+  exclude:
+    labels:
+      - ignore-for-release
+  categories:
+    - title: Product
+      labels:
+        - area:product
+    - title: Web
+      labels:
+        - area:web
+    - title: Mobile
+      labels:
+        - area:mobile
+    - title: Server
+      labels:
+        - area:server
+    - title: Domain And Data
+      labels:
+        - area:domain
+        - area:database
+        - area:content
+    - title: UI And Accessibility
+      labels:
+        - area:ui
+        - accessibility
+    - title: Offline And Sync
+      labels:
+        - area:sync
+        - offline
+    - title: Infrastructure
+      labels:
+        - area:infra
+        - security
+    - title: Documentation
+      labels:
+        - type:docs
+    - title: Other
+      labels:
+        - "*"
