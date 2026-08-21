@@ -27,17 +27,27 @@ Clean local environment:
 
 Homelab:
 
-- Intended production-like target for real household data on an
-  admin-controlled home network.
-- Validation should prove install, upgrade, backup, restore, LAN/VPN or secure
-  reverse proxy access, and iPhone pairing when those workflows are in scope.
+- Post-MVP target for real household data on an admin-controlled home network.
+- Expected to use UniFi-managed IP assignment, hostname, DNS, and routing.
+- Validation should eventually prove install, upgrade, backup, restore, LAN/VPN
+  or secure reverse proxy access, TLS, SAN/NAS backup destination, and iPhone
+  pairing when those workflows are in scope.
 
 Cloud pilot:
 
-- Acceptable for testing with real users outside a local developer machine.
-- Must use isolated pilot data, stronger authentication expectations, and a
-  documented reset/seed path.
-- Must not depend on or expose private homelab data.
+- v1 MVP target for testing with the admin and one trusted friend outside a
+  local developer machine.
+- Target host is a bare-metal Supermicro 1U server running Ubuntu 24.04 with
+  12 GB or 16 GB RAM.
+- Should use real user data, except fake/demo data needed for CI, QA, and
+  repeatable tests.
+- Must use admin-created local username/password accounts and must not require
+  SSO.
+- Must use local disk backups for v1, with later SAN/NAS backup support planned
+  for the homelab profile.
+- Must have a documented reset/seed path.
+- If reachable outside a LAN or private network, TLS is required before real
+  data or passwords are used.
 
 Separate server:
 
@@ -52,6 +62,8 @@ Physical iPhone:
 - Required for mobile validation involving camera, QR/barcode scanning, iOS
   permissions, TestFlight or stable installation, local network access, offline
   behavior, notifications, and real device pairing.
+- Required for v1 field data capture because the mobile experience is the
+  primary way data will be added away from a desk.
 - Simulator testing is acceptable for layout, navigation, pure domain logic, and
   early app-shell checks, but it does not replace physical device validation for
   field workflows.
@@ -75,7 +87,8 @@ comments:
 - Remote access stance: LAN-only, VPN, or reverse proxy.
 - TLS/DNS constraints if remote access is in scope.
 - Deployment profile: `homelab` or `cloud-pilot`.
-- Whether test data is isolated from real homelab data.
+- Whether data is real user data, fake/demo data, or disposable QA data.
+- Whether cloud pilot data is isolated from future homelab data.
 - Whether test data can be destroyed after validation.
 
 Secrets, private keys, passwords, tokens, and one-time codes must be exchanged

@@ -1414,15 +1414,16 @@ Primary deployment profiles:
 
 - `local-dev`: contributor machine, local SQLite, fast iteration, no production
   claims.
-- `homelab`: admin-controlled home network deployment, likely single-node,
-  VPN or secure reverse proxy for remote access, durable backups, and clear
-  upgrade/rollback instructions.
-- `cloud-pilot`: cloud server for real-user testing, isolated pilot data,
-  stronger authentication expectations, reset/seed controls, logs/metrics, and
-  no dependence on private homelab data.
+- `cloud-pilot`: v1 MVP server for the admin and one trusted friend using real
+  data. Current target is a bare-metal Supermicro 1U server running Ubuntu 24.04
+  with 12 GB or 16 GB RAM, admin-created username/password accounts, no SSO,
+  local disk backups, logs/metrics, and a clear reset/seed path for QA.
+- `homelab`: post-MVP admin-controlled home network deployment, likely LAN-only
+  at first, with UniFi handling IP assignment, hostname, DNS, and routing. TLS
+  should be added when this profile comes online or any remote access is enabled.
 
 Docker Compose is the current single-node reference adapter for the M6 beta. It
-can support homelab beta installs and simple cloud pilot testing, but it must
+can support the v1 cloud pilot and later homelab testing, but it must
 not become the only expression of production behavior.
 
 ## Backup And Recovery Strategy

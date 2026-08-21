@@ -20,22 +20,32 @@ today. See [ADR 0009](../adr/0009-self-hosting-beta-sqlite-ops.md) and
 ## Deployment Profiles
 
 - `local-dev`: contributor machine, local SQLite, and fast iteration.
-- `homelab`: admin-controlled home network deployment for real household data.
-  This is the primary real Basecamp target.
-- `cloud-pilot`: cloud server used to test with real users. It must use isolated
-  pilot data, have a clear reset path, and should not depend on private homelab
-  data.
+- `cloud-pilot`: v1 MVP server used by the admin and one trusted friend with
+  real data. The current target is a bare-metal Supermicro 1U server running
+  Ubuntu 24.04 with 12 GB or 16 GB RAM.
+- `homelab`: later admin-controlled home network deployment. Expected network
+  management is UniFi-provided IP assignment, hostname, DNS, and routing.
 
 The commands below document the M6 reference adapter. v1.0 readiness must prove
 the underlying app, database, storage, secrets, backup, restore, and proxy
 responsibilities are separable from Compose.
+
+For v1, the cloud pilot should use admin-created local accounts with
+username/password login. Do not add SSO as a required dependency because it
+conflicts with eventual offgrid operation. Use real user-entered data for the
+pilot; fake/demo data is only for CI, QA, and repeatable test fixtures.
+
+If the cloud pilot is reachable outside a LAN or private network, TLS is
+required before real data or passwords are used. LAN/private-network testing may
+defer TLS. Homelab TLS is expected when the later homelab profile is brought
+online.
 
 ## Install Runbook
 
 Prerequisites:
 
 - Linux host with Docker Engine and the Docker Compose plugin.
-- Stable LAN address or DNS name.
+- Stable LAN/private address or DNS name for the cloud pilot.
 - Admin-controlled paths for release assets, config, data, and backups.
 - No secrets committed to git or published in GitHub text.
 
