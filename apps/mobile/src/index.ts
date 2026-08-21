@@ -48,6 +48,14 @@ export {
   type MobilePendingEvidenceUpload,
   type MobileQueuedCommandResult
 } from "./field-workflows";
+export {
+  createIphoneValidationReport,
+  iphoneValidationRows,
+  type IPhoneValidationEnvironment,
+  type IPhoneValidationIssue,
+  type IPhoneValidationReportInput,
+  type IPhoneValidationRow
+} from "./validation";
 
 export interface MobileScreen {
   route: MobileRoute;

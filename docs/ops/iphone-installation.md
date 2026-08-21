@@ -191,48 +191,9 @@ Evidence to record:
 - Any app crash, stuck spinner, unclear copy, or sync result that was not
   understandable from the UI.
 
-Report template:
-
-```markdown
-## Physical iPhone Validation
-
-- Date:
-- Tester:
-- iPhone model:
-- iOS version:
-- Basecamp Mobile version/build:
-- Install channel:
-- Server URL mode:
-- Deployment profile:
-- Database kind:
-- Backup confirmed before test: yes/no
-
-| Area | Pass/Fail | Notes |
-| --- | --- | --- |
-| Install |  |  |
-| Server URL |  |  |
-| Sign-in |  |  |
-| First sync |  |  |
-| Local Network |  |  |
-| Quick Capture online |  |  |
-| Evidence photo |  |  |
-| Evidence document |  |  |
-| Basecamp QR scan |  |  |
-| Barcode scan |  |  |
-| Offline cache |  |  |
-| Offline queue restart |  |  |
-| Reconnect sync |  |  |
-| Conflict visibility |  |  |
-| Sign-out |  |  |
-| Lost device/user disable procedure |  |  |
-
-## Follow-Ups
-
-- Blockers:
-- Bugs:
-- Documentation gaps:
-- Screenshots attached: yes/no
-```
+Use the canonical report template in
+[Basecamp iPhone Field Validation Report](./iphone-field-validation-report.md)
+when posting results back to issues #75, #76, or #77.
 
 Current local preview for contributors:
 

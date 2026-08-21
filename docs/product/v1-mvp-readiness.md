@@ -149,6 +149,11 @@ v1 blockers in known limitations.
 | Physical iPhone | Local Xcode-built install path, Local Network, Camera, Photos, offline storage, scan, field capture, reconnect sync. | iOS version, app build, install path, server URL mode, pass/fail notes, and screenshots when useful. |
 | CI | Repository checks on every PR and release candidate. | GitHub Actions run link. |
 
+Physical iPhone results should use the canonical report in
+[Basecamp iPhone Field Validation Report](../ops/iphone-field-validation-report.md)
+so issues #75, #76, and #77 can be reviewed without exposing private server,
+device, or household details.
+
 ## Open v1 Blockers
 
 The v1.0 milestone should remain open until these blockers are complete:
