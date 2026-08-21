@@ -15,6 +15,9 @@ adapter, not the final production architecture.
 v0.8 adds the cloud pilot foundation: local username/password login,
 admin-created accounts, placeholder admin token rejection, and a portable
 evidence-reference boundary that does not publish host filesystem paths. The
+v0.8.1 recovery checkpoint adds deployment-profile metadata to admin status,
+backup manifests, and restore results, plus a restore proof for local accounts,
+inventory, evidence storage, reports, and admin readiness. The
 long-term production target remains PostgreSQL. The runnable beta uses SQLite
 because that is the persistence layer implemented by the application today. See
 [ADR 0009](../adr/0009-self-hosting-beta-sqlite-ops.md) and
@@ -75,6 +78,8 @@ Edit `infra/basecamp.env` before startup:
 - Set `BASECAMP_PUBLIC_URL` to the LAN or reverse-proxy URL.
 - Set `BASECAMP_WEB_URL` to the web URL if different.
 - Keep `BASECAMP_AUTH_MODE=local` for the cloud pilot.
+- Keep `BASECAMP_DEPLOYMENT_PROFILE=cloud-pilot` for the v1 cloud pilot. Use
+  `homelab` only after that profile is intentionally brought online later.
 - Replace `BASECAMP_ADMIN_TOKEN` with a random break-glass operational secret
   generated outside git, or leave it unset in the real env file after a local
   admin account exists. The placeholder value is rejected by the server and does
@@ -156,9 +161,10 @@ curl -H "Authorization: Bearer ${BASECAMP_SESSION_TOKEN}" \
 unset BASECAMP_SESSION_TOKEN
 ```
 
-The status response covers web, server, database, storage, migrations, backup
-recency, and beta security posture. It should report `localAuthMode: "local"`
-and `localUsersConfigured: true` before real pilot use.
+The status response covers web, server, database, storage, deployment profile,
+backup recency, and beta security posture. It should report
+`deployment.profile: "cloud-pilot"`, `localAuthMode: "local"`, and
+`localUsersConfigured: true` before real pilot use.
 
 ## Backup
 
@@ -169,6 +175,8 @@ Backups include:
 - Configuration file when `BASECAMP_CONFIG_PATH` points at it.
 - App version.
 - Seed/content version.
+- Deployment profile, database kind, storage kind, config inclusion status,
+  table counts, active local user count, and storage file count.
 - Manifest and checksums.
 
 Manual backup:
@@ -194,15 +202,59 @@ curl -H "Authorization: Bearer <admin-session-token>" \
 
 ## Restore Drill
 
-Run a restore drill before trusting the installation.
+Run a restore drill before trusting the installation and before closing a
+recovery milestone.
 
 1. Stop services.
 2. Choose a backup directory from the backup volume or host backup path.
-3. Restore into an empty target.
-4. Start services.
-5. Confirm `/health/ready` passes.
-6. Open the web app.
-7. Confirm inventory, quests, evidence metadata, reports, and readiness load.
+3. Inspect `manifest.json` and confirm the expected release version,
+   seed/content version, deployment profile, config inclusion, active local user
+   count, and storage file count.
+4. Restore into an empty target.
+5. Start services.
+6. Confirm `/health/ready` passes.
+7. Sign in with a restored admin-created account.
+8. Confirm inventory, quests, evidence metadata, evidence files, gap reports,
+   readiness data, users, and `/api/admin/status` load.
+
+Manifest inspection example:
+
+```bash
+jq '{
+  appVersion,
+  contentSchemaVersion,
+  deployment: {
+    profile: .deployment.profile,
+    configIncluded: .deployment.configIncluded,
+    localUserCount: .deployment.localUserCount,
+    storageFileCount: .deployment.storageFileCount
+  }
+}' /var/backups/basecamp/<backup-directory>/manifest.json
+```
+
+Expected cloud pilot values for v0.8.1:
+
+- `appVersion` is `0.8.1`.
+- `deployment.profile` is `cloud-pilot`.
+- `deployment.configIncluded` is `true` when `BASECAMP_CONFIG_SOURCE` points at
+  the real admin config file.
+- `deployment.localUserCount` is the active local user count and is at least 1
+  after first-admin setup.
+- `deployment.storageFileCount` should match the number of evidence/document
+  files expected in the storage directory.
+
+Restore failure messages are intended to be actionable:
+
+- `Backup manifest is missing.` means the selected directory is not a complete
+  backup.
+- `Backup manifest is not readable` means the manifest is invalid JSON.
+- `Missing backup file: ...` means the manifest references a file that is absent
+  from the backup.
+- `Backup checksum mismatch: ...` means a backup file changed after the manifest
+  was written.
+- `Restore target already exists` means the restore would overwrite an existing
+  database or storage path; use a disposable empty target for drills or set
+  `BASECAMP_RESTORE_OVERWRITE=true` for an intentional replacement.
 
 Example restore command:
 

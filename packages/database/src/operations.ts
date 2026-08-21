@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync, copyFileSync, cpSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { createHash } from "node:crypto";
-import type { DatabaseSync } from "node:sqlite";
+import { DatabaseSync } from "node:sqlite";
 
 export const portableExportVersion = "basecamp-portable-v1";
 
@@ -45,9 +45,23 @@ export interface BackupManifest {
   createdAt: string;
   appVersion: string;
   contentSchemaVersion: string;
+  deployment: BackupDeploymentMetadata;
   database: BackupFileEntry;
   storage: BackupFileEntry[];
   config?: BackupFileEntry;
+}
+
+export type DeploymentProfile = "local-dev" | "cloud-pilot" | "homelab" | "unknown";
+
+export interface BackupDeploymentMetadata {
+  profile: DeploymentProfile;
+  databaseKind: "sqlite";
+  storageKind: "filesystem";
+  backupDestination: "local-disk";
+  configIncluded: boolean;
+  tableCounts: Record<string, number>;
+  localUserCount: number;
+  storageFileCount: number;
 }
 
 export interface BackupFileEntry {
@@ -83,6 +97,11 @@ export interface RestoreResult {
   databasePath: string;
   storageDir: string;
   restoredFiles: number;
+  manifest: {
+    appVersion: string;
+    contentSchemaVersion: string;
+    deployment: BackupDeploymentMetadata;
+  };
 }
 
 export interface AuditEventInput {
@@ -126,6 +145,9 @@ export interface OperationalStatus {
     ok: boolean;
     writable: boolean;
     pathConfigured: boolean;
+  };
+  deployment: {
+    profile: DeploymentProfile;
   };
   backup: BackupStatus;
   security: {
@@ -365,6 +387,7 @@ export function createBackup(
     contentSchemaVersion: string;
     now?: string;
     configPath?: string;
+    deploymentProfile?: DeploymentProfile;
   }
 ): BackupResult {
   const createdAt = options.now ?? new Date().toISOString();
@@ -388,22 +411,37 @@ export function createBackup(
     storageEntries.push(...listFiles(storageTarget).map((file) => fileEntry(backupPath, file)));
   }
 
-  const manifest: BackupManifest = {
-    backupVersion: "basecamp-backup-v1",
-    createdAt,
-    appVersion: options.appVersion,
-    contentSchemaVersion: options.contentSchemaVersion,
-    database: fileEntry(backupPath, databaseTarget),
-    storage: storageEntries
-  };
+  let configEntry: BackupFileEntry | undefined;
 
   if (options.configPath !== undefined && existsSync(options.configPath)) {
     const configTarget = path.join(backupPath, "config", "basecamp.env");
 
     mkdirSync(path.dirname(configTarget), { recursive: true });
     copyFileSync(options.configPath, configTarget);
-    manifest.config = fileEntry(backupPath, configTarget);
+    configEntry = fileEntry(backupPath, configTarget);
   }
+
+  const tableCounts = sqliteTableCounts(databaseTarget);
+  const activeLocalUserCount = sqliteActiveLocalUserCount(databaseTarget);
+  const manifest: BackupManifest = {
+    backupVersion: "basecamp-backup-v1",
+    createdAt,
+    appVersion: options.appVersion,
+    contentSchemaVersion: options.contentSchemaVersion,
+    deployment: {
+      profile: options.deploymentProfile ?? "local-dev",
+      databaseKind: "sqlite",
+      storageKind: "filesystem",
+      backupDestination: "local-disk",
+      configIncluded: configEntry !== undefined,
+      tableCounts,
+      localUserCount: activeLocalUserCount,
+      storageFileCount: storageEntries.length
+    },
+    database: fileEntry(backupPath, databaseTarget),
+    storage: storageEntries,
+    ...(configEntry === undefined ? {} : { config: configEntry })
+  };
 
   writeFileSync(path.join(backupPath, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
   writeFileSync(
@@ -414,23 +452,41 @@ export function createBackup(
   return { backupPath, manifest };
 }
 
+export function readBackupManifest(backupPath: string): BackupManifest {
+  const manifestPath = path.join(backupPath, "manifest.json");
+
+  if (!existsSync(manifestPath)) {
+    throw new Error("Backup manifest is missing.");
+  }
+
+  try {
+    return normalizeBackupManifest(JSON.parse(readFileSync(manifestPath, "utf8")) as BackupManifest);
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      throw new Error(`Backup manifest is not readable: ${error.message}`);
+    }
+
+    throw error;
+  }
+}
+
 export function verifyBackup(
   backupPath: string,
   checkedAt = new Date().toISOString()
 ): BackupIntegrityResult {
-  const manifestPath = path.join(backupPath, "manifest.json");
   const failures: string[] = [];
+  let manifest: BackupManifest;
 
-  if (!existsSync(manifestPath)) {
+  try {
+    manifest = readBackupManifest(backupPath);
+  } catch (error) {
     return {
       ok: false,
       checkedAt,
       backupPath,
-      failures: ["Backup manifest is missing."]
+      failures: [error instanceof Error ? error.message : "Backup manifest is not readable."]
     };
   }
-
-  const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as BackupManifest;
 
   for (const entry of [manifest.database, ...manifest.storage, ...(manifest.config === undefined ? [] : [manifest.config])]) {
     const absolutePath = path.join(backupPath, entry.path);
@@ -470,6 +526,8 @@ export function restoreBackup(
     throw new Error(`Backup integrity failed: ${integrity.failures.join("; ")}`);
   }
 
+  const manifest = readBackupManifest(options.backupPath);
+
   if (!options.allowOverwrite && (existsSync(options.databasePath) || existsSync(options.storageDir))) {
     throw new Error("Restore target already exists. Set allowOverwrite to replace it.");
   }
@@ -494,7 +552,12 @@ export function restoreBackup(
     restoredAt: options.restoredAt ?? new Date().toISOString(),
     databasePath: options.databasePath,
     storageDir: options.storageDir,
-    restoredFiles: listFiles(options.storageDir).length + 1
+    restoredFiles: listFiles(options.storageDir).length + 1,
+    manifest: {
+      appVersion: manifest.appVersion,
+      contentSchemaVersion: manifest.contentSchemaVersion,
+      deployment: manifest.deployment
+    }
   };
 }
 
@@ -565,6 +628,7 @@ export function buildOperationalStatus(
     adminTokenPlaceholder?: boolean;
     webUrl?: string;
     remoteAccessMode?: OperationalStatus["security"]["remoteAccessMode"];
+    deploymentProfile?: DeploymentProfile;
     now?: string;
   }
 ): OperationalStatus {
@@ -608,6 +672,9 @@ export function buildOperationalStatus(
       ok: storageOk,
       writable: storageWritable,
       pathConfigured: options.storageDir !== undefined
+    },
+    deployment: {
+      profile: options.deploymentProfile ?? "unknown"
     },
     backup,
     security: {
@@ -756,6 +823,67 @@ function fileEntry(basePath: string, absolutePath: string): BackupFileEntry {
     bytes: statSync(absolutePath).size,
     sha256: createHash("sha256").update(buffer).digest("hex")
   };
+}
+
+function normalizeBackupManifest(manifest: BackupManifest): BackupManifest {
+  if (manifest.deployment !== undefined) {
+    return manifest;
+  }
+
+  return {
+    ...manifest,
+    deployment: {
+      profile: "unknown",
+      databaseKind: "sqlite",
+      storageKind: "filesystem",
+      backupDestination: "local-disk",
+      configIncluded: manifest.config !== undefined,
+      tableCounts: {},
+      localUserCount: 0,
+      storageFileCount: manifest.storage.length
+    }
+  };
+}
+
+function sqliteTableCounts(databasePath: string): Record<string, number> {
+  const database = new DatabaseSync(databasePath);
+
+  try {
+    const tables = database
+      .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name")
+      .all()
+      .map((row) => (row as { name: string }).name);
+
+    return Object.fromEntries(
+      tables.map((table) => {
+        const row = database.prepare(`SELECT COUNT(*) as count FROM ${quoteIdentifier(table)}`).get() as {
+          count: number;
+        };
+
+        return [table, row.count];
+      })
+    );
+  } finally {
+    database.close();
+  }
+}
+
+function sqliteActiveLocalUserCount(databasePath: string): number {
+  const database = new DatabaseSync(databasePath);
+
+  try {
+    if (!tableExists(database, "local_users")) {
+      return 0;
+    }
+
+    const row = database.prepare("SELECT COUNT(*) as count FROM local_users WHERE status = 'active'").get() as {
+      count: number;
+    };
+
+    return row.count;
+  } finally {
+    database.close();
+  }
 }
 
 function listFiles(root: string): string[] {

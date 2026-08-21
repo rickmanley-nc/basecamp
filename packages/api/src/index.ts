@@ -105,6 +105,9 @@ export interface OperationalStatusResponse {
     writable: boolean;
     pathConfigured: boolean;
   };
+  deployment: {
+    profile: "local-dev" | "cloud-pilot" | "homelab" | "unknown";
+  };
   backup: {
     configured: boolean;
     ok: boolean;

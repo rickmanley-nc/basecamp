@@ -42,8 +42,10 @@ v1 because eventual offgrid operation must remain possible.
 
 PostgreSQL remains the later production target. The M6 beta uses SQLite because
 that is the implemented application persistence layer. The v0.8 cloud pilot
-foundation adds local username/password authentication while keeping PostgreSQL
-and clearer reset/seed controls in v1.0 readiness work.
+foundation adds local username/password authentication. The v0.8.1 recovery
+checkpoint proves cloud-pilot backup/restore for the implemented SQLite and
+filesystem storage path while keeping PostgreSQL and clearer reset/seed controls
+in v1.0 readiness work.
 
 ## Runtime Services
 
@@ -91,6 +93,8 @@ Back up:
 - Release version.
 - Seed/content version.
 - Deployment profile and restore target notes.
+- Backup manifest metadata: database kind, storage kind, config inclusion
+  status, table counts, active local user count, and storage file count.
 
 ## Backup Policy
 
@@ -117,11 +121,15 @@ pnpm ops:restore
 A restore drill should prove:
 
 - Database can be restored.
+- Local user accounts and admin status survive restore.
 - Evidence files match restored records.
 - App version is compatible with restored data.
 - Readiness scores can be recalculated.
+- Inventory, quests, gap reports, and evidence metadata load after restore.
 - Mobile clients can resync.
 - Exported user data remains readable.
+- Restore failure modes produce actionable messages for missing manifests,
+  missing files, checksum mismatches, and non-empty restore targets.
 
 ## Data Export
 

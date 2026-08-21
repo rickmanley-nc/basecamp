@@ -58,6 +58,7 @@ import {
 import { questActions, type InventoryItemType, type PursuitState } from "@basecamp/domain";
 import { createXpEventForQuest } from "@basecamp/gamification";
 import type { PortableExportArchive } from "@basecamp/database";
+import type { DeploymentProfile } from "@basecamp/database";
 import type { SyncBatchRequest } from "@basecamp/sync";
 import Fastify, { type FastifyInstance } from "fastify";
 import type { DatabaseSync } from "node:sqlite";
@@ -71,6 +72,7 @@ export interface BuildServerOptions {
   databasePath?: string;
   logger?: boolean;
   remoteAccessMode?: "lan" | "vpn" | "reverse_proxy" | "unknown";
+  deploymentProfile?: DeploymentProfile;
   authMode?: "none" | "local";
   storageDir?: string;
   webUrl?: string;
@@ -104,7 +106,7 @@ const inventoryItemTypes = new Set<InventoryItemType>([
 export function buildServer(options: BuildServerOptions = {}): FastifyInstance {
   const database = options.database ?? createDatabase();
   const ownsDatabase = options.database === undefined || options.closeDatabaseOnClose === true;
-  const appVersion = options.appVersion ?? process.env.BASECAMP_APP_VERSION ?? "0.8.0";
+  const appVersion = options.appVersion ?? process.env.BASECAMP_APP_VERSION ?? "0.8.1";
   const adminToken = normalizeAdminToken(options.adminToken ?? process.env.BASECAMP_ADMIN_TOKEN);
   const authMode = options.authMode ?? authModeFromEnv(process.env.BASECAMP_AUTH_MODE);
   const server = Fastify({
@@ -710,7 +712,8 @@ function operationalStatus(
     adminTokenPlaceholder: isPlaceholderAdminToken(options.adminToken ?? process.env.BASECAMP_ADMIN_TOKEN),
     localAuthMode: authMode === "local" ? "local" : "disabled",
     localUsersConfigured: countActiveLocalUsers(database) > 0,
-    remoteAccessMode: options.remoteAccessMode ?? remoteAccessModeFromEnv(process.env.BASECAMP_REMOTE_ACCESS)
+    remoteAccessMode: options.remoteAccessMode ?? remoteAccessModeFromEnv(process.env.BASECAMP_REMOTE_ACCESS),
+    deploymentProfile: options.deploymentProfile ?? deploymentProfileFromEnv(process.env.BASECAMP_DEPLOYMENT_PROFILE)
   };
   const databasePath = options.databasePath ?? process.env.BASECAMP_DB_PATH;
   const storageDir = options.storageDir ?? process.env.BASECAMP_STORAGE_DIR;
@@ -871,4 +874,12 @@ function remoteAccessModeFromEnv(value: string | undefined): NonNullable<BuildSe
   }
 
   return "unknown";
+}
+
+function deploymentProfileFromEnv(value: string | undefined): DeploymentProfile {
+  if (value === "local-dev" || value === "cloud-pilot" || value === "homelab" || value === "unknown") {
+    return value;
+  }
+
+  return value === undefined || value.trim().length === 0 ? "local-dev" : "unknown";
 }
