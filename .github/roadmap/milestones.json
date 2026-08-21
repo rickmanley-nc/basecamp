@@ -49,6 +49,13 @@
     "description": "Linux self-hosted beta with deployment, backups, restore, updates, security hardening, and observability."
   },
   {
+    "title": "M7 - Cloud Pilot Foundation",
+    "state": "open",
+    "dueOn": "2026-12-17T23:59:59Z",
+    "release": "v0.8.0",
+    "description": "Cloud pilot deployment profile, local username/password auth, evidence storage portability, and first real-user controls."
+  },
+  {
     "title": "v1.0 - MVP Readiness",
     "state": "open",
     "dueOn": "2027-01-15T23:59:59Z",

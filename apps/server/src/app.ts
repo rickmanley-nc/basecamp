@@ -5,6 +5,10 @@ import {
   createSeedContentResponse,
   type AssetTagResponse,
   type AdminAuditEventSummary,
+  type AuthLoginRequest,
+  type AuthLoginResponse,
+  type AuthSessionResponse,
+  type AuthUserSummary,
   type CategoryPursuitUpdateRequest,
   type DrillRunRequest,
   type DrillRunResponse,
@@ -24,7 +28,10 @@ import { basecampSeed, seedValidation } from "@basecamp/content";
 import {
   applyMigrations,
   applyPersistedQuestAction,
+  authenticateSession,
   buildOperationalStatus,
+  countActiveLocalUsers,
+  createAuthSession,
   createBasecampAssetTag,
   createDatabase,
   createPortableExport,
@@ -42,8 +49,10 @@ import {
   recordMaintenanceCompletion,
   recordQuickInventoryEntry,
   recordSkillTraining,
+  revokeAuthSession,
   setCategoryPursuit,
   upsertEvidenceRecord,
+  verifyLocalUserPassword,
   upsertMaintenancePolicy
 } from "@basecamp/database";
 import { questActions, type InventoryItemType, type PursuitState } from "@basecamp/domain";
@@ -62,6 +71,7 @@ export interface BuildServerOptions {
   databasePath?: string;
   logger?: boolean;
   remoteAccessMode?: "lan" | "vpn" | "reverse_proxy" | "unknown";
+  authMode?: "none" | "local";
   storageDir?: string;
   webUrl?: string;
 }
@@ -94,14 +104,27 @@ const inventoryItemTypes = new Set<InventoryItemType>([
 export function buildServer(options: BuildServerOptions = {}): FastifyInstance {
   const database = options.database ?? createDatabase();
   const ownsDatabase = options.database === undefined || options.closeDatabaseOnClose === true;
-  const appVersion = options.appVersion ?? process.env.BASECAMP_APP_VERSION ?? "0.7.2";
-  const adminToken = options.adminToken ?? process.env.BASECAMP_ADMIN_TOKEN;
+  const appVersion = options.appVersion ?? process.env.BASECAMP_APP_VERSION ?? "0.8.0";
+  const adminToken = normalizeAdminToken(options.adminToken ?? process.env.BASECAMP_ADMIN_TOKEN);
+  const authMode = options.authMode ?? authModeFromEnv(process.env.BASECAMP_AUTH_MODE);
   const server = Fastify({
     logger: options.logger ?? false
   });
 
   applyMigrations(database);
   importSeed(database, basecampSeed);
+
+  server.addHook("preHandler", async (request, reply) => {
+    if (!shouldRequireUserSession(request.method, request.url, authMode)) {
+      return;
+    }
+
+    const session = authenticateSession(database, bearerTokenFromHeaders(request.headers));
+
+    if (session === undefined) {
+      return reply.code(401).send({ error: "Sign in to Basecamp." });
+    }
+  });
 
   server.addHook("onClose", async () => {
     if (ownsDatabase) {
@@ -123,7 +146,7 @@ export function buildServer(options: BuildServerOptions = {}): FastifyInstance {
   }));
 
   server.get("/health/ready", async (request, reply) => {
-    const status = operationalStatus(database, options, appVersion, adminToken);
+    const status = operationalStatus(database, options, appVersion, adminToken, authMode);
 
     if (!status.database.ok || !status.storage.ok) {
       return reply.code(503).send(status);
@@ -136,6 +159,65 @@ export function buildServer(options: BuildServerOptions = {}): FastifyInstance {
     ...createSeedContentResponse(basecampSeed),
     validation: seedValidation
   }));
+
+  server.post<{
+    Body: AuthLoginRequest;
+  }>("/api/auth/login", async (request, reply): Promise<AuthLoginResponse | unknown> => {
+    const user = verifyLocalUserPassword(database, request.body.username, request.body.password);
+
+    if (user === undefined) {
+      recordAuditEvent(database, {
+        action: "auth.login",
+        actor: `local-user:${request.body.username.trim().toLowerCase() || "unknown"}`,
+        result: "failure"
+      });
+
+      return reply.code(401).send({ error: "Invalid username or password." });
+    }
+
+    const session = createAuthSession(database, user);
+
+    recordAuditEvent(database, {
+      action: "auth.login",
+      actor: `local-user:${user.username}`,
+      result: "success"
+    });
+
+    return {
+      token: session.token,
+      expiresAt: session.expiresAt,
+      user: toAuthUserSummary(session.user)
+    };
+  });
+
+  server.get("/api/auth/session", async (request, reply): Promise<AuthSessionResponse | unknown> => {
+    const session = authenticateSession(database, bearerTokenFromHeaders(request.headers));
+
+    if (session === undefined) {
+      return reply.code(401).send({ error: "Sign in to Basecamp." });
+    }
+
+    return {
+      expiresAt: session.expiresAt,
+      user: toAuthUserSummary(session.user)
+    };
+  });
+
+  server.post("/api/auth/logout", async (request) => {
+    const token = bearerTokenFromHeaders(request.headers);
+    const session = authenticateSession(database, token);
+    const revoked = revokeAuthSession(database, token);
+
+    if (session !== undefined) {
+      recordAuditEvent(database, {
+        action: "auth.logout",
+        actor: `local-user:${session.user.username}`,
+        result: revoked ? "success" : "failure"
+      });
+    }
+
+    return { ok: true };
+  });
 
   server.get("/api/dashboard", async () =>
     createDashboardSummary(
@@ -162,23 +244,23 @@ export function buildServer(options: BuildServerOptions = {}): FastifyInstance {
   );
 
   server.get("/api/admin/status", async (request, reply): Promise<OperationalStatusResponse | unknown> => {
-    if (!isAdminAuthorized(request.headers, adminToken)) {
+    const adminAuth = adminAuthorization(database, request.headers, adminToken);
+
+    if (!adminAuth.authorized) {
       recordAdminAudit(database, "admin.status", "failure");
-      return reply.code(adminToken === undefined ? 503 : 401).send({
-        error: adminToken === undefined ? "Admin token is not configured." : "Admin authorization failed."
-      });
+      return reply.code(adminAuth.misconfigured ? 503 : 401).send({ error: adminAuth.error });
     }
 
-    recordAdminAudit(database, "admin.status", "success");
-    return operationalStatus(database, options, appVersion, adminToken);
+    recordAdminAudit(database, "admin.status", "success", {}, adminAuth.actor);
+    return operationalStatus(database, options, appVersion, adminToken, authMode);
   });
 
   server.get("/api/admin/export", async (request, reply) => {
-    if (!isAdminAuthorized(request.headers, adminToken)) {
+    const adminAuth = adminAuthorization(database, request.headers, adminToken);
+
+    if (!adminAuth.authorized) {
       recordAdminAudit(database, "export.create", "failure");
-      return reply.code(adminToken === undefined ? 503 : 401).send({
-        error: adminToken === undefined ? "Admin token is not configured." : "Admin authorization failed."
-      });
+      return reply.code(adminAuth.misconfigured ? 503 : 401).send({ error: adminAuth.error });
     }
 
     const archive = createPortableExport(database, {
@@ -188,7 +270,7 @@ export function buildServer(options: BuildServerOptions = {}): FastifyInstance {
 
     recordAdminAudit(database, "export.create", "success", {
       tableCounts: archive.manifest.tableCounts
-    });
+    }, adminAuth.actor);
 
     return archive;
   });
@@ -196,11 +278,11 @@ export function buildServer(options: BuildServerOptions = {}): FastifyInstance {
   server.post<{
     Body: PortableExportArchive;
   }>("/api/admin/import", async (request, reply) => {
-    if (!isAdminAuthorized(request.headers, adminToken)) {
+    const adminAuth = adminAuthorization(database, request.headers, adminToken);
+
+    if (!adminAuth.authorized) {
       recordAdminAudit(database, "import.apply", "failure");
-      return reply.code(adminToken === undefined ? 503 : 401).send({
-        error: adminToken === undefined ? "Admin token is not configured." : "Admin authorization failed."
-      });
+      return reply.code(adminAuth.misconfigured ? 503 : 401).send({ error: adminAuth.error });
     }
 
     try {
@@ -210,13 +292,13 @@ export function buildServer(options: BuildServerOptions = {}): FastifyInstance {
 
       recordAdminAudit(database, "import.apply", "success", {
         tableCounts: result.tableCounts
-      });
+      }, adminAuth.actor);
 
       return result;
     } catch (error) {
       recordAdminAudit(database, "import.apply", "failure", {
         message: error instanceof Error ? error.message : "Import failed."
-      });
+      }, adminAuth.actor);
 
       return reply.code(400).send({
         error: error instanceof Error ? error.message : "Import failed."
@@ -225,14 +307,14 @@ export function buildServer(options: BuildServerOptions = {}): FastifyInstance {
   });
 
   server.get("/api/admin/audit", async (request, reply): Promise<{ events: AdminAuditEventSummary[] } | unknown> => {
-    if (!isAdminAuthorized(request.headers, adminToken)) {
+    const adminAuth = adminAuthorization(database, request.headers, adminToken);
+
+    if (!adminAuth.authorized) {
       recordAdminAudit(database, "audit.list", "failure");
-      return reply.code(adminToken === undefined ? 503 : 401).send({
-        error: adminToken === undefined ? "Admin token is not configured." : "Admin authorization failed."
-      });
+      return reply.code(adminAuth.misconfigured ? 503 : 401).send({ error: adminAuth.error });
     }
 
-    recordAdminAudit(database, "audit.list", "success");
+    recordAdminAudit(database, "audit.list", "success", {}, adminAuth.actor);
 
     return {
       events: listAuditEvents(database).map((event) => ({
@@ -619,11 +701,15 @@ function operationalStatus(
   database: DatabaseSync,
   options: BuildServerOptions,
   appVersion: string,
-  adminToken: string | undefined
+  adminToken: string | undefined,
+  authMode: NonNullable<BuildServerOptions["authMode"]>
 ): OperationalStatusResponse {
   const statusOptions: Parameters<typeof buildOperationalStatus>[1] = {
     version: appVersion,
     adminTokenConfigured: adminToken !== undefined && adminToken.trim().length > 0,
+    adminTokenPlaceholder: isPlaceholderAdminToken(options.adminToken ?? process.env.BASECAMP_ADMIN_TOKEN),
+    localAuthMode: authMode === "local" ? "local" : "disabled",
+    localUsersConfigured: countActiveLocalUsers(database) > 0,
     remoteAccessMode: options.remoteAccessMode ?? remoteAccessModeFromEnv(process.env.BASECAMP_REMOTE_ACCESS)
   };
   const databasePath = options.databasePath ?? process.env.BASECAMP_DB_PATH;
@@ -650,7 +736,45 @@ function operationalStatus(
   return buildOperationalStatus(database, statusOptions);
 }
 
-function isAdminAuthorized(
+interface AdminAuthorizationResult {
+  authorized: boolean;
+  actor: string;
+  error?: string;
+  misconfigured?: boolean;
+}
+
+function adminAuthorization(
+  database: DatabaseSync,
+  headers: Record<string, string | string[] | undefined>,
+  adminToken: string | undefined
+): AdminAuthorizationResult {
+  const session = authenticateSession(database, bearerTokenFromHeaders(headers));
+
+  if (session?.user.role === "admin") {
+    return {
+      authorized: true,
+      actor: `local-user:${session.user.username}`
+    };
+  }
+
+  if (isAdminTokenAuthorized(headers, adminToken)) {
+    return {
+      authorized: true,
+      actor: "admin-token"
+    };
+  }
+
+  return {
+    authorized: false,
+    actor: "unknown",
+    misconfigured: adminToken === undefined && countActiveLocalUsers(database) === 0,
+    error: adminToken === undefined && countActiveLocalUsers(database) === 0
+      ? "No admin authentication is configured."
+      : "Admin authorization failed."
+  };
+}
+
+function isAdminTokenAuthorized(
   headers: Record<string, string | string[] | undefined>,
   adminToken: string | undefined
 ): boolean {
@@ -659,10 +783,15 @@ function isAdminAuthorized(
   }
 
   const headerToken = firstHeader(headers["x-basecamp-admin-token"]);
-  const authorization = firstHeader(headers.authorization);
-  const bearerToken = authorization?.startsWith("Bearer ") ? authorization.slice("Bearer ".length) : undefined;
+  const bearerToken = bearerTokenFromHeaders(headers);
 
   return headerToken === adminToken || bearerToken === adminToken;
+}
+
+function bearerTokenFromHeaders(headers: Record<string, string | string[] | undefined>): string | undefined {
+  const authorization = firstHeader(headers.authorization);
+
+  return authorization?.startsWith("Bearer ") ? authorization.slice("Bearer ".length) : undefined;
 }
 
 function firstHeader(value: string | string[] | undefined): string | undefined {
@@ -673,14 +802,67 @@ function recordAdminAudit(
   database: DatabaseSync,
   action: string,
   result: "success" | "failure",
-  metadata: Record<string, unknown> = {}
+  metadata: Record<string, unknown> = {},
+  actor = "admin-token"
 ): void {
   recordAuditEvent(database, {
     action,
-    actor: "admin-token",
+    actor,
     result,
     metadata
   });
+}
+
+function toAuthUserSummary(user: { id: string; username: string; displayName: string; role: "admin" | "member" }): AuthUserSummary {
+  return {
+    id: user.id,
+    username: user.username,
+    displayName: user.displayName,
+    role: user.role
+  };
+}
+
+function shouldRequireUserSession(
+  method: string,
+  url: string,
+  authMode: NonNullable<BuildServerOptions["authMode"]>
+): boolean {
+  if (authMode !== "local" || method === "OPTIONS") {
+    return false;
+  }
+
+  const pathname = url.split("?")[0] ?? "/";
+
+  if (
+    pathname === "/api/seed" ||
+    pathname === "/api/auth/login" ||
+    pathname.startsWith("/health") ||
+    pathname.startsWith("/api/admin/")
+  ) {
+    return false;
+  }
+
+  return pathname.startsWith("/api/");
+}
+
+function authModeFromEnv(value: string | undefined): NonNullable<BuildServerOptions["authMode"]> {
+  return value === "local" ? "local" : "none";
+}
+
+function normalizeAdminToken(value: string | undefined): string | undefined {
+  if (value === undefined || value.trim().length === 0 || isPlaceholderAdminToken(value)) {
+    return undefined;
+  }
+
+  return value;
+}
+
+function isPlaceholderAdminToken(value: string | undefined): boolean {
+  if (value === undefined) {
+    return false;
+  }
+
+  return value.trim() === "change-me-generate-a-random-token";
 }
 
 function remoteAccessModeFromEnv(value: string | undefined): NonNullable<BuildServerOptions["remoteAccessMode"]> {

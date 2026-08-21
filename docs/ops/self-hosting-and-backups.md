@@ -41,9 +41,9 @@ Avoid mandatory SaaS dependencies for normal operation. Do not require SSO for
 v1 because eventual offgrid operation must remain possible.
 
 PostgreSQL remains the later production target. The M6 beta uses SQLite because
-that is the implemented application persistence layer. The cloud pilot profile
-should move PostgreSQL, local username/password authentication, and clearer
-reset/seed controls from later ideas into v1.0 readiness work.
+that is the implemented application persistence layer. The v0.8 cloud pilot
+foundation adds local username/password authentication while keeping PostgreSQL
+and clearer reset/seed controls in v1.0 readiness work.
 
 ## Runtime Services
 
@@ -84,6 +84,7 @@ Back up:
 
 - SQLite database.
 - PostgreSQL database when the production adapter exists.
+- Local user accounts and password hashes through database backup/restore.
 - Evidence/photo/document files.
 - Configuration.
 - Encryption keys or documented key recovery material if added.
@@ -130,13 +131,18 @@ Basecamp should support user-owned data export:
 - CSV exports for inventory, maintenance, quests, skills, drills, evidence, and
   audit events.
 - Evidence/document references in the archive manifest.
+- No private host filesystem paths in evidence references. Use anonymized
+  examples such as `/Users/<admin>/Evidence/...` when documentation needs to
+  discuss workstation paths.
 - Human-readable emergency packet for critical plans.
 
-M6 commands:
+Ops commands:
 
 ```bash
 pnpm ops:export
 pnpm ops:import
+pnpm ops:user:create
+pnpm ops:user:disable
 ```
 
 ## Open Decisions
@@ -146,7 +152,5 @@ pnpm ops:import
 - Whether embedded object storage is needed after filesystem storage, and what
   S3-compatible contract is required for cloud pilot.
 - Cloud pilot reset/seed data controls.
-- Local username/password authentication boundary for cloud pilot and later
-  homelab use.
 - Restore UX for non-technical users.
 - Remote access guidance: VPN-first, reverse proxy, or both.

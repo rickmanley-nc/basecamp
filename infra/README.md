@@ -29,5 +29,22 @@ docker compose --env-file basecamp.env up -d --build
 docker compose --env-file basecamp.env ps
 ```
 
+For the cloud pilot profile, keep `BASECAMP_AUTH_MODE=local` and create the
+first admin account after startup:
+
+```bash
+docker compose --env-file basecamp.env run --rm server pnpm ops:user:create
+```
+
+Set `BASECAMP_USER_USERNAME`, `BASECAMP_USER_PASSWORD`, and optionally
+`BASECAMP_USER_DISPLAY_NAME` in the shell that runs the command. Do not commit
+real credentials or tokens.
+
+To revoke a pilot user's access, set `BASECAMP_USER_USERNAME` and run:
+
+```bash
+docker compose --env-file basecamp.env run --rm server pnpm ops:user:disable
+```
+
 When the real env file lives outside `infra/`, set `BASECAMP_CONFIG_SOURCE` in
 that file to the absolute host path so backups can include the config file.

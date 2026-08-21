@@ -32,6 +32,7 @@ The sync script lives in:
 | `v0.5.0` | M4 - Mobile And Offline Sync | Mobile shell, Quick Capture, scanning, offline outbox, sync. | Mobile can capture field changes offline and sync them later. |
 | `v0.6.0` | M5 - Drills, Skills And Validation | Drills, skill progression, evidence, validation ceilings, reports. | Validated capability outweighs owned gear in scoring. |
 | `v0.7.0+` | M6 - Self-Hosting Beta | Container deployment, backups, restore, release process, security. | Linux self-hosted beta can be installed, backed up, restored, and upgraded. |
+| `v0.8.0` | M7 - Cloud Pilot Foundation | Cloud pilot profile, local auth, evidence storage portability, first real-user controls. | The accepted cloud pilot target can run with local accounts, portable evidence metadata, and documented operator controls. |
 | `v1.0.0` | v1.0 - MVP Readiness | Complete MVP for real household preparedness use. | Core workflows are usable, tested, documented, and releasable. |
 
 ## Milestone Detail
@@ -209,6 +210,47 @@ M6 deployment patch impact audit:
   example, real deployment validation on an accepted environment, and clear
   proof that backup/restore covers database, storage, and admin configuration.
 
+### M7 - Cloud Pilot Foundation
+
+Outcome:
+
+- Basecamp can run on the accepted cloud pilot target with real pilot users,
+  local username/password accounts, and no required SSO.
+- Evidence metadata is portable and does not expose private workstation paths in
+  exports or public documentation.
+- Admin runbooks explain first-user setup, user revocation, backup expectations,
+  and the current SQLite boundary.
+
+Primary work:
+
+- Cloud pilot deployment profile for an x86_64/amd64 Ubuntu 22.04 LTS host with
+  12 GB or 16 GB RAM.
+- Local account table, password hashing, bearer sessions, login/logout routes,
+  and web sign-in.
+- Operator commands for creating and disabling local users.
+- Placeholder admin-token rejection and fallback admin-token documentation.
+- Evidence `storageKey` metadata and portable export filtering for host
+  filesystem references.
+- Remote validation on the cloud pilot target plus local test coverage.
+
+M7 impact audit:
+
+- M0 through M2 are unaffected functionally. Authentication wraps API access but
+  does not change seed content, quest lifecycle, scoring, or recommendation
+  rules.
+- M3 is affected only by access control. Location, inventory, and multiple home
+  base progression remain the same, but real pilot entry now requires login.
+- M4 is affected operationally. Mobile field-data capture must sign in to the
+  same local account model for v1, and physical iPhone validation remains
+  required before v1.
+- M5 is affected by evidence portability. Evidence records now support
+  deployment-owned storage keys, and portable exports suppress host filesystem
+  paths.
+- M6 is affected operationally. Deployment docs now require first-admin account
+  creation, optional fallback admin-token setup, and user disable instructions.
+- v1.0 still needs PostgreSQL hardening, full physical iPhone validation,
+  restore proof on the claimed release profile, and final MVP release criteria.
+
 ### v1.0 - MVP Readiness
 
 Outcome:
@@ -227,16 +269,17 @@ Primary work:
 - Production deployment profiles from ADR 0010: `local-dev`, `cloud-pilot` for
   v1 MVP, and post-MVP `homelab`.
 - PostgreSQL production persistence path.
-- Evidence/document storage abstraction with filesystem storage for the v1 cloud
-  pilot and later SAN/NAS or object storage options.
+- Evidence/document storage hardening beyond the v0.8 portability boundary,
+  including filesystem bytes for the v1 cloud pilot and later SAN/NAS or object
+  storage options.
 - Cloud pilot deployment profile for real-user testing on an x86_64/amd64 Ubuntu
   22.04 LTS server with real data, local disk backups, reset/seed controls, and
   logs/metrics.
 - Post-MVP homelab migration constraints, including UniFi-managed
   LAN/DNS/routing, future TLS/SAN/NAS expectations, and Ubuntu 24.04 LTS
   migration when the admin explicitly requests it.
-- Production authentication and secret-management baseline using admin-created
-  local username/password accounts, not SSO.
+- Production authentication and secret-management hardening beyond the v0.8
+  local username/password baseline, not SSO.
 - Backup/restore proof for database, storage, and admin configuration across
   accepted deployment profiles.
 - Physical iPhone testing for field data capture before v1.

@@ -1,6 +1,7 @@
 import {
   apiRoutes,
   createDashboardSummary,
+  type AuthLoginResponse,
   type DashboardSummary,
   type QuickInventoryEntryRequest,
   type QuestActionRequest
@@ -47,12 +48,19 @@ const inventoryTypeOptions: Array<{
   { label: "Kit", value: "kit" }
 ];
 
+const authTokenStorageKey = "basecamp.authToken";
+
 export interface AppProps {
   summary?: DashboardSummary;
 }
 
 export function App({ summary = fallbackDashboardSummary }: AppProps) {
   const [dashboard, setDashboard] = useState(summary);
+  const [authToken, setAuthToken] = useState(() =>
+    typeof window === "undefined" ? undefined : window.localStorage.getItem(authTokenStorageKey) ?? undefined
+  );
+  const [loginRequired, setLoginRequired] = useState(false);
+  const [loginForm, setLoginForm] = useState({ username: "", password: "" });
   const [selectedCategoryId, setSelectedCategoryId] = useState(
     summary.criticalGaps[0]?.categoryId ?? summary.categories[0]?.id ?? "water"
   );
@@ -79,9 +87,15 @@ export function App({ summary = fallbackDashboardSummary }: AppProps) {
       });
 
     async function fetchDashboard() {
-      const response = await fetch(apiRoutes.dashboard);
+      const response = await apiFetch(apiRoutes.dashboard);
 
       if (!response.ok) {
+        if (response.status === 401) {
+          setLoginRequired(true);
+          setStatusMessage("Sign in required");
+          return;
+        }
+
         throw new Error(response.statusText);
       }
 
@@ -98,16 +112,70 @@ export function App({ summary = fallbackDashboardSummary }: AppProps) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [authToken]);
 
   async function reloadDashboard() {
-    const response = await fetch(apiRoutes.dashboard);
+    const response = await apiFetch(apiRoutes.dashboard);
 
     if (!response.ok) {
+      if (response.status === 401) {
+        setLoginRequired(true);
+        setStatusMessage("Sign in required");
+        return;
+      }
+
       throw new Error(response.statusText);
     }
 
     setDashboard((await response.json()) as DashboardSummary);
+  }
+
+  async function submitLogin(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setStatusMessage("Signing in");
+
+    try {
+      const response = await fetch(apiRoutes.authLogin, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(loginForm)
+      });
+
+      if (!response.ok) {
+        throw new Error(response.statusText);
+      }
+
+      const session = (await response.json()) as AuthLoginResponse;
+
+      setAuthToken(session.token);
+      window.localStorage.setItem(authTokenStorageKey, session.token);
+      setLoginRequired(false);
+      setLoginForm({ username: "", password: "" });
+      setStatusMessage(`Signed in as ${session.user.username}`);
+    } catch {
+      setStatusMessage("Sign in failed");
+    }
+  }
+
+  function signOut() {
+    if (authToken !== undefined) {
+      void apiFetch(apiRoutes.authLogout, { method: "POST" });
+    }
+
+    window.localStorage.removeItem(authTokenStorageKey);
+    setAuthToken(undefined);
+    setLoginRequired(true);
+    setStatusMessage("Signed out");
+  }
+
+  function apiFetch(input: string, init: RequestInit = {}) {
+    const headers = new Headers(init.headers);
+
+    if (authToken !== undefined) {
+      headers.set("Authorization", `Bearer ${authToken}`);
+    }
+
+    return fetch(input, { ...init, headers });
   }
 
   async function submitQuickInventoryEntry(event: React.FormEvent<HTMLFormElement>) {
@@ -126,7 +194,7 @@ export function App({ summary = fallbackDashboardSummary }: AppProps) {
     };
 
     try {
-      const response = await fetch(apiRoutes.quickInventoryEntry, {
+      const response = await apiFetch(apiRoutes.quickInventoryEntry, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -155,7 +223,7 @@ export function App({ summary = fallbackDashboardSummary }: AppProps) {
     setStatusMessage("Generating asset tag");
 
     try {
-      const response = await fetch(`/api/assets/${assetId}/tags`, {
+      const response = await apiFetch(`/api/assets/${assetId}/tags`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({})
@@ -191,7 +259,7 @@ export function App({ summary = fallbackDashboardSummary }: AppProps) {
     setStatusMessage("Updating category");
 
     try {
-      const response = await fetch(`/api/categories/${categoryId}/pursuit`, {
+      const response = await apiFetch(`/api/categories/${categoryId}/pursuit`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pursuitState })
@@ -218,7 +286,7 @@ export function App({ summary = fallbackDashboardSummary }: AppProps) {
     setStatusMessage(`${action} quest`);
 
     try {
-      const response = await fetch(`/api/quests/${questId}/actions`, {
+      const response = await apiFetch(`/api/quests/${questId}/actions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action })
@@ -239,9 +307,51 @@ export function App({ summary = fallbackDashboardSummary }: AppProps) {
   return (
     <PageShell
       title="Basecamp Operations"
-      eyebrow="M5 milestone"
-      actions={<StatusBadge tone="active">{statusMessage}</StatusBadge>}
+      eyebrow="Cloud pilot"
+      actions={
+        <>
+          <StatusBadge tone="active">{statusMessage}</StatusBadge>
+          {authToken !== undefined ? (
+            <Button tone="quiet" onClick={signOut}>
+              Sign out
+            </Button>
+          ) : null}
+        </>
+      }
     >
+      {loginRequired ? (
+        <Panel title="Sign In" description="Use an admin-created Basecamp account.">
+          <form className="bc-form-grid bc-login-form" onSubmit={(event) => void submitLogin(event)}>
+            <label>
+              <span>Username</span>
+              <input
+                autoComplete="username"
+                onChange={(event) => setLoginForm((current) => ({ ...current, username: event.target.value }))}
+                required
+                value={loginForm.username}
+              />
+            </label>
+            <label>
+              <span>Password</span>
+              <input
+                autoComplete="current-password"
+                onChange={(event) => setLoginForm((current) => ({ ...current, password: event.target.value }))}
+                required
+                type="password"
+                value={loginForm.password}
+              />
+            </label>
+            <Button
+              disabled={loginForm.username.trim().length === 0 || loginForm.password.length === 0}
+              tone="primary"
+              type="submit"
+            >
+              Sign in
+            </Button>
+          </form>
+        </Panel>
+      ) : null}
+
       <div className="bc-dashboard-grid">
         <Panel title="Readiness" description="Weighted capability, validation, and maintenance state.">
           <ProgressRing value={dashboard.readinessScore} label="Readiness Score" />

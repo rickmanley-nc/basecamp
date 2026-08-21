@@ -301,6 +301,10 @@ select {
   gap: 12px;
 }
 
+.bc-login-form {
+  max-width: 420px;
+}
+
 .bc-form-grid label {
   display: grid;
   gap: 6px;

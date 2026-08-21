@@ -65,6 +65,9 @@ export const apiRoutes = {
   adminExport: "/api/admin/export",
   adminImport: "/api/admin/import",
   adminAudit: "/api/admin/audit",
+  authLogin: "/api/auth/login",
+  authSession: "/api/auth/session",
+  authLogout: "/api/auth/logout",
   sync: "/api/sync",
   categoryPursuit: "/api/categories/:categoryId/pursuit",
   questAction: "/api/quests/:questId/actions"
@@ -113,6 +116,9 @@ export interface OperationalStatusResponse {
   };
   security: {
     adminTokenConfigured: boolean;
+    localAuthMode: "disabled" | "local";
+    localUsersConfigured: boolean;
+    adminTokenPlaceholder: boolean;
     remoteAccessMode: "lan" | "vpn" | "reverse_proxy" | "unknown";
   };
 }
@@ -310,6 +316,29 @@ export interface EvidenceRecordRequest {
 
 export interface EvidenceRecordResponse {
   evidence: EvidenceRecord;
+}
+
+export interface AuthUserSummary {
+  id: string;
+  username: string;
+  displayName: string;
+  role: "admin" | "member";
+}
+
+export interface AuthLoginRequest {
+  username: string;
+  password: string;
+}
+
+export interface AuthLoginResponse {
+  token: string;
+  expiresAt: string;
+  user: AuthUserSummary;
+}
+
+export interface AuthSessionResponse {
+  expiresAt: string;
+  user: AuthUserSummary;
 }
 
 export interface SkillTrainingRequest {
