@@ -11,7 +11,8 @@ Operator-facing server and web installation requirements are tracked in
 
 ## M6 Beta Files
 
-- `compose.yml` - web, server, reverse proxy, persistent volumes, and backup job.
+- `compose.yml` - web, server, reverse proxy, persistent volumes, backup job,
+  and optional `postgres` profile for production-persistence validation.
 - `basecamp.env.example` - safe environment template.
 - `server.Dockerfile` - API server and ops command image.
 - `web.Dockerfile` - static web app image.
@@ -27,6 +28,13 @@ Compose command:
 docker compose --env-file basecamp.env config --quiet
 docker compose --env-file basecamp.env up -d --build
 docker compose --env-file basecamp.env ps
+```
+
+PostgreSQL validation uses the optional profile:
+
+```bash
+docker compose --profile postgres --env-file basecamp.env run --rm postgres-tools pnpm ops:postgres:migrate
+docker compose --profile postgres --env-file basecamp.env run --rm postgres-tools pnpm ops:postgres:status
 ```
 
 For the cloud pilot profile, keep `BASECAMP_AUTH_MODE=local` and create the

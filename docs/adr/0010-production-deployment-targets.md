@@ -85,6 +85,10 @@ proxy responsibilities are separable from Compose.
   username/password accounts and no SSO dependency.
 - M8 records deployment profile metadata in backup manifests, restore results,
   and admin status so recovery evidence follows the same profile boundary.
+- v0.9.1 provides PostgreSQL production-persistence migration, seed, status, and
+  portable SQLite import commands, plus an optional Compose `postgres` profile
+  for validation. The API server still defaults to SQLite until the PostgreSQL
+  runtime adapter is promoted.
 - Release notes and issue comments should identify which deployment profile was
   validated.
 - Cloud pilot data must be treated as separate from future homelab data unless an

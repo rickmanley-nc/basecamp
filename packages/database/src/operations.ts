@@ -264,28 +264,9 @@ export function importPortableExport(
     importedAt?: string;
   }
 ): PortableImportResult {
-  if (archive.manifest.exportVersion !== portableExportVersion) {
-    throw new Error(`Unsupported Basecamp export version ${archive.manifest.exportVersion}.`);
-  }
-
-  if (archive.manifest.contentSchemaVersion !== options.expectedContentSchemaVersion) {
-    throw new Error(
-      `Export content schema ${archive.manifest.contentSchemaVersion} is not compatible with ${options.expectedContentSchemaVersion}.`
-    );
-  }
-
-  const calculatedChecksum = checksumJson({
-    exportVersion: archive.manifest.exportVersion,
-    generatedAt: archive.manifest.generatedAt,
-    appVersion: archive.manifest.appVersion,
-    contentSchemaVersion: archive.manifest.contentSchemaVersion,
-    tables: archive.tables,
-    evidenceFiles: archive.evidenceFiles
+  assertPortableExportArchiveCompatible(archive, {
+    expectedContentSchemaVersion: options.expectedContentSchemaVersion
   });
-
-  if (calculatedChecksum !== archive.manifest.checksum) {
-    throw new Error("Basecamp export checksum does not match archive contents.");
-  }
 
   database.exec("BEGIN");
 
@@ -318,6 +299,40 @@ export function importPortableExport(
     importedAt: options.importedAt ?? new Date().toISOString(),
     tableCounts: Object.fromEntries(portableExportTables.map((table) => [table, archive.tables[table]?.length ?? 0]))
   };
+}
+
+export function assertPortableExportArchiveCompatible(
+  archive: PortableExportArchive,
+  options: {
+    expectedContentSchemaVersion: string;
+  }
+): void {
+  if (archive.manifest.exportVersion !== portableExportVersion) {
+    throw new Error(`Unsupported Basecamp export version ${archive.manifest.exportVersion}.`);
+  }
+
+  if (archive.manifest.contentSchemaVersion !== options.expectedContentSchemaVersion) {
+    throw new Error(
+      `Export content schema ${archive.manifest.contentSchemaVersion} is not compatible with ${options.expectedContentSchemaVersion}.`
+    );
+  }
+
+  const calculatedChecksum = portableExportChecksum(archive);
+
+  if (calculatedChecksum !== archive.manifest.checksum) {
+    throw new Error("Basecamp export checksum does not match archive contents.");
+  }
+}
+
+export function portableExportChecksum(archive: PortableExportArchive): string {
+  return checksumJson({
+    exportVersion: archive.manifest.exportVersion,
+    generatedAt: archive.manifest.generatedAt,
+    appVersion: archive.manifest.appVersion,
+    contentSchemaVersion: archive.manifest.contentSchemaVersion,
+    tables: archive.tables,
+    evidenceFiles: archive.evidenceFiles
+  });
 }
 
 export function recordAuditEvent(

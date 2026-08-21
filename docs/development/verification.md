@@ -55,6 +55,10 @@ Cloud pilot:
 - Must have a documented reset/seed path.
 - If reachable outside a LAN or private network, TLS is required before real
   data or passwords are used.
+- PostgreSQL production-persistence validation may use the optional Compose
+  `postgres` profile or an admin-provided PostgreSQL server. Record whether the
+  validation covered migrations only, portable SQLite import, or a promoted API
+  runtime adapter.
 
 Separate server:
 
@@ -141,3 +145,17 @@ reports, and admin status.
 If the ideal environment is not available yet, say so directly and record the
 follow-up milestone or issue that must complete real-device or real-server
 validation.
+
+For PostgreSQL persistence work, acceptable validation includes the
+`PostgreSQL persistence validation` GitHub Actions job plus local or
+cloud-pilot checks when the environment is available. Local validation includes:
+
+```bash
+docker compose -f infra/compose.yml --profile postgres --env-file infra/basecamp.env.example config --quiet
+pnpm ops:postgres:migrate
+pnpm ops:postgres:status
+pnpm ops:postgres:import
+```
+
+`pnpm ops:postgres:*` commands require `BASECAMP_DATABASE_URL` or
+`DATABASE_URL`; use a disposable PostgreSQL database for local checks.

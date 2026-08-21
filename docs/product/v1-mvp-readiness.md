@@ -67,7 +67,9 @@ v1 blockers in known limitations.
 - Ubuntu 24.04 LTS migration remains deferred until the admin explicitly
   requests it.
 - PostgreSQL production persistence is implemented or the release is held before
-  `v1.0.0`.
+  `v1.0.0`. The v0.9.x migration/import validation path is not enough by itself
+  unless the API runtime adapter is promoted or the release notes explicitly
+  hold v1.
 - SQLite beta data has a tested or documented migration bridge using portable
   export/import when direct migration is not available.
 - Filesystem evidence/document storage is acceptable for the v1 cloud pilot if
@@ -145,7 +147,7 @@ v1 blockers in known limitations.
 
 The v1.0 milestone should remain open until these blockers are complete:
 
-- PostgreSQL production persistence path.
+- PostgreSQL API runtime adapter promotion and cloud-pilot validation.
 - Installable iPhone beta distribution path.
 - Mobile field data capture, offline sync, and evidence upload.
 - Physical iPhone field validation.

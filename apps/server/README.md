@@ -11,6 +11,11 @@ Responsibilities:
 - Local-network availability with no mandatory SaaS dependency.
 - Backup, restore, export, audit, and health endpoints.
 
+The v0.9.x server runtime still defaults to the SQLite beta store through
+`BASECAMP_DB_PATH`. PostgreSQL migrations, seed import, portable import, and
+status checks live in `@basecamp/database`; promoting the API runtime adapter to
+PostgreSQL remains a v1 blocker.
+
 ## Local Routes
 
 ```bash

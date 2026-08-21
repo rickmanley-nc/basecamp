@@ -46,6 +46,18 @@ pnpm ops:export
 Run `pnpm ops:restore` against a disposable restore target before calling the
 release self-hosting ready.
 
+For PostgreSQL persistence releases, also validate against a disposable
+PostgreSQL database:
+
+```bash
+pnpm ops:postgres:migrate
+pnpm ops:postgres:status
+pnpm ops:postgres:import
+```
+
+Record whether validation covered only migration/import or a promoted API
+runtime adapter.
+
 When a patch changes deployment behavior, audit previous milestone docs,
 operator runbooks, release notes, and the open v1.0 criteria before starting the
 next milestone. Record whether earlier milestones are unaffected or need
@@ -99,4 +111,5 @@ Every upgrade note should say:
 - `v0.8.0` - Cloud Pilot Foundation
 - `v0.8.1` - Recovery And Homelab Boundary
 - `v0.9.0` - MVP Readiness Gate
+- `v0.9.1` - PostgreSQL Production Persistence Path
 - `v1.0.0` - MVP Readiness

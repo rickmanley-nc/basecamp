@@ -35,6 +35,7 @@ The sync script lives in:
 | `v0.8.0` | M7 - Cloud Pilot Foundation | Cloud pilot profile, local auth, evidence storage portability, first real-user controls. | The accepted cloud pilot target can run with local accounts, portable evidence metadata, and documented operator controls. |
 | `v0.8.1` | M8 - Recovery And Homelab Boundary | Backup/restore proof, deployment-profile metadata, and homelab deferral clarity. | Cloud pilot restore can prove real data, users, evidence, reports, admin status, and recoverable failure modes. |
 | `v0.9.0` | M9 - MVP Readiness Gate | v1 release criteria, validation matrix, non-goals, and remaining blocker issue map. | The v1 MVP gate is explicit enough that work can proceed without asking what comes next. |
+| `v0.9.1` | M10 - PostgreSQL Production Persistence Path | PostgreSQL migration, seed, status, and portable SQLite import bridge. | The production-persistence data path is validated and the remaining runtime blocker is explicit. |
 | `v1.0.0` | v1.0 - MVP Readiness | Complete MVP for real household preparedness use. | Core workflows are usable, tested, documented, and releasable. |
 
 ## Milestone Detail
@@ -253,8 +254,8 @@ M7 impact audit:
   paths.
 - M6 is affected operationally. Deployment docs now require first-admin account
   creation, optional fallback admin-token setup, and user disable instructions.
-- v1.0 still needs PostgreSQL hardening, full physical iPhone validation, and
-  final MVP release criteria.
+- v1.0 still needs PostgreSQL API runtime promotion, full physical iPhone
+  validation, and final MVP release criteria.
 
 ### M8 - Recovery And Homelab Boundary
 
@@ -299,12 +300,12 @@ M8 impact audit:
   inclusion status, and restore drills must verify admin status after restore.
 - M7 is affected operationally. Cloud pilot auth is now explicitly backed up and
   restored through the database backup path.
-- v1.0 still needs PostgreSQL production persistence, physical iPhone field
+- v1.0 still needs PostgreSQL API runtime promotion, physical iPhone field
   validation, and the final MVP readiness checklist.
 
 ### M9 - MVP Readiness Gate
 
-Status: complete once `v0.9.0` is released.
+Status: complete. `v0.9.0` delivered the MVP readiness gate.
 
 Outcome:
 
@@ -344,6 +345,48 @@ M9 impact audit:
 - v1.0 work should proceed through the blocker issues rather than ad hoc
   prompts for the next task.
 
+### M10 - PostgreSQL Production Persistence Path
+
+Status: complete once `v0.9.1` is released.
+
+Outcome:
+
+- PostgreSQL production-persistence data path exists for the v1 cloud pilot.
+- PostgreSQL migrations, seed import, status checks, and portable SQLite-beta
+  import are runnable by an operator.
+- The remaining v1 blocker is narrowed to promoting the API server runtime to
+  PostgreSQL and validating it against the cloud-pilot profile.
+
+Primary work:
+
+- Translate the SQLite baseline migrations into PostgreSQL-compatible DDL.
+- Add PostgreSQL operator scripts for migrate, status, and portable import.
+- Add an optional Compose `postgres` profile for clean local validation.
+- Document database modes for `sqlite-beta`, `postgresql-validation`, and the
+  still-required `postgresql-runtime`.
+- Keep Ubuntu 22.04 LTS as the accepted v1 cloud-pilot target and keep Ubuntu
+  24.04 LTS deferred until the admin explicitly requests it.
+
+Validation:
+
+- `pnpm check`.
+- Docker Compose config validation with the tracked env example and the
+  optional `postgres` profile.
+- PostgreSQL migration/import validation against a disposable PostgreSQL
+  database.
+
+M10 impact audit:
+
+- M0 through M5 are unaffected functionally. Domain workflows, content, web
+  dashboard behavior, inventory, maintenance, mobile shell, sync fixtures,
+  drills, skills, and evidence records keep the same product contracts.
+- M6 through M8 are affected operationally. Deployment, backup, restore,
+  security, and cloud-pilot docs now distinguish the SQLite beta runtime from
+  PostgreSQL validation and future runtime promotion.
+- M9 is affected by narrowing the v1 PostgreSQL blocker: migration/import is no
+  longer the unknown, but PostgreSQL API runtime validation remains required
+  before `v1.0.0`.
+
 ### v1.0 - MVP Readiness
 
 Outcome:
@@ -361,7 +404,7 @@ Primary work:
 - The v1 gate in [Basecamp v1.0 MVP Readiness](./v1-mvp-readiness.md).
 - Production deployment profiles from ADR 0010: `local-dev`, `cloud-pilot` for
   v1 MVP, and post-MVP `homelab`.
-- PostgreSQL production persistence path.
+- PostgreSQL API runtime adapter promotion and cloud-pilot validation.
 - Evidence/document storage hardening beyond the v0.8 portability boundary,
   including filesystem bytes for the v1 cloud pilot and later SAN/NAS or object
   storage options.
@@ -379,7 +422,7 @@ Primary work:
 
 Current blocker map:
 
-- PostgreSQL production persistence path.
+- PostgreSQL API runtime adapter promotion and cloud-pilot validation.
 - Installable iPhone beta distribution path.
 - Mobile field data capture, offline sync, and evidence upload.
 - Physical iPhone field validation.
