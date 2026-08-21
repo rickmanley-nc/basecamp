@@ -94,7 +94,7 @@ const inventoryItemTypes = new Set<InventoryItemType>([
 export function buildServer(options: BuildServerOptions = {}): FastifyInstance {
   const database = options.database ?? createDatabase();
   const ownsDatabase = options.database === undefined || options.closeDatabaseOnClose === true;
-  const appVersion = options.appVersion ?? process.env.BASECAMP_APP_VERSION ?? "0.7.0-m6";
+  const appVersion = options.appVersion ?? process.env.BASECAMP_APP_VERSION ?? "0.7.2";
   const adminToken = options.adminToken ?? process.env.BASECAMP_ADMIN_TOKEN;
   const server = Fastify({
     logger: options.logger ?? false

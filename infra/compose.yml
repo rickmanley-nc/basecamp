@@ -9,7 +9,7 @@ services:
     environment:
       HOST: 0.0.0.0
       PORT: 4317
-      BASECAMP_APP_VERSION: ${BASECAMP_APP_VERSION:-0.7.0-m6}
+      BASECAMP_APP_VERSION: ${BASECAMP_APP_VERSION:-0.7.2}
       BASECAMP_PUBLIC_URL: ${BASECAMP_PUBLIC_URL:-http://basecamp.local:8080}
       BASECAMP_WEB_URL: ${BASECAMP_WEB_URL:-http://basecamp.local:8080}
       BASECAMP_ADMIN_TOKEN: ${BASECAMP_ADMIN_TOKEN:-change-me-generate-a-random-token}
@@ -75,16 +75,18 @@ services:
       server:
         condition: service_healthy
     environment:
-      BASECAMP_APP_VERSION: ${BASECAMP_APP_VERSION:-0.7.0-m6}
+      BASECAMP_APP_VERSION: ${BASECAMP_APP_VERSION:-0.7.2}
       BASECAMP_DB_PATH: /var/lib/basecamp/basecamp.sqlite
       BASECAMP_STORAGE_DIR: /var/lib/basecamp/storage
       BASECAMP_BACKUP_DIR: /var/backups/basecamp
+      BASECAMP_CONFIG_PATH: /etc/basecamp/basecamp.env
       BASECAMP_BACKUP_INTERVAL_SECONDS: ${BASECAMP_BACKUP_INTERVAL_SECONDS:-86400}
     command: ["sh", "-lc", "while true; do pnpm ops:backup; sleep ${BASECAMP_BACKUP_INTERVAL_SECONDS:-86400}; done"]
     volumes:
       - basecamp_database:/var/lib/basecamp
       - basecamp_storage:/var/lib/basecamp/storage
       - basecamp_backups:/var/backups/basecamp
+      - ${BASECAMP_CONFIG_SOURCE:-./basecamp.env}:/etc/basecamp/basecamp.env:ro
     healthcheck:
       test: ["CMD", "node", "-e", "const fs=require('fs'); process.exit(fs.existsSync('/var/backups/basecamp/latest-backup.json')?0:1)"]
       interval: 5m

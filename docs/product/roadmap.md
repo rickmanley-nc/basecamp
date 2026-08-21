@@ -1,6 +1,6 @@
 # Basecamp Roadmap
 
-Last updated: 2026-08-20
+Last updated: 2026-08-21
 
 ## Source Of Truth
 
@@ -31,7 +31,7 @@ The sync script lives in:
 | `v0.4.0` | M3 - Inventory, BOMs And Maintenance | Inventory, locations, multiple home bases, assets, BOMs, acquisition, recurring maintenance. | Location, inventory, and BOM workflows update quests and readiness. |
 | `v0.5.0` | M4 - Mobile And Offline Sync | Mobile shell, Quick Capture, scanning, offline outbox, sync. | Mobile can capture field changes offline and sync them later. |
 | `v0.6.0` | M5 - Drills, Skills And Validation | Drills, skill progression, evidence, validation ceilings, reports. | Validated capability outweighs owned gear in scoring. |
-| `v0.7.0` | M6 - Self-Hosting Beta | Container deployment, backups, restore, release process, security. | Linux self-hosted beta can be installed, backed up, restored, and upgraded. |
+| `v0.7.0+` | M6 - Self-Hosting Beta | Container deployment, backups, restore, release process, security. | Linux self-hosted beta can be installed, backed up, restored, and upgraded. |
 | `v1.0.0` | v1.0 - MVP Readiness | Complete MVP for real household preparedness use. | Core workflows are usable, tested, documented, and releasable. |
 
 ## Milestone Detail
@@ -162,7 +162,8 @@ maintenance gaps, then suggests follow-up quests.
 
 ### M6 - Self-Hosting Beta
 
-Status: complete once `v0.7.0` is released.
+Status: complete. `v0.7.0` delivered the beta; the `v0.7.x` patch line keeps
+deployment validation and operator docs current.
 
 Outcome:
 
@@ -186,6 +187,27 @@ release/security artifact checks, and a deployment guide with install, backup,
 restore, upgrade, rollback, remote access, and troubleshooting steps. The beta
 uses SQLite in a persistent volume; PostgreSQL remains a later production
 hardening target.
+
+M6 deployment patch impact audit:
+
+- M0 through M2 are unaffected because architecture, local vertical slice,
+  readiness, quests, scoring, badges, and category progression do not depend on
+  Compose env loading.
+- M3 is unaffected functionally. QR and asset-tag server URLs still come from
+  `BASECAMP_PUBLIC_URL`, now passed explicitly through the operator env file in
+  Compose deployments.
+- M4 is unaffected functionally. Mobile/server pairing still targets the
+  self-hosted server URL, and the server URL now has clearer deployment
+  configuration.
+- M5 is unaffected functionally. Evidence, skills, drills, validation ceilings,
+  and gap reports continue to use the same APIs and persistence model.
+- M6 is affected operationally. Operators must pass `--env-file` on every
+  Compose command; `basecamp.env` remains ignored; backups mount
+  `BASECAMP_CONFIG_SOURCE` read-only so the admin config file can be included in
+  backup manifests.
+- v1.0 readiness should require Compose config validation with the tracked env
+  example, real deployment validation on an accepted environment, and clear
+  proof that backup/restore covers database, storage, and admin configuration.
 
 ### v1.0 - MVP Readiness
 

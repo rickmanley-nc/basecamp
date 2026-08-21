@@ -48,10 +48,19 @@ if (compose.includes("env_file:")) {
   failures.push("Compose file should map --env-file values explicitly instead of requiring a local env_file.");
 }
 
-for (const variable of ["BASECAMP_APP_VERSION", "BASECAMP_ADMIN_TOKEN", "BASECAMP_REMOTE_ACCESS"]) {
+for (const variable of [
+  "BASECAMP_APP_VERSION",
+  "BASECAMP_ADMIN_TOKEN",
+  "BASECAMP_REMOTE_ACCESS",
+  "BASECAMP_CONFIG_PATH"
+]) {
   if (!compose.includes(`${variable}:`)) {
     failures.push(`Compose file must pass ${variable} into containers from the operator env file.`);
   }
+}
+
+if (!compose.includes("${BASECAMP_CONFIG_SOURCE")) {
+  failures.push("Compose file must mount the admin config file from BASECAMP_CONFIG_SOURCE.");
 }
 
 for (const variable of [
@@ -59,7 +68,8 @@ for (const variable of [
   "BASECAMP_DB_PATH",
   "BASECAMP_STORAGE_DIR",
   "BASECAMP_BACKUP_DIR",
-  "BASECAMP_ADMIN_TOKEN"
+  "BASECAMP_ADMIN_TOKEN",
+  "BASECAMP_CONFIG_SOURCE"
 ]) {
   if (!envExample.includes(variable)) {
     failures.push(`Environment example is missing ${variable}.`);
@@ -70,6 +80,14 @@ for (const section of ["Install Runbook", "Backup", "Restore Drill", "Upgrade", 
   if (!deployment.includes(section)) {
     failures.push(`Deployment guide is missing ${section} guidance.`);
   }
+}
+
+if (!deployment.includes("docker compose --env-file basecamp.env config --quiet")) {
+  failures.push("Deployment guide must validate Compose config with the operator env file.");
+}
+
+if (!deployment.includes("--env-file basecamp.env") || !deployment.includes("every Compose command")) {
+  failures.push("Deployment guide must tell operators to pass the env file on every Compose command.");
 }
 
 if (/password|token|secret/i.test(envExample.replaceAll("change-me", ""))) {

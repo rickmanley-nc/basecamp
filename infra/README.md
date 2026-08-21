@@ -19,8 +19,15 @@ Operator-facing server and web installation requirements are tracked in
 - `nginx/web.conf` - static web container config.
 
 Start from this directory after copying `basecamp.env.example` to
-`basecamp.env` and replacing placeholder secrets:
+`basecamp.env` and replacing placeholder secrets. The real env file is ignored
+by git and is not auto-loaded by `compose.yml`; pass it explicitly on every
+Compose command:
 
 ```bash
+docker compose --env-file basecamp.env config --quiet
 docker compose --env-file basecamp.env up -d --build
+docker compose --env-file basecamp.env ps
 ```
+
+When the real env file lives outside `infra/`, set `BASECAMP_CONFIG_SOURCE` in
+that file to the absolute host path so backups can include the config file.

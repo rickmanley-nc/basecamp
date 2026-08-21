@@ -13,7 +13,7 @@ const databasePath = requiredEnv("BASECAMP_DB_PATH", "var/basecamp-dev.sqlite");
 const storageDir = requiredEnv("BASECAMP_STORAGE_DIR", "var/storage");
 const backupDir = requiredEnv("BASECAMP_BACKUP_DIR", "var/backups");
 const configPath = process.env.BASECAMP_CONFIG_PATH;
-const appVersion = process.env.BASECAMP_APP_VERSION ?? "0.7.0-m6";
+const appVersion = process.env.BASECAMP_APP_VERSION ?? "0.7.2";
 
 await ensureDatabaseDirectory(databasePath);
 

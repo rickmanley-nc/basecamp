@@ -60,7 +60,7 @@ describe("M6 self-hosting operations", () => {
     });
 
     const archive = createPortableExport(source, {
-      appVersion: "0.7.0-m6",
+      appVersion: "0.7.2",
       contentSchemaVersion: basecampSeed.schemaVersion,
       generatedAt: "2026-08-21T00:02:00.000Z"
     });
@@ -94,7 +94,7 @@ describe("M6 self-hosting operations", () => {
     applyMigrations(database);
     importSeed(database, basecampSeed);
     const archive = createPortableExport(database, {
-      appVersion: "0.7.0-m6",
+      appVersion: "0.7.2",
       contentSchemaVersion: basecampSeed.schemaVersion
     });
     const incompatible = {
@@ -154,7 +154,7 @@ describe("M6 self-hosting operations", () => {
       databasePath,
       storageDir,
       backupDir,
-      appVersion: "0.7.0-m6",
+      appVersion: "0.7.2",
       contentSchemaVersion: basecampSeed.schemaVersion,
       now: "2026-08-21T00:01:00.000Z"
     });
@@ -194,7 +194,7 @@ describe("M6 self-hosting operations", () => {
       storageDir,
       backupDir,
       adminToken: "test-admin-token",
-      appVersion: "0.7.0-m6",
+      appVersion: "0.7.2",
       remoteAccessMode: "lan",
       webUrl: "http://basecamp.local:8080"
     });
@@ -225,7 +225,7 @@ describe("M6 self-hosting operations", () => {
     expect(denied.statusCode).toBe(401);
     expect(status.statusCode).toBe(200);
     expect(status.json()).toMatchObject({
-      version: "0.7.0-m6",
+      version: "0.7.2",
       database: { kind: "sqlite", migrated: true },
       security: { adminTokenConfigured: true, remoteAccessMode: "lan" }
     });
@@ -257,7 +257,11 @@ describe("M6 self-hosting operations", () => {
     expect(compose).toContain("BASECAMP_APP_VERSION:");
     expect(compose).toContain("BASECAMP_ADMIN_TOKEN:");
     expect(compose).toContain("BASECAMP_REMOTE_ACCESS:");
+    expect(compose).toContain("BASECAMP_CONFIG_PATH:");
+    expect(compose).toContain("${BASECAMP_CONFIG_SOURCE");
     expect(envExample).toContain("BASECAMP_ADMIN_TOKEN=change-me");
+    expect(envExample).toContain("BASECAMP_APP_VERSION=0.7.2");
+    expect(envExample).toContain("BASECAMP_CONFIG_SOURCE=./basecamp.env");
     expect(envExample).toContain("BASECAMP_REMOTE_ACCESS=lan");
     expect(caddy).toContain("reverse_proxy server:4317");
     expect(caddy).toContain("reverse_proxy web:80");

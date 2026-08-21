@@ -12,7 +12,7 @@ import path from "node:path";
 
 const databasePath = requiredEnv("BASECAMP_DB_PATH", "var/basecamp-dev.sqlite");
 const exportDir = requiredEnv("BASECAMP_EXPORT_DIR", "var/exports/latest");
-const appVersion = process.env.BASECAMP_APP_VERSION ?? "0.7.0-m6";
+const appVersion = process.env.BASECAMP_APP_VERSION ?? "0.7.2";
 
 await ensureDatabaseDirectory(databasePath);
 await mkdir(exportDir, { recursive: true });
