@@ -149,7 +149,7 @@
     "title": "Implement mobile app foundation",
     "milestone": "M4 - Mobile And Offline Sync",
     "labels": ["roadmap", "type:feature", "priority:high", "area:mobile", "offline"],
-    "body": "## Outcome\n\n`apps/mobile` starts as a real mobile companion app with navigation for Home, Capture, Scan, Quests, Inventory, and Offline.\n\n## Acceptance Criteria\n\n- Mobile stack ADR is finalized.\n- App shell runs locally.\n- Shared domain/API packages are consumable.\n- Mobile design-system boundary is documented.\n\n## Validation\n\n- Mobile app starts in local simulator or documented environment."
+    "body": "## Outcome\n\n`apps/mobile` starts as a real mobile companion app with navigation for Home, Capture, Scan, Quests, Inventory, and Offline.\n\n## Acceptance Criteria\n\n- Mobile stack ADR is finalized.\n- App shell runs locally.\n- Shared domain/API packages are consumable.\n- Mobile design-system boundary is documented.\n- iPhone installation documentation is updated for the chosen distribution path and does not require normal users to build from source.\n- Documentation covers minimum supported iOS version, install channel, server URL setup, pairing/sign-in, iOS permissions, first sync, offline verification, updates, and lost/replaced device removal.\n\n## Validation\n\n- Mobile app starts in local simulator or documented environment.\n- iPhone installation instructions are followed on a device or explicitly marked as pending until TestFlight or stable distribution exists."
   },
   {
     "title": "Implement Quick Capture command parser v1",
@@ -209,7 +209,7 @@
     "title": "Implement Docker Compose self-hosting baseline",
     "milestone": "M6 - Self-Hosting Beta",
     "labels": ["roadmap", "type:feature", "priority:high", "area:infra", "security"],
-    "body": "## Outcome\n\nA user can run Basecamp on a Linux host with documented container services.\n\n## Acceptance Criteria\n\n- Compose file includes web, server, database, storage path, and reverse proxy or documented proxy option.\n- Persistent volumes are defined.\n- Environment configuration is documented with safe defaults.\n- Local network operation does not require internet after setup.\n\n## Validation\n\n- Fresh compose deployment starts and health checks pass."
+    "body": "## Outcome\n\nA user can run Basecamp on a Linux host with documented container services.\n\n## Acceptance Criteria\n\n- Compose file includes web, server, database, storage path, and reverse proxy or documented proxy option.\n- Persistent volumes are defined.\n- Environment configuration is documented with safe defaults.\n- Deployment guide covers host prerequisites, admin-controlled paths, release artifact download, configuration, startup, migrations, health checks, browser access, remote access stance, backup setup, restore drill, and troubleshooting.\n- Local network operation does not require internet after setup.\n\n## Validation\n\n- Fresh compose deployment starts and health checks pass.\n- Deployment guide is followed from a fresh host or clean VM."
   },
   {
     "title": "Implement backup and restore automation",
@@ -221,7 +221,7 @@
     "title": "Implement release packaging and upgrade process",
     "milestone": "M6 - Self-Hosting Beta",
     "labels": ["roadmap", "type:docs", "priority:medium", "area:infra", "release"],
-    "body": "## Outcome\n\nBasecamp releases are installable, upgradeable, and understandable.\n\n## Acceptance Criteria\n\n- Release checklist is implemented in docs and scripts where useful.\n- Upgrade steps cover migrations and backup-before-upgrade.\n- Release notes include known limitations and validation.\n- Rollback guidance is documented.\n\n## Validation\n\n- Dry-run release process is documented or tested."
+    "body": "## Outcome\n\nBasecamp releases are installable, upgradeable, and understandable.\n\n## Acceptance Criteria\n\n- Release checklist is implemented in docs and scripts where useful.\n- Server/web install steps are included or linked from each installable release.\n- Mobile install steps are included or linked once mobile distribution exists.\n- Upgrade steps cover migrations and backup-before-upgrade.\n- Release notes include known limitations and validation.\n- Rollback guidance is documented.\n\n## Validation\n\n- Dry-run release process is documented or tested.\n- Release notes link to current deployment and mobile installation guides where applicable."
   },
   {
     "title": "Implement security hardening baseline",
@@ -245,6 +245,6 @@
     "title": "Define v1.0 MVP readiness criteria",
     "milestone": "v1.0 - MVP Readiness",
     "labels": ["roadmap", "type:architecture", "priority:high", "area:product", "release"],
-    "body": "## Outcome\n\nThe team has an explicit, testable definition for when Basecamp is a real MVP instead of an endless prototype.\n\n## Acceptance Criteria\n\n- Required web workflows are listed.\n- Required mobile workflows are listed.\n- Required offline/sync behavior is listed.\n- Required self-hosting and backup behavior is listed.\n- Required content coverage and validation behavior are listed.\n- Non-goals for v1.0 are listed.\n\n## Validation\n\n- v1.0 readiness checklist is linked from the roadmap and release docs."
+    "body": "## Outcome\n\nThe team has an explicit, testable definition for when Basecamp is a real MVP instead of an endless prototype.\n\n## Acceptance Criteria\n\n- Required web workflows are listed.\n- Required mobile workflows are listed.\n- Required offline/sync behavior is listed.\n- Required self-hosting and backup behavior is listed.\n- Required server/web deployment instructions are listed.\n- Required iPhone mobile installation instructions are listed.\n- Required content coverage and validation behavior are listed.\n- Non-goals for v1.0 are listed.\n\n## Validation\n\n- v1.0 readiness checklist is linked from the roadmap and release docs."
   }
 ]

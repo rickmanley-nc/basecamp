@@ -116,6 +116,7 @@ Outcome:
 Primary work:
 
 - Mobile app foundation.
+- iPhone install documentation for non-developer users.
 - Quick Capture command parser v1.
 - Barcode and QR scanning.
 - Offline read model.
@@ -149,6 +150,7 @@ Outcome:
 Primary work:
 
 - Docker Compose deployment.
+- Operator deployment guide for server/web install.
 - Backup and restore automation.
 - Release packaging.
 - Security hardening.
@@ -163,6 +165,8 @@ Outcome:
 - The web app is the source of truth.
 - Mobile supports practical field workflows.
 - Self-hosting and backups are documented and tested.
+- Server/web deployment and iPhone installation instructions are tested or
+  explicitly validated for the release path.
 
 ## Issue Policy
 

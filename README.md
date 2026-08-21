@@ -44,6 +44,8 @@ tests/       Cross-package test fixtures and integration tests
 - [Development Workflow](docs/development/workflow.md)
 - [GitHub Planning Workflow](docs/development/github-planning.md)
 - [Release Process](docs/development/releases.md)
+- [Deployment Guide](docs/ops/deployment.md)
+- [iPhone Installation Guide](docs/ops/iphone-installation.md)
 - [Self-Hosting And Backups](docs/ops/self-hosting-and-backups.md)
 - [Seed Dataset](packages/content/seed/basecamp-seed-v0.json)
 

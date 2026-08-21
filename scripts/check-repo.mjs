@@ -20,6 +20,8 @@ const requiredFiles = [
   "docs/development/github-planning.md",
   "docs/development/privacy-and-portability.md",
   "docs/development/releases.md",
+  "docs/ops/deployment.md",
+  "docs/ops/iphone-installation.md",
   "docs/ops/self-hosting-and-backups.md",
   "docs/adr/0001-monorepo-typescript-react.md",
   "docs/adr/0002-basecamp-ui-kaizen-adapter.md",
