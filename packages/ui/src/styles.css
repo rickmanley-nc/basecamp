@@ -77,6 +77,10 @@ select {
   gap: 20px;
 }
 
+.bc-dashboard-grid-balanced {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .bc-panel {
   display: grid;
   gap: 16px;
@@ -277,6 +281,10 @@ select {
   gap: 16px;
 }
 
+.bc-backlog-grid-two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .bc-backlog-column {
   display: grid;
   align-content: start;
@@ -286,6 +294,45 @@ select {
 .bc-backlog-column h3 {
   margin: 0;
   font-size: 15px;
+}
+
+.bc-form-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.bc-form-grid label {
+  display: grid;
+  gap: 6px;
+}
+
+.bc-form-grid label span {
+  color: var(--bc-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.bc-form-grid input,
+.bc-form-grid select,
+.bc-form-grid textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid var(--bc-border);
+  border-radius: 6px;
+  color: var(--bc-text);
+  background: var(--bc-surface);
+}
+
+.bc-form-grid textarea {
+  resize: vertical;
+}
+
+.bc-inline-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
 }
 
 @media (max-width: 820px) {
@@ -301,7 +348,8 @@ select {
   }
 
   .bc-dashboard-grid,
-  .bc-backlog-grid {
+  .bc-backlog-grid,
+  .bc-inline-fields {
     grid-template-columns: 1fr;
   }
 

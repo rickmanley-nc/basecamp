@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@basecamp/domain": "workspace:*",
-    "@basecamp/gamification": "workspace:*"
+    "@basecamp/gamification": "workspace:*",
+    "qrcode": "^1.5.4"
   }
 }

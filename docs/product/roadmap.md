@@ -91,6 +91,8 @@ Primary work:
 
 ### M3 - Inventory, BOMs And Maintenance
 
+Status: complete once `v0.4.0` is released.
+
 Outcome:
 
 - Basecamp knows what the user owns, what they need, where assets are, and what
@@ -104,7 +106,10 @@ Primary work:
 - Maintenance policies and completion events.
 - Web inventory entry.
 - QR asset tag design.
-- Inventory export/backup shape.
+- QR tag local-network behavior documented in
+  [Inventory And Asset Tags](../ops/inventory-and-asset-tags.md).
+- Inventory export/backup shape remains part of the self-hosting/export work in
+  M6 and v1.0.
 
 ### M4 - Mobile And Offline Sync
 
