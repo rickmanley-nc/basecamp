@@ -57,6 +57,7 @@ export const apiRoutes = {
   maintenancePolicy: "/api/maintenance/policies",
   maintenanceCompletion: "/api/maintenance/:policyId/completions",
   evidence: "/api/evidence",
+  evidenceUpload: "/api/evidence/upload",
   skillTraining: "/api/skills/training",
   drillTemplates: "/api/drills/templates",
   drillRun: "/api/drills/:templateId/runs",
@@ -319,6 +320,24 @@ export interface EvidenceRecordRequest {
 
 export interface EvidenceRecordResponse {
   evidence: EvidenceRecord;
+}
+
+export interface EvidenceUploadRequest {
+  kind: EvidenceKind;
+  title: string;
+  link: EvidenceLink;
+  fileName: string;
+  contentType: string;
+  base64: string;
+  capturedAt: string;
+  notes?: string;
+  id?: string;
+}
+
+export interface EvidenceUploadResponse {
+  evidence: EvidenceRecord;
+  storageKey: string;
+  byteLength: number;
 }
 
 export interface AuthUserSummary {

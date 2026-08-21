@@ -15,6 +15,8 @@ import {
   type DrillTemplatesResponse,
   type EvidenceRecordRequest,
   type EvidenceRecordResponse,
+  type EvidenceUploadRequest,
+  type EvidenceUploadResponse,
   type HealthResponse,
   type MaintenanceCompletionRequest,
   type MaintenancePolicyRequest,
@@ -58,12 +60,14 @@ import {
   type BasecampDatabase,
   type DatabaseKind
 } from "@basecamp/database";
-import { questActions, type InventoryItemType, type PursuitState } from "@basecamp/domain";
+import { questActions, slugify, type InventoryItemType, type PursuitState } from "@basecamp/domain";
 import { createXpEventForQuest } from "@basecamp/gamification";
 import type { PortableExportArchive } from "@basecamp/database";
 import type { DeploymentProfile } from "@basecamp/database";
 import type { SyncBatchRequest } from "@basecamp/sync";
 import Fastify, { type FastifyInstance } from "fastify";
+import { mkdirSync, writeFileSync } from "node:fs";
+import path from "node:path";
 
 export interface BuildServerOptions {
   adminToken?: string;
@@ -106,6 +110,8 @@ const inventoryItemTypes = new Set<InventoryItemType>([
   "food_storage",
   "spare_part"
 ]);
+
+const maxEvidenceUploadBytes = 15 * 1024 * 1024;
 
 export function buildServer(options: BuildServerOptions = {}): FastifyInstance {
   const database = options.database ?? createDatabase();
@@ -400,6 +406,63 @@ export function buildServer(options: BuildServerOptions = {}): FastifyInstance {
   });
 
   server.post<{
+    Body: EvidenceUploadRequest;
+  }>("/api/evidence/upload", async (request, reply): Promise<EvidenceUploadResponse | unknown> => {
+    const validationError = validateEvidenceUpload(request.body);
+
+    if (validationError !== undefined) {
+      return reply.code(400).send({ error: validationError });
+    }
+
+    const storageDir = options.storageDir ?? process.env.BASECAMP_STORAGE_DIR;
+
+    if (storageDir === undefined || storageDir.trim().length === 0) {
+      return reply.code(503).send({ error: "Evidence storage is not configured." });
+    }
+
+    const payload = normalizedBase64(request.body.base64);
+    const bytes = Buffer.from(payload, "base64");
+
+    if (bytes.byteLength === 0) {
+      return reply.code(400).send({ error: "Evidence upload is empty." });
+    }
+
+    if (bytes.byteLength > maxEvidenceUploadBytes) {
+      return reply.code(413).send({ error: "Evidence upload is too large." });
+    }
+
+    const safeFileName = portableEvidenceFileName(request.body.fileName, request.body.contentType);
+    const evidenceId =
+      request.body.id ?? `evidence-mobile-${slugify(`${request.body.capturedAt}-${safeFileName}`)}`;
+    const storageKey = `evidence/mobile/${evidenceId}/${safeFileName}`;
+    const target = safeStorageTarget(storageDir, storageKey);
+
+    mkdirSync(path.dirname(target), { recursive: true });
+    writeFileSync(target, bytes);
+
+    const evidence = upsertEvidenceRecord(database, {
+      id: evidenceId,
+      kind: request.body.kind,
+      title: request.body.title,
+      links: [request.body.link],
+      metadata: {
+        capturedAt: request.body.capturedAt,
+        fileName: safeFileName,
+        mimeType: request.body.contentType,
+        storageKey,
+        byteSize: bytes.byteLength,
+        ...(request.body.notes === undefined ? {} : { notes: request.body.notes })
+      }
+    });
+
+    return reply.code(201).send({
+      evidence,
+      storageKey,
+      byteLength: bytes.byteLength
+    });
+  });
+
+  server.post<{
     Body: SkillTrainingRequest;
   }>("/api/skills/training", async (request, reply): Promise<SkillTrainingResponse | unknown> => {
     if (request.body.skillId.trim().length === 0) {
@@ -691,6 +754,86 @@ function validateQuickInventoryEntry(body: QuickInventoryEntryRequest): string |
   }
 
   return undefined;
+}
+
+function validateEvidenceUpload(body: EvidenceUploadRequest): string | undefined {
+  if (body.title.trim().length === 0) {
+    return "Evidence title is required.";
+  }
+
+  if (body.fileName.trim().length === 0) {
+    return "Evidence file name is required.";
+  }
+
+  if (body.contentType.trim().length === 0 || !body.contentType.includes("/")) {
+    return "Evidence content type is required.";
+  }
+
+  if (body.capturedAt.trim().length === 0 || Number.isNaN(Date.parse(body.capturedAt))) {
+    return "Evidence capture time is required.";
+  }
+
+  if (body.link.entityType.trim().length === 0 || body.link.entityId.trim().length === 0) {
+    return "Evidence link is required.";
+  }
+
+  if (normalizedBase64(body.base64).length === 0) {
+    return "Evidence upload bytes are required.";
+  }
+
+  if (!/^[A-Za-z0-9+/]*={0,2}$/.test(normalizedBase64(body.base64))) {
+    return "Evidence upload must be base64 encoded.";
+  }
+
+  return undefined;
+}
+
+function normalizedBase64(value: string): string {
+  return value.replace(/\s+/g, "");
+}
+
+function portableEvidenceFileName(fileName: string, contentType: string): string {
+  const baseName = path.basename(fileName.replace(/\\/g, "/")).replace(/[^A-Za-z0-9._-]+/g, "-");
+  const trimmed = baseName.replace(/^-+|-+$/g, "");
+
+  if (trimmed.length > 0 && trimmed.includes(".")) {
+    return trimmed;
+  }
+
+  const extension = extensionForContentType(contentType);
+
+  return `${trimmed.length > 0 ? trimmed : "evidence"}${extension}`;
+}
+
+function extensionForContentType(contentType: string): string {
+  if (contentType === "image/jpeg") {
+    return ".jpg";
+  }
+
+  if (contentType === "image/png") {
+    return ".png";
+  }
+
+  if (contentType === "application/pdf") {
+    return ".pdf";
+  }
+
+  if (contentType === "text/plain") {
+    return ".txt";
+  }
+
+  return ".bin";
+}
+
+function safeStorageTarget(storageDir: string, storageKey: string): string {
+  const root = path.resolve(storageDir);
+  const target = path.resolve(root, storageKey);
+
+  if (!target.startsWith(`${root}${path.sep}`)) {
+    throw new Error("Evidence storage key escapes storage directory.");
+  }
+
+  return target;
 }
 
 function publicBaseUrl(host: string | undefined): string {

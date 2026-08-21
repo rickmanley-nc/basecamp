@@ -26,6 +26,9 @@
         "serverUrlSetup": "manual_url_or_pairing_qr",
         "authModel": "local_username_password"
       }
-    }
+    },
+    "plugins": [
+      "expo-secure-store"
+    ]
   }
 }

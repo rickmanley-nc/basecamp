@@ -9,7 +9,7 @@ Owns:
 - Client helpers for web and mobile.
 - Error and pagination conventions.
 - Dashboard, seed, category pursuit, quest action, inventory, asset tag,
-  maintenance, evidence, skill training, drill, gap report, and sync route
+  maintenance, evidence metadata/upload, skill training, drill, gap report, and sync route
   contracts shared by web, mobile, and server.
 - Admin status, export, import, and audit response contracts for the
   self-hosting beta.

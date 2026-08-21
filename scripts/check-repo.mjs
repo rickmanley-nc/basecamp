@@ -50,6 +50,8 @@ const requiredFiles = [
   "apps/mobile/index.js",
   "apps/web/package.json",
   "apps/mobile/package.json",
+  "apps/mobile/src/field-workflows.ts",
+  "apps/mobile/src/native-storage.ts",
   "apps/server/package.json",
   "packages/domain/package.json",
   "packages/database/package.json",

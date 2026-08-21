@@ -26,7 +26,8 @@ Basecamp Mobile uses the Expo React Native stack selected in
 [ADR 0008](../../docs/adr/0008-mobile-expo-offline-sync.md). The repository
 includes the typed app shell, route model, offline read model preview, Quick
 Capture parser, scan workflows, command outbox contracts, Expo app entrypoint,
-and EAS profiles for simulator and TestFlight builds.
+EAS profiles for simulator and TestFlight builds, and native field screens for
+Home, Capture, Scan, Quests, Inventory, and Offline.
 
 Run the local shell preview:
 
@@ -55,10 +56,19 @@ pnpm --filter @basecamp/mobile submit:ios:testflight
 ```
 
 The preview prints the current mobile stack, tab labels, sample Quick Capture
-confirmation, and sample QR scan target. The native Expo entrypoint currently
-covers server URL entry and local username/password sign-in. Field capture,
-scanner screens, durable secure storage, and offline reconnect UX remain v1
-blocker work.
+confirmation, and sample QR scan target. The native Expo entrypoint covers server
+URL entry, local username/password sign-in, tabbed field screens, Quick Capture
+queueing, CameraView scan handling, photo/document evidence selection, evidence
+upload, persistent outbox storage, and reconnect sync attempts.
+
+Mobile storage boundary:
+
+- Session token: Expo SecureStore.
+- Non-secret session display data, command outbox, and pending evidence drafts:
+  AsyncStorage.
+- Evidence bytes: uploaded to the Basecamp server through
+  `POST /api/evidence/upload` so persisted metadata uses deployment-owned
+  `storageKey` values instead of phone-local file paths.
 
 ## Navigation
 
@@ -75,8 +85,10 @@ The route model is exported from `@basecamp/mobile` and consumes shared
 `@basecamp/api`, `@basecamp/content`, and `@basecamp/sync` packages.
 
 M5 server persistence accepts mobile-captured drill records, skill records, and
-evidence attachments through the sync command vocabulary. Native camera and file
-upload UX remains part of the signed mobile build path.
+evidence attachments through the sync command vocabulary. The v1 mobile field
+slice adds native capture and upload plumbing, but physical iPhone validation is
+still required for Camera permission, Photos/Documents behavior, persistent
+device storage, and reconnect behavior.
 
 ## Design Boundary
 
@@ -95,9 +107,9 @@ Local validation:
 - `pnpm check`
 
 Physical iPhone validation is pending until a TestFlight build is uploaded and
-installed. Camera permission, QR/barcode scanning, Local Network permission,
-offline storage, and reconnect sync must be verified on a physical iPhone when
-native field screens and distribution are available. The exact v1 requirements
-are tracked in
+installed. Camera permission, QR/barcode scanning, Photos/Documents access,
+Local Network permission, offline storage across app restart, evidence upload,
+and reconnect sync must be verified on a physical iPhone when native field
+screens and distribution are available. The exact v1 requirements are tracked in
 [Basecamp v1.0 MVP Readiness](../../docs/product/v1-mvp-readiness.md) and the
 v1.0 GitHub milestone blocker issues.

@@ -152,7 +152,9 @@ The v1.0 milestone should remain open until these blockers are complete:
 - Installable iPhone beta distribution path. The Expo/EAS/TestFlight path is
   configured, but the blocker remains open until a TestFlight build is installed
   and validated on a physical iPhone.
-- Mobile field data capture, offline sync, and evidence upload.
+- Mobile field data capture, offline sync, and evidence upload. Native screens,
+  local queues, and server upload plumbing exist, but the blocker remains open
+  until simulator and physical iPhone validation prove the implemented behavior.
 - Physical iPhone field validation.
 - PostgreSQL cloud-pilot backup/restore proof and operational validation.
 - Cloud pilot reset, seed, and observability controls.

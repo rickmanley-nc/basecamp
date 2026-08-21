@@ -14,7 +14,10 @@ the iPhone install and physical-device test path used by that gate.
 Basecamp Mobile now has an Expo app entrypoint, iOS app metadata, and EAS build
 profiles for simulator and TestFlight builds. The app can accept an
 admin-controlled Basecamp server URL and sign in with the local
-username/password model.
+username/password model. Native Home, Capture, Scan, Quests, Inventory, and
+Offline screens exist, with Quick Capture queueing, camera scan handling,
+photo/document evidence selection, persistent local outbox storage, and reconnect
+sync attempts.
 
 The selected distribution path for private beta is TestFlight through EAS Build
 and EAS Submit. Normal users should not need Xcode or a local build toolchain.
@@ -35,6 +38,9 @@ Current beta metadata:
 - Install channel: TestFlight.
 - Auth model: local username/password; SSO is not required or configured.
 - Server URL setup: manual URL entry now; pairing QR remains future work.
+- Secret storage: session token in Expo SecureStore.
+- Offline storage: non-secret session display data, command outbox, and pending
+  evidence drafts in AsyncStorage.
 
 ## Target Distribution Paths
 
@@ -130,6 +136,8 @@ Expected preview result:
 - Sample Quick Capture confirms an inventory command.
 - Sample QR scan opens an asset workflow target.
 - Native app entrypoint shows server URL entry and local sign-in.
+- Native field screens can queue Quick Capture commands, process manual scan
+  payloads, store pending evidence drafts, and attempt sync after sign-in.
 
 ## Server URL Setup
 
@@ -149,6 +157,24 @@ part of v1 because the eventual off-grid deployment must keep local auth usable.
 
 Pairing QR remains future work. When it is added, pairing payloads must avoid
 public issues, PRs, releases, and docs unless values are anonymized placeholders.
+
+## Field Capture And Evidence Upload
+
+Basecamp Mobile uses native pickers for field evidence:
+
+- Camera photos use Expo ImagePicker.
+- Documents use Expo DocumentPicker.
+- Document bytes are read from the app cache through Expo FileSystem.
+- Evidence upload uses `POST /api/evidence/upload`.
+
+The server writes evidence bytes under the configured Basecamp storage directory
+and records deployment-owned `storageKey` metadata. Phone-local file URIs are
+kept in the pending local evidence queue only and must not be sent to public
+issues, PRs, releases, or portable exports.
+
+If the iPhone is offline, evidence remains pending locally until reconnect. On
+sync, the app attempts evidence uploads before command outbox sync so evidence
+bytes are stored by the deployment before metadata is considered synced.
 
 ## Updates, Expiration, And Rollback
 
@@ -212,8 +238,9 @@ When available, run this on a physical iPhone:
 Mobile features that depend on iOS behavior must be verified on a physical
 iPhone before the relevant milestone closes. Simulator validation is useful for
 layout, navigation, and shared TypeScript logic, but it does not prove camera,
-Local Network permission, TestFlight installation, push notification, offline
-storage, or real reconnect behavior.
+Local Network permission, TestFlight installation, push notification,
+Photos/Documents access, offline storage, evidence upload, or real reconnect
+behavior.
 
 Each mobile issue that needs device testing should provide:
 
