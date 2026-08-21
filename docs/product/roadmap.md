@@ -98,7 +98,8 @@ Outcome:
 
 Primary work:
 
-- Locations, inventory, durable assets, kits, and QR tag data model.
+- Locations, location progression, multiple home bases, inventory, durable
+  assets, kits, and QR tag data model.
 - BOM and acquisition rollup.
 - Maintenance policies and completion events.
 - Web inventory entry.
