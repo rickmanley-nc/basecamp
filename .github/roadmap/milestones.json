@@ -50,7 +50,7 @@
   },
   {
     "title": "M7 - Cloud Pilot Foundation",
-    "state": "open",
+    "state": "closed",
     "dueOn": "2026-12-17T23:59:59Z",
     "release": "v0.8.0",
     "description": "Cloud pilot deployment profile, local username/password auth, evidence storage portability, and first real-user controls."

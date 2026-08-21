@@ -212,6 +212,9 @@ M6 deployment patch impact audit:
 
 ### M7 - Cloud Pilot Foundation
 
+Status: complete. `v0.8.0` delivered the cloud pilot foundation; remaining
+production hardening stays in the v1.0 readiness milestone.
+
 Outcome:
 
 - Basecamp can run on the accepted cloud pilot target with real pilot users,
