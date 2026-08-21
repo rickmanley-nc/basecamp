@@ -43,6 +43,25 @@ M4 should turn this outline into verified steps:
 9. Put the iPhone in airplane mode and confirm offline reference data still opens.
 10. Reconnect and confirm queued changes sync back to the server.
 
+## Physical Device Testing
+
+Mobile features that depend on iOS behavior must be verified on a physical
+iPhone before the relevant milestone closes. Simulator validation is useful for
+layout, navigation, and shared TypeScript logic, but it does not prove camera,
+Local Network permission, TestFlight installation, push notification, offline
+storage, or real reconnect behavior.
+
+Each mobile issue that needs device testing should provide:
+
+- The install channel to use.
+- The minimum iOS version.
+- The Basecamp server URL or pairing method to test.
+- Required test data or seed state.
+- Step-by-step actions for the iPhone.
+- Expected results.
+- Offline and reconnect steps where relevant.
+- What pass/fail notes or screenshots the admin should report.
+
 ## Required Mobile Install Documentation
 
 The M4 mobile foundation cannot close until documentation covers:
@@ -59,6 +78,8 @@ The M4 mobile foundation cannot close until documentation covers:
 - How to confirm queued changes sync after reconnecting.
 - How to update the app.
 - How to remove a device from the server if the phone is lost or replaced.
+- Which mobile checks require a physical iPhone and which may be run in a
+  simulator.
 
 ## Troubleshooting Targets
 

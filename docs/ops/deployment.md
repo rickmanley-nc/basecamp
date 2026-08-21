@@ -20,6 +20,11 @@ reverse proxy, health checks, backups, restore drill, and upgrade path.
 Use this only for development and review. It does not include production auth,
 PostgreSQL, container packaging, backup automation, TLS, or upgrade support.
 
+Local preview validation is acceptable for early milestone work. Self-hosting
+release validation must eventually run on a clean local VM/container environment
+or a separate server provided by the admin. See
+[Verification Policy](../development/verification.md).
+
 Prerequisites:
 
 - Node.js 24 or newer.
@@ -105,6 +110,22 @@ M6 should turn this outline into verified commands:
 12. Run the first backup.
 13. Complete a restore drill before trusting the installation.
 
+## Separate Server Testing
+
+If the admin provides access to a separate server, the deployment issue should
+include a short test plan before changes are made:
+
+- What host is being used.
+- Whether the host can be reset or test data can be destroyed.
+- Whether the validation is LAN-only, VPN, or reverse-proxy based.
+- Which paths will hold release assets, config, persistent data, and backups.
+- Which commands will be run.
+- Which health checks prove success.
+- How rollback or cleanup will be performed.
+
+Do not publish credentials, private host details, tokens, or private keys in
+issues, pull requests, releases, or comments.
+
 ## Required Release Validation
 
 A self-hosting release cannot close its milestone until these are verified:
@@ -119,6 +140,8 @@ A self-hosting release cannot close its milestone until these are verified:
 - Restore drill succeeds from a fresh deployment.
 - Upgrade path includes backup-before-upgrade and rollback guidance.
 - Public instructions contain no personal workstation paths.
+- Resolution comments identify whether validation ran locally, in a clean local
+  environment, on a separate server, or in CI.
 
 ## External References
 

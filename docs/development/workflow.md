@@ -77,6 +77,8 @@ Every PR should describe:
 - Offline/sync impact.
 - Accessibility impact.
 - Kaizen/UI boundary impact for web changes.
+- Verification environment used, such as CI, local machine, clean local
+  environment, separate server, simulator, or physical iPhone.
 
 Passing roadmap PRs should be squash-merged by the agent by default. The user
 reviews milestone outcomes and releases rather than merging every PR manually.
@@ -124,6 +126,9 @@ For product code:
 - Docs or ADRs are updated for architecture changes.
 - Closed roadmap issues have `## Resolution` comments with the specific change,
   validation, and follow-up status.
+- Validation environment is documented, and physical iPhone or separate-server
+  testing is not replaced with local-only testing when the issue requires real
+  device or deployment proof.
 
 For content:
 

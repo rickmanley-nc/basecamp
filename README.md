@@ -43,6 +43,7 @@ tests/       Cross-package test fixtures and integration tests
 - [Kaizen UI Integration](docs/ui/kaizen-integration.md)
 - [Development Workflow](docs/development/workflow.md)
 - [GitHub Planning Workflow](docs/development/github-planning.md)
+- [Verification Policy](docs/development/verification.md)
 - [Release Process](docs/development/releases.md)
 - [Deployment Guide](docs/ops/deployment.md)
 - [iPhone Installation Guide](docs/ops/iphone-installation.md)

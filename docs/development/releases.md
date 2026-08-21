@@ -19,12 +19,15 @@ project clearer.
    relevant.
 7. Confirm deployment and mobile installation guides are updated when a release
    changes install, upgrade, pairing, or distribution behavior.
-8. Confirm release notes and linked PR text contain no personal workstation
+8. Confirm required validation environments are satisfied or explicitly recorded:
+   CI, local machine, clean local environment, separate server, simulator, or
+   physical iPhone.
+9. Confirm release notes and linked PR text contain no personal workstation
    paths.
-9. Draft release notes.
-10. Tag the release.
-11. Create the GitHub Release.
-12. Close the milestone when appropriate.
+10. Draft release notes.
+11. Tag the release.
+12. Create the GitHub Release.
+13. Close the milestone when appropriate.
 
 ## Release Notes Template
 
