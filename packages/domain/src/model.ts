@@ -69,6 +69,27 @@ export type QuestStatus =
   | "complete"
   | "reopened";
 
+export type QuestAction =
+  | "save"
+  | "start"
+  | "pause"
+  | "resume"
+  | "snooze"
+  | "abandon"
+  | "complete"
+  | "reopen";
+
+export type DependencyType =
+  | "knowledge"
+  | "skill"
+  | "equipment"
+  | "supply"
+  | "tool"
+  | "machinery"
+  | "drill"
+  | "validation"
+  | "optional_recommendation";
+
 export type CapabilityContributionState =
   | "planned"
   | "needed"
@@ -191,6 +212,47 @@ export interface QuestInstance {
   startedAt?: string;
   completedAt?: string;
   snoozedUntil?: string;
+}
+
+export interface QuestLifecycleEvent {
+  id: BasecampId;
+  templateId: QuestId;
+  action: QuestAction;
+  fromStatus: QuestStatus;
+  toStatus: QuestStatus;
+  reason: string;
+  occurredAt: string;
+}
+
+export interface QuestLifecycleResult {
+  instance: QuestInstance;
+  event: QuestLifecycleEvent;
+}
+
+export interface CategoryPursuitSnapshot {
+  categoryId: CategoryId;
+  pursuitState: PursuitState;
+  updatedAt?: string;
+}
+
+export interface XpEvent {
+  id: BasecampId;
+  sourceType: "quest" | "badge" | "outpost" | "milestone";
+  sourceId: BasecampId;
+  reason: string;
+  xpAwarded: number;
+  occurredAt: string;
+}
+
+export interface HouseholdProgressSnapshot {
+  completedQuestIds?: QuestId[];
+  questInstances?: QuestInstance[];
+  categoryPursuits?: CategoryPursuitSnapshot[];
+  failedValidationQuestIds?: QuestId[];
+  maintenanceRequiredQuestIds?: QuestId[];
+  maintenanceRequiredCategoryIds?: CategoryId[];
+  interestCategoryIds?: CategoryId[];
+  xpEvents?: XpEvent[];
 }
 
 export type BadgeTier = "bronze" | "silver" | "gold" | "platinum" | "master";

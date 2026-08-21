@@ -12,4 +12,7 @@ Core test priorities:
 - Accessibility and offline web/mobile workflows.
 
 M1 includes smoke tests for seed validation, database seed import, server routes,
-and the first web dashboard render.
+and the first web dashboard render. M2 adds tests for lifecycle transitions,
+dependency locks, readiness ceilings, recommendation suppression, progression
+node states, XP caps, badge/outpost progress, persistent audit events, server
+mutation routes, and the readiness-core web shell.

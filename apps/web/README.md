@@ -15,7 +15,7 @@ Architectural rule:
 - Feature code imports Basecamp UI components from `@basecamp/ui`.
 - Feature code does not import Kaizen packages directly except inside approved integration tests or migration spikes.
 
-## M1 Local Run
+## Local Run
 
 ```bash
 pnpm --filter @basecamp/web dev
@@ -23,3 +23,7 @@ pnpm --filter @basecamp/web dev
 
 The Vite dev server runs on `http://127.0.0.1:4318` and proxies API requests to
 the local Basecamp server on port `4317`.
+
+M2 renders the readiness core: ranked recommendations, category pursuit
+controls, progression path lists, active/saved/deferred quest buckets, critical
+gaps, badges, and outposts.

@@ -10,6 +10,7 @@
     "@basecamp/content": "workspace:*",
     "@basecamp/database": "workspace:*",
     "@basecamp/domain": "workspace:*",
+    "@basecamp/gamification": "workspace:*",
     "@basecamp/server": "workspace:*",
     "@basecamp/web": "workspace:*",
     "react": "19.2.8",

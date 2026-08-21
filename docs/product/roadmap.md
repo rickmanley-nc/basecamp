@@ -76,6 +76,7 @@ Outcome:
 - Basecamp can track user-selected quests and category progress.
 - It recommends options without forcing a path.
 - Readiness scoring rewards validated capability more than purchases.
+- Quest and category actions are persisted with an audit trail.
 
 Primary work:
 

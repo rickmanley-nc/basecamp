@@ -8,6 +8,7 @@ Owns:
 - Request/response schemas.
 - Client helpers for web and mobile.
 - Error and pagination conventions.
-- M1 dashboard and seed response helpers shared by web and server.
+- Dashboard, seed, category pursuit, and quest action contracts shared by web
+  and server.
 
 API contracts should expose user workflows, not raw tables.

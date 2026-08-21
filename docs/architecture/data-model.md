@@ -213,6 +213,19 @@ Events worth preserving:
 Routine display screens can use read models, but audit-worthy state changes
 should be recoverable from events.
 
+## Implemented Migration Slice
+
+M1 created seed import tables for categories, capability levels, and quest
+templates. M2 adds early household progress state:
+
+- `category_pursuits` for user-controlled hold/defer/resume decisions.
+- `quest_instances` for selected quest lifecycle state.
+- `quest_events` for audit-ready lifecycle transitions.
+- `xp_events` for motivational progress with source and reason.
+
+This is not the final production schema; it is the first persistent read/write
+slice that keeps user action history recoverable for future sync.
+
 ## Initial Migration Plan
 
 1. Create identity, category, level, quest template, and seed tables.

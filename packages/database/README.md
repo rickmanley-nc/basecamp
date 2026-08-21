@@ -7,8 +7,10 @@ The recommended initial persistence target is PostgreSQL for the server and
 SQLite-compatible snapshots for offline/mobile caches and portable exports.
 
 M1 uses a local SQLite baseline via Node's built-in `node:sqlite` module so the
-first vertical slice can run without a database server. PostgreSQL remains the
-self-hosted production target in the architecture docs.
+first vertical slice can run without a database server. M2 adds persisted
+category pursuit overrides, quest instances, quest lifecycle events, and XP
+events. PostgreSQL remains the self-hosted production target in the architecture
+docs.
 
 ## Local Seed Import
 
