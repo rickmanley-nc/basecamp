@@ -2,7 +2,7 @@
   "name": "@basecamp/gamification",
   "version": "0.0.0",
   "private": true,
-  "description": "XP, readiness scoring, badges, outposts, milestones, recommendations, and unlock logic.",
+  "description": "XP, readiness scoring, badges, capability outposts, milestones, recommendations, and unlock logic.",
   "license": "Apache-2.0",
   "type": "module",
   "exports": {

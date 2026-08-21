@@ -252,8 +252,8 @@ export function App({ summary = fallbackDashboardSummary }: AppProps) {
           </ul>
         </Panel>
 
-        <Panel title="Badges And Outposts">
-          <ul className="bc-list" aria-label="Badge and outpost progress">
+        <Panel title="Badges And Capability Outposts">
+          <ul className="bc-list" aria-label="Badge and capability outpost progress">
             {dashboard.gamification.badges.slice(0, 4).map((badge) => (
               <QuestListItem
                 key={badge.badgeId}
@@ -261,7 +261,7 @@ export function App({ summary = fallbackDashboardSummary }: AppProps) {
                 meta={`${badge.progressPercent}% · next ${badge.nextTier ?? "complete"}`}
               />
             ))}
-            {dashboard.gamification.outposts.map((outpost) => (
+            {dashboard.gamification.capabilityOutposts.map((outpost) => (
               <QuestListItem
                 key={outpost.outpostId}
                 title={outpost.name}

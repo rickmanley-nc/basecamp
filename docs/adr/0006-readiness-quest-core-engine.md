@@ -20,7 +20,8 @@ Implement the M2 core as pure TypeScript domain and gamification functions:
 
 - `@basecamp/domain` owns lifecycle types and transition rules.
 - `@basecamp/gamification` owns dependency resolution, readiness scoring,
-  recommendations, progression paths, XP, badges, outposts, and milestones.
+  recommendations, progression paths, XP, badges, capability outposts, and
+  milestones.
 - `@basecamp/database` persists category pursuit overrides, quest instances,
   quest events, and XP events in the local SQLite baseline.
 - `@basecamp/api` exposes workflow-shaped dashboard, category pursuit, and
@@ -40,6 +41,8 @@ snoozing, abandoning, and reopening quests are explicit user actions.
   offline sync.
 - The M2 database slice is intentionally small and should be migrated toward
   the final PostgreSQL schema during self-hosting milestones.
+- ADR 0007 separates M2 capability outpost achievements from physical location
+  outposts planned for M3.
 
 ## Alternatives Considered
 

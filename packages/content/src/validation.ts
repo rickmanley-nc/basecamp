@@ -78,7 +78,7 @@ export function validateSeedDataset(seed: BasecampSeed): SeedValidationResult {
     }
 
     if (outpost.requirements.length === 0) {
-      addIssue(issues, "error", `outposts.${outpost.id}.requirements`, "Outpost must define requirements.");
+      addIssue(issues, "error", `outposts.${outpost.id}.requirements`, "Capability outpost must define requirements.");
     }
   }
 

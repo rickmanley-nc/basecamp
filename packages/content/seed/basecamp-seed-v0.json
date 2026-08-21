@@ -551,8 +551,8 @@
     {
       "id": "outpost-network",
       "name": "Outpost Network",
-      "description": "Establish a defined number of validated category outposts.",
-      "requirements": ["three outposts earned"]
+      "description": "Establish a defined number of validated category capability outposts.",
+      "requirements": ["three capability outposts earned"]
     },
     {
       "id": "household-resilience",

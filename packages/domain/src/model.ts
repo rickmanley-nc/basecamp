@@ -237,7 +237,7 @@ export interface CategoryPursuitSnapshot {
 
 export interface XpEvent {
   id: BasecampId;
-  sourceType: "quest" | "badge" | "outpost" | "milestone";
+  sourceType: "quest" | "badge" | "capability_outpost" | "milestone";
   sourceId: BasecampId;
   reason: string;
   xpAwarded: number;
@@ -276,6 +276,8 @@ export interface BadgeTemplate {
   readinessBias: ReadinessBias;
 }
 
+// Capability outposts are category achievements. Physical location outposts
+// are modeled by inventory/location work.
 export interface OutpostTemplate {
   id: OutpostId;
   name: string;

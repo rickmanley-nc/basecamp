@@ -8,24 +8,24 @@
   },
   {
     "title": "M1 - Running Vertical Slice",
-    "state": "open",
+    "state": "closed",
     "dueOn": "2026-09-03T23:59:59Z",
     "release": "v0.2.0",
     "description": "First local web/server/domain/content slice that runs and loads seed data."
   },
   {
     "title": "M2 - Readiness And Quest Core",
-    "state": "open",
+    "state": "closed",
     "dueOn": "2026-09-17T23:59:59Z",
     "release": "v0.3.0",
-    "description": "User-controlled quests, category paths, dependency graph, readiness scoring, recommendations, badges, and outposts."
+    "description": "User-controlled quests, category paths, dependency graph, readiness scoring, recommendations, badges, and capability outposts."
   },
   {
     "title": "M3 - Inventory, BOMs And Maintenance",
     "state": "open",
     "dueOn": "2026-10-01T23:59:59Z",
     "release": "v0.4.0",
-    "description": "Inventory, durable assets, QR tags, BOMs, acquisition rollups, and recurring maintenance."
+    "description": "Inventory, locations, multiple home bases, durable assets, QR tags, BOMs, acquisition rollups, and recurring maintenance."
   },
   {
     "title": "M4 - Mobile And Offline Sync",

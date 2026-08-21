@@ -111,9 +111,9 @@ Location maturity tiers:
 
 Multiple locations can hold `home_base` maturity. Location maturity is derived
 from inventory, kits, assets, maintenance, quests, evidence, drills, and
-category readiness at that location. Gamified outpost awards can contribute to a
-location's maturity, but physical location outposts and category achievement
-outposts remain separate concepts.
+category readiness at that location. Gamified capability outpost awards can
+contribute to a location's maturity, but physical location outposts and category
+capability outposts remain separate concepts.
 
 ### BOM, Projects, And Acquisition
 
@@ -222,7 +222,7 @@ Events worth preserving:
 - Drill run.
 - Skill practice or certification.
 - Evidence upload.
-- Badge/outpost/milestone award.
+- Badge/capability outpost/milestone award.
 - Sync conflict.
 - Backup and restore.
 
@@ -249,7 +249,7 @@ slice that keeps user action history recoverable for future sync.
 3. Add inventory, locations, location progression, assets, and QR tags.
 4. Add BOMs, projects, and acquisition needs.
 5. Add skills, drills, and maintenance.
-6. Add scoring, XP, badges, outposts, and milestones.
+6. Add scoring, XP, badges, capability outposts, and milestones.
 7. Add sync clients, command log, conflict records, and audit events.
 8. Add export/import and backup metadata.
 

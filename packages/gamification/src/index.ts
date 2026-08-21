@@ -112,7 +112,7 @@ export type ProgressionNodeType =
   | "test"
   | "drill"
   | "milestone"
-  | "outpost";
+  | "capability_outpost";
 
 export type ProgressionNodeState =
   | "completed"
@@ -149,7 +149,7 @@ export interface BadgeProgress {
   progressPercent: number;
 }
 
-export interface OutpostProgress {
+export interface CapabilityOutpostProgress {
   outpostId: BasecampId;
   name: string;
   categoryId: CategoryId;
@@ -158,6 +158,8 @@ export interface OutpostProgress {
   missingRequirements: string[];
   progressPercent: number;
 }
+
+export type OutpostProgress = CapabilityOutpostProgress;
 
 export interface MilestoneProgress {
   milestoneId: BasecampId;
@@ -480,7 +482,7 @@ export function buildCategoryProgressionPaths(
         return {
           id: outpost.id,
           title: outpost.name,
-          type: "outpost",
+          type: "capability_outpost",
           state: progressResult.earned ? "completed" : suppressedPursuitStates.has(pursuitState) ? "deferred" : "locked",
           categoryId: category.id,
           targetLevel: 3,
@@ -537,12 +539,14 @@ export function calculateBadgeProgress(
   return seed.badges.map((badge) => evaluateBadge(badge, categoryScores.get(badge.categoryId) ?? 0));
 }
 
-export function calculateOutpostProgress(
+export function calculateCapabilityOutpostProgress(
   seed: BasecampSeed,
   progress: HouseholdProgressSnapshot = createEmptyProgressSnapshot()
-): OutpostProgress[] {
+): CapabilityOutpostProgress[] {
   return seed.outposts.map((outpost) => evaluateOutpost(seed, progress, outpost));
 }
+
+export const calculateOutpostProgress = calculateCapabilityOutpostProgress;
 
 export function calculateMilestoneProgress(
   seed: BasecampSeed,

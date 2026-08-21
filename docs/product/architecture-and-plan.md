@@ -1,6 +1,6 @@
 # Basecamp Product Architecture And Implementation Plan
 
-Last updated: 2026-08-20
+Last updated: 2026-08-21
 
 ## Product Definition
 
@@ -14,8 +14,8 @@ Primary deliverables:
 - A mobile companion app for fast capture, field work, scanning, photos,
   maintenance, drills, task completion, and offline reference.
 - Structured preparedness content, quests, progression, projects, bills of
-  materials, inventory, skills, drills, maintenance, scoring, badges, outposts,
-  milestones, and reports.
+  materials, inventory, skills, drills, maintenance, scoring, badges,
+  capability outposts, milestones, and reports.
 
 Core product promise:
 
@@ -32,7 +32,8 @@ Authoritative terminology:
 - Basecamp: the overall platform and central home.
 - Quests: meaningful preparedness objectives selected by the user.
 - Paths: visual progression through a category.
-- Outposts: validated capability milestones inside a category or domain.
+- Capability Outposts: validated capability milestones inside a category or
+  domain.
 - Badges: achievements with tiers and artwork.
 - Milestones: significant cross-category accomplishments.
 - Skills: learned and demonstrated abilities independent of equipment.
@@ -158,7 +159,8 @@ validation work are completed there.
 This means "outpost" has two related uses:
 
 - A location maturity tier: a physical place that has progressed to Outpost.
-- A gamification achievement: a category capability badge such as Water Outpost.
+- A gamification achievement: a category capability outpost such as Water
+  Outpost.
 
 The product should keep those concepts distinct but linkable. For example, a
 Water Outpost achievement can contribute to a specific physical location's
@@ -441,9 +443,9 @@ Survival-themed badge concepts:
 
 Badge art should evolve by tier while retaining a recognizable symbol.
 
-## Outpost Badge Concepts
+## Capability Outpost Concepts
 
-Initial outpost badges:
+Initial capability outpost achievements:
 
 - Water Outpost: validated water storage, purification, shutoff knowledge, and
   outage test.
@@ -469,7 +471,7 @@ Initial milestone concepts:
   electricity for a measured duration.
 - Ready to Evacuate: go-bags, vehicle kit, routes, rally points, navigation,
   communications, and evacuation drill.
-- Outpost Network: establish a defined number of category outposts.
+- Outpost Network: establish a defined number of category capability outposts.
 - Household Resilience: reach Level 3 across defined critical capabilities.
 - One Month Ready: reach Level 4 across critical preparedness capabilities.
 
@@ -840,7 +842,7 @@ Core entity groups:
 - Drills, scenarios, results, failures, lessons, and follow-up quests
 - Maintenance schedules, completions, failures, and next due calculations
 - Evidence, photos, documents, notes, and source references
-- XP, badges, outposts, milestones, and readiness scores
+- XP, badges, capability outposts, milestones, and readiness scores
 - Sync clients, command outbox, audit events, and conflict records
 
 ## API Architecture
@@ -1065,8 +1067,8 @@ Dashboard sections:
 - Quest backlog
 - Recommended quests
 - Recent badges
-- Outposts earned
-- Progress toward upcoming outposts
+- Capability outposts earned
+- Progress toward upcoming capability outposts
 - Major gaps
 - Upcoming maintenance
 - Upcoming drills
@@ -1508,7 +1510,7 @@ Phase 2: Readiness and quest core
 - Dependency graph.
 - Readiness score v1.
 - Recommendation engine v1.
-- Badge/outpost progress v1.
+- Badge and capability outpost progress v1.
 
 Phase 3: Inventory, BOMs, and acquisition
 

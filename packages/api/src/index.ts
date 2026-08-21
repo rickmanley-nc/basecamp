@@ -8,16 +8,16 @@ import type {
 import {
   buildCategoryProgressionPaths,
   calculateBadgeProgress,
+  calculateCapabilityOutpostProgress,
   calculateMilestoneProgress,
-  calculateOutpostProgress,
   calculateReadiness,
   createEmptyProgressSnapshot,
   recommendQuests,
   type BadgeProgress,
   type CategoryProgressionPath,
+  type CapabilityOutpostProgress,
   type CriticalGap,
   type MilestoneProgress,
-  type OutpostProgress,
   type ProgressionNodeState,
   type RecommendationKind
 } from "@basecamp/gamification";
@@ -99,7 +99,7 @@ export interface DashboardSummary {
   gamification: {
     totalXp: number;
     badges: BadgeProgress[];
-    outposts: OutpostProgress[];
+    capabilityOutposts: CapabilityOutpostProgress[];
     milestones: MilestoneProgress[];
   };
 }
@@ -148,7 +148,7 @@ export function createDashboardSummary(
     .filter((instance) => instance.status === "paused" || instance.status === "snoozed")
     .map((instance) => toQuestSummary(requiredQuest(questTemplates, instance.templateId), instance.status, false));
   const badgeProgress = calculateBadgeProgress(seed, progress);
-  const outpostProgress = calculateOutpostProgress(seed, progress);
+  const capabilityOutpostProgress = calculateCapabilityOutpostProgress(seed, progress);
   const milestoneProgress = calculateMilestoneProgress(seed, progress);
   const totalXp = (progress.xpEvents ?? []).reduce((total, event) => total + event.xpAwarded, 0);
 
@@ -206,7 +206,7 @@ export function createDashboardSummary(
     gamification: {
       totalXp,
       badges: badgeProgress,
-      outposts: outpostProgress,
+      capabilityOutposts: capabilityOutpostProgress,
       milestones: milestoneProgress
     }
   };

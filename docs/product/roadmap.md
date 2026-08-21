@@ -27,8 +27,8 @@ The sync script lives in:
 | --- | --- | --- | --- |
 | `v0.1.0` | M0 - Foundation | Architecture, repo skeleton, seed data, CI baseline. | Merged scaffold, docs, seed dataset, and repository check. |
 | `v0.2.0` | M1 - Running Vertical Slice | First running web/server/domain/content slice. | Local app runs, seed content loads, dashboard shell appears, checks pass. |
-| `v0.3.0` | M2 - Readiness And Quest Core | User-controlled progression, quests, scoring, recommendations. | Quest lifecycle, category paths, readiness score v1, deferral controls. |
-| `v0.4.0` | M3 - Inventory, BOMs And Maintenance | Inventory, assets, BOMs, acquisition, recurring maintenance. | Inventory and BOM workflows update quests and readiness. |
+| `v0.3.0` | M2 - Readiness And Quest Core | User-controlled progression, quests, scoring, recommendations. | Quest lifecycle, category paths, readiness score v1, capability outpost progress, deferral controls. |
+| `v0.4.0` | M3 - Inventory, BOMs And Maintenance | Inventory, locations, multiple home bases, assets, BOMs, acquisition, recurring maintenance. | Location, inventory, and BOM workflows update quests and readiness. |
 | `v0.5.0` | M4 - Mobile And Offline Sync | Mobile shell, Quick Capture, scanning, offline outbox, sync. | Mobile can capture field changes offline and sync them later. |
 | `v0.6.0` | M5 - Drills, Skills And Validation | Drills, skill progression, evidence, validation ceilings, reports. | Validated capability outweighs owned gear in scoring. |
 | `v0.7.0` | M6 - Self-Hosting Beta | Container deployment, backups, restore, release process, security. | Linux self-hosted beta can be installed, backed up, restored, and upgraded. |
@@ -86,7 +86,7 @@ Primary work:
 - Dependency graph.
 - Readiness score v1.
 - Recommendation engine v1.
-- XP, badges, outpost progress.
+- XP, badges, capability outpost progress.
 - Category hold/defer controls.
 
 ### M3 - Inventory, BOMs And Maintenance
