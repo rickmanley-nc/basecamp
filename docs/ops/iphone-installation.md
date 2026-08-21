@@ -11,15 +11,30 @@ the iPhone install and physical-device test path used by that gate.
 
 ## Current Status
 
-M4 adds the Basecamp Mobile foundation, shared command model, offline read model,
-scan workflows, and local app-shell preview. A signed installable iPhone build is
-not published yet.
+Basecamp Mobile now has an Expo app entrypoint, iOS app metadata, and EAS build
+profiles for simulator and TestFlight builds. The app can accept an
+admin-controlled Basecamp server URL and sign in with the local
+username/password model.
 
-The selected distribution path for private beta is TestFlight. Normal users
-should not need Xcode or a local build toolchain. Physical iPhone installation is
-pending until a TestFlight or stable Apple-supported build exists.
+The selected distribution path for private beta is TestFlight through EAS Build
+and EAS Submit. Normal users should not need Xcode or a local build toolchain.
+Physical iPhone installation is still pending until an Apple Developer Program
+account, App Store Connect app record, and TestFlight build are available.
 
-Minimum target iOS version: iOS 17.0.
+The v1 installable-iPhone blocker must remain open until the TestFlight path is
+followed on a physical iPhone and the issue records the iOS version, app build,
+install channel, validation environment, and pass/fail notes.
+
+Current beta metadata:
+
+- App name: Basecamp Mobile.
+- Marketing version: `1.0.0-beta.1`.
+- Initial iOS build number: `1`.
+- Bundle identifier: `com.basecamppreparedness.mobile`.
+- Minimum target iOS version: iOS 17.0.
+- Install channel: TestFlight.
+- Auth model: local username/password; SSO is not required or configured.
+- Server URL setup: manual URL entry now; pairing QR remains future work.
 
 ## Target Distribution Paths
 
@@ -33,7 +48,47 @@ Basecamp should support these iPhone install paths:
 TestFlight builds are temporary beta builds, so release instructions must include
 how the admin receives updates and what to do before a beta build expires.
 
-## Target User Install Runbook
+## Admin Build And Submit Runbook
+
+Use this path when Apple and Expo credentials are available. Do not commit Apple
+credentials, Expo tokens, provisioning profiles, API keys, pairing tokens, or
+private server URLs.
+
+Prerequisites:
+
+- Expo account with access to the Basecamp project.
+- Apple Developer Program membership.
+- App Store Connect app record for bundle identifier
+  `com.basecamppreparedness.mobile`.
+- Admin access to invite the pilot friend as an internal or external TestFlight
+  tester.
+- A reachable cloud pilot Basecamp server URL for validation.
+
+Repository checks:
+
+```bash
+pnpm install
+pnpm --filter @basecamp/mobile dev
+pnpm --filter @basecamp/mobile expo:config
+pnpm check
+```
+
+Build and submit:
+
+```bash
+pnpm --filter @basecamp/mobile build:ios:testflight
+pnpm --filter @basecamp/mobile submit:ios:testflight
+```
+
+The `testflight` EAS profile uses App Store distribution and automatically
+increments the iOS build number. Record the final build number from EAS or App
+Store Connect in the issue or release notes.
+
+If the submit step is performed manually instead of by EAS Submit, download the
+`.ipa` from the completed EAS build and upload it through an Apple-supported App
+Store Connect flow. Record that manual upload path in the validation notes.
+
+## Pilot User Install Runbook
 
 Use these steps when a TestFlight or stable build is available:
 
@@ -45,8 +100,8 @@ Use these steps when a TestFlight or stable build is available:
    email.
 5. Install Basecamp Mobile from TestFlight or the stable release channel.
 6. Open Basecamp Mobile.
-7. Enter the Basecamp server URL or scan the future pairing QR code.
-8. Pair the device with the self-hosted server.
+7. Enter the Basecamp server URL.
+8. Sign in with the admin-created local username and password.
 9. Grant permissions only when prompted:
    - Local Network for LAN-only self-hosted sync.
    - Camera for barcode and QR scanning.
@@ -61,10 +116,11 @@ Use these steps when a TestFlight or stable build is available:
 15. Reconnect, sync, and confirm the queued command is accepted or shown as a
     user-visible conflict.
 
-Current M4 local preview for contributors:
+Current local preview for contributors:
 
 ```bash
 pnpm --filter @basecamp/mobile dev
+pnpm --filter @basecamp/mobile start
 ```
 
 Expected preview result:
@@ -73,6 +129,7 @@ Expected preview result:
 - Screens include Home, Capture, Scan, Quests, Inventory, and Offline.
 - Sample Quick Capture confirms an inventory command.
 - Sample QR scan opens an asset workflow target.
+- Native app entrypoint shows server URL entry and local sign-in.
 
 ## Server URL Setup
 
@@ -84,14 +141,16 @@ Use an admin-controlled server URL:
 Do not publish private LAN addresses, pairing tokens, or server secrets in
 issues, PRs, releases, or docs.
 
-## Pairing And Sign-In
+## Sign-In
 
-The M4 contract supports manual server URL entry and a future pairing QR. The
-server must register a mobile sync client ID before accepting queued commands.
-Authentication, authorization, device revocation, and secure pairing tokens are
-future security-hardening work.
+The current native entrypoint supports manual server URL entry and local
+username/password sign-in against `POST /api/auth/login`. Required SSO is not
+part of v1 because the eventual off-grid deployment must keep local auth usable.
 
-## Updates
+Pairing QR remains future work. When it is added, pairing payloads must avoid
+public issues, PRs, releases, and docs unless values are anonymized placeholders.
+
+## Updates, Expiration, And Rollback
 
 For TestFlight:
 
@@ -99,6 +158,18 @@ For TestFlight:
 2. Open Basecamp Mobile while online.
 3. Confirm sync completes.
 4. Repeat the offline smoke check before field use.
+
+Apple TestFlight beta builds are available to testers for up to 90 days. Before
+the active build expires, upload a newer build and ask pilot users to install it.
+
+Rollback expectation:
+
+- If a previous non-expired TestFlight build is still available to the tester,
+  reinstall that build from TestFlight.
+- If the prior build is expired or unavailable, publish a new build with a
+  higher iOS build number that restores the desired behavior.
+- Do not rely on TestFlight as a permanent release channel for long-term field
+  use without monitoring expiration dates.
 
 For a stable release channel, follow the update instructions published with that
 release.
@@ -114,7 +185,7 @@ security event:
 4. Pair as a new mobile client.
 5. Run first sync before relying on offline data.
 
-## M4 Physical Scanner Test
+## Physical Scanner Test
 
 Status: pending until a signed iPhone build with native scanner screens exists.
 
@@ -188,5 +259,8 @@ The install guide should include fixes for:
 
 ## External References
 
+- [Expo EAS Build introduction](https://docs.expo.dev/build/introduction/)
+- [Expo EAS Submit overview](https://docs.expo.dev/deploy/submit-to-app-stores/)
+- [Expo EAS Submit for iOS](https://docs.expo.dev/submit/ios/)
 - [Apple TestFlight overview](https://developer.apple.com/help/app-store-connect/test-a-beta-version/testflight-overview/)
 - [Apple TestFlight app](https://apps.apple.com/app/testflight/id899247664)

@@ -72,11 +72,19 @@ M4 adds mobile/offline sync commands:
 
 - `POST /api/sync`
 - `pnpm --filter @basecamp/mobile dev`
+- `pnpm --filter @basecamp/mobile start`
+- `pnpm --filter @basecamp/mobile expo:config`
 
-The mobile preview is a local TypeScript app-shell check. Physical iPhone checks
-for TestFlight installation, Camera permission, Local Network permission, offline
-device storage, and reconnect sync remain pending until a signed iPhone build
-exists.
+The mobile preview is a local TypeScript app-shell check. The Expo entrypoint
+supports server URL entry and local username/password sign-in. The TestFlight
+path is configured through EAS:
+
+- `pnpm --filter @basecamp/mobile build:ios:testflight`
+- `pnpm --filter @basecamp/mobile submit:ios:testflight`
+
+Physical iPhone checks for TestFlight installation, Camera permission, Local
+Network permission, offline device storage, and reconnect sync remain pending
+until Apple credentials are available and a signed TestFlight build is installed.
 
 M5 adds drills, skills, evidence, and reports:
 

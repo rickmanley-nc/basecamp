@@ -17,15 +17,16 @@ Design principle:
 
 Install requirement:
 
-- M4 must include an iPhone install guide for non-developer users. See
+- v1 must include an iPhone install guide for non-developer users. See
   [iPhone Installation Guide](../../docs/ops/iphone-installation.md).
 
 ## M4 Stack
 
 Basecamp Mobile uses the Expo React Native stack selected in
-[ADR 0008](../../docs/adr/0008-mobile-expo-offline-sync.md). The M4 repository
-slice includes the typed app shell, route model, offline read model preview,
-Quick Capture parser, scan workflows, and command outbox contracts.
+[ADR 0008](../../docs/adr/0008-mobile-expo-offline-sync.md). The repository
+includes the typed app shell, route model, offline read model preview, Quick
+Capture parser, scan workflows, command outbox contracts, Expo app entrypoint,
+and EAS profiles for simulator and TestFlight builds.
 
 Run the local shell preview:
 
@@ -33,9 +34,31 @@ Run the local shell preview:
 pnpm --filter @basecamp/mobile dev
 ```
 
+Run the native Expo app locally:
+
+```bash
+pnpm --filter @basecamp/mobile start
+```
+
+Confirm the public Expo configuration:
+
+```bash
+pnpm --filter @basecamp/mobile expo:config
+```
+
+Build and submit the iOS TestFlight beta when Expo and Apple credentials are
+available:
+
+```bash
+pnpm --filter @basecamp/mobile build:ios:testflight
+pnpm --filter @basecamp/mobile submit:ios:testflight
+```
+
 The preview prints the current mobile stack, tab labels, sample Quick Capture
-confirmation, and sample QR scan target. Native Expo screens and signed
-TestFlight builds are the next implementation layer.
+confirmation, and sample QR scan target. The native Expo entrypoint currently
+covers server URL entry and local username/password sign-in. Field capture,
+scanner screens, durable secure storage, and offline reconnect UX remain v1
+blocker work.
 
 ## Navigation
 
@@ -68,11 +91,13 @@ components.
 Local validation:
 
 - `pnpm --filter @basecamp/mobile dev`
+- `pnpm --filter @basecamp/mobile expo:config`
 - `pnpm check`
 
-Physical iPhone validation is pending until a signed TestFlight or stable build
-exists. Camera permission, QR/barcode scanning, Local Network permission, offline
-storage, and reconnect sync must be verified on a physical iPhone when native
-screens and distribution are available. The exact v1 requirements are tracked in
+Physical iPhone validation is pending until a TestFlight build is uploaded and
+installed. Camera permission, QR/barcode scanning, Local Network permission,
+offline storage, and reconnect sync must be verified on a physical iPhone when
+native field screens and distribution are available. The exact v1 requirements
+are tracked in
 [Basecamp v1.0 MVP Readiness](../../docs/product/v1-mvp-readiness.md) and the
 v1.0 GitHub milestone blocker issues.
