@@ -122,6 +122,105 @@ Use these steps when a TestFlight or stable build is available:
 15. Reconnect, sync, and confirm the queued command is accepted or shown as a
     user-visible conflict.
 
+## Physical iPhone Validation Checklist
+
+Use this checklist for issues #75, #76, and #77 once a TestFlight or stable
+iPhone build is available. Run it against the cloud-pilot server unless the
+issue explicitly names another validation target.
+
+Preflight:
+
+- Confirm the iPhone model and iOS version.
+- Confirm the Basecamp Mobile build number and install channel.
+- Confirm the cloud-pilot server is reachable from Safari on the iPhone.
+- Confirm a pilot username/password account exists. Do not record the password
+  in issues, PRs, release notes, screenshots, or chat.
+- Confirm a fresh server backup exists before testing destructive sync or reset
+  behavior.
+- Confirm the server URL can be described publicly as LAN, VPN, or secure remote
+  without publishing a private hostname, IP address, token, or pairing secret.
+
+Test criteria:
+
+| Area | Steps | Pass Criteria |
+| --- | --- | --- |
+| Install | Install TestFlight if needed, accept the Basecamp invite, install Basecamp Mobile, and open it. | App installs without Xcode, opens without crashing, and shows the server URL/sign-in flow. |
+| Server URL | Enter the cloud-pilot server URL and continue. | URL is accepted; invalid URLs show a clear error and do not save credentials. |
+| Sign-in | Sign in with an admin-created local username/password account. | Sign-in succeeds; password field clears; token is stored securely; Home refreshes from the server. |
+| First Sync | While online, refresh Home/Offline data. | Home, Quests, Inventory, and Offline screens show server-backed data or an explicit empty state. |
+| Local Network | If iOS prompts for Local Network access, allow it and retry sync. | LAN/private server sync works after permission is granted. If denied, the failure is understandable. |
+| Quick Capture Online | From Capture, queue an inventory-style entry such as adding water. Sync while online. | Command appears in the outbox, sync attempts, and the server accepts it or shows a user-visible conflict. |
+| Evidence Photo | From Capture, select or take a photo and upload it while online. | Permission prompt appears when expected; upload succeeds; server stores deployment-owned evidence bytes; no phone-local URI appears in server/export metadata. |
+| Evidence Document | Attach a document if available. | Document picker opens, upload succeeds or gives a clear actionable error. |
+| Basecamp QR Scan | From Scan, grant Camera permission and scan a Basecamp asset QR tag. | Asset workflow appears with inspect, maintain, move, adjust quantity, report issue, and instructions actions. |
+| Barcode Scan | Scan a commercial barcode. | Inventory confirmation appears with barcode context, quantity, location, and notes fields. |
+| Offline Cache | Turn on airplane mode and open Home, Quests, Inventory, and Offline. | Previously synced data remains visible enough for field use; online-only failures do not erase cached data. |
+| Offline Queue | While still offline, create a Quick Capture entry and scan or manually enter a code. Force-close and reopen the app. | Pending commands survive app restart and remain visible in Offline/outbox state. |
+| Reconnect Sync | Turn airplane mode off, return to the same network, and sync. | Pending commands upload idempotently or show a user-visible conflict; the outbox does not duplicate accepted commands. |
+| Conflict Visibility | If a conflict appears, open it and read the message. | Conflict explains what needs human review without exposing internal payloads or secrets. |
+| Sign-out | Sign out, close the app, reopen it. | The prior session is gone; protected server data requires sign-in again. |
+| Lost Device Procedure | Confirm the operator can disable the test user from the server runbook. | User disable guidance is understandable; no password or token is recorded publicly. |
+
+Evidence to record:
+
+- iPhone model.
+- iOS version.
+- Basecamp Mobile build number.
+- Install channel: TestFlight or stable release.
+- Server URL mode: LAN, VPN, or secure remote.
+- Deployment profile: normally `cloud-pilot`.
+- Database kind reported by server status when known.
+- Whether Local Network, Camera, Photos, and Documents flows were prompted and
+  allowed or denied.
+- Pass/fail result for each checklist row.
+- Screenshots only when useful, with private hostnames/IPs, usernames,
+  locations, and preparedness-sensitive details redacted.
+- Any app crash, stuck spinner, unclear copy, or sync result that was not
+  understandable from the UI.
+
+Report template:
+
+```markdown
+## Physical iPhone Validation
+
+- Date:
+- Tester:
+- iPhone model:
+- iOS version:
+- Basecamp Mobile version/build:
+- Install channel:
+- Server URL mode:
+- Deployment profile:
+- Database kind:
+- Backup confirmed before test: yes/no
+
+| Area | Pass/Fail | Notes |
+| --- | --- | --- |
+| Install |  |  |
+| Server URL |  |  |
+| Sign-in |  |  |
+| First sync |  |  |
+| Local Network |  |  |
+| Quick Capture online |  |  |
+| Evidence photo |  |  |
+| Evidence document |  |  |
+| Basecamp QR scan |  |  |
+| Barcode scan |  |  |
+| Offline cache |  |  |
+| Offline queue restart |  |  |
+| Reconnect sync |  |  |
+| Conflict visibility |  |  |
+| Sign-out |  |  |
+| Lost device/user disable procedure |  |  |
+
+## Follow-Ups
+
+- Blockers:
+- Bugs:
+- Documentation gaps:
+- Screenshots attached: yes/no
+```
+
 Current local preview for contributors:
 
 ```bash
@@ -138,6 +237,40 @@ Expected preview result:
 - Native app entrypoint shows server URL entry and local sign-in.
 - Native field screens can queue Quick Capture commands, process manual scan
   payloads, store pending evidence drafts, and attempt sync after sign-in.
+
+## Local Xcode And Simulator Setup
+
+Xcode is useful for local simulator validation, but it is not the normal
+pilot-user install path and it does not replace physical iPhone validation for
+TestFlight installation, Camera, Photos/Documents, Local Network, offline
+storage, or real reconnect behavior.
+
+Install Xcode on a Mac when simulator validation is useful:
+
+1. Install the full Xcode app from the Mac App Store or Apple Developer
+   Downloads. The command-line tools alone are not enough for `simctl`.
+2. Open Xcode once and allow it to install required components.
+3. In Xcode, open Settings, then Components, and install an iOS simulator
+   runtime if one is not already installed.
+4. Set the active developer directory:
+
+```bash
+sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+sudo xcodebuild -license accept
+xcrun simctl list devices available
+```
+
+Simulator smoke commands:
+
+```bash
+pnpm install
+pnpm --filter @basecamp/mobile expo:config
+pnpm --filter @basecamp/mobile ios
+```
+
+Use simulator validation for layout, navigation, URL entry, sign-in happy path
+against a reachable server, and non-camera smoke checks. Record simulator
+results separately from physical iPhone results.
 
 ## Server URL Setup
 
@@ -289,5 +422,8 @@ The install guide should include fixes for:
 - [Expo EAS Build introduction](https://docs.expo.dev/build/introduction/)
 - [Expo EAS Submit overview](https://docs.expo.dev/deploy/submit-to-app-stores/)
 - [Expo EAS Submit for iOS](https://docs.expo.dev/submit/ios/)
+- [Expo iOS Simulator workflow](https://docs.expo.dev/workflow/ios-simulator/)
+- [Apple Xcode system requirements](https://developer.apple.com/xcode/system-requirements/)
+- [Apple Xcode command-line tool reference](https://developer.apple.com/documentation/xcode/xcode-command-line-tool-reference)
 - [Apple TestFlight overview](https://developer.apple.com/help/app-store-connect/test-a-beta-version/testflight-overview/)
 - [Apple TestFlight app](https://apps.apple.com/app/testflight/id899247664)
