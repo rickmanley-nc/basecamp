@@ -1,6 +1,6 @@
 # Basecamp Development Workflow
 
-Last updated: 2026-08-20
+Last updated: 2026-08-21
 
 ## Local Setup
 
@@ -80,6 +80,8 @@ Every PR should describe:
 
 Passing roadmap PRs should be squash-merged by the agent by default. The user
 reviews milestone outcomes and releases rather than merging every PR manually.
+Before merging a PR that closes roadmap issues, post a `## Resolution` comment
+on each issue explaining how it was resolved.
 
 Pause for user review only when a PR changes product direction, introduces
 security or infrastructure risk, fails validation in a non-obvious way, or
@@ -120,6 +122,8 @@ For product code:
 - Accessibility is considered.
 - UI imports respect `@basecamp/ui`.
 - Docs or ADRs are updated for architecture changes.
+- Closed roadmap issues have `## Resolution` comments with the specific change,
+  validation, and follow-up status.
 
 For content:
 
