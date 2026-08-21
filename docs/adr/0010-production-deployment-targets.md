@@ -75,6 +75,9 @@ proxy responsibilities are separable from Compose.
   deployment.
 - Compose files must not become the only place where production behavior is
   defined.
+- The v1 release decision is governed by
+  [Basecamp v1.0 MVP Readiness](../product/v1-mvp-readiness.md), which turns
+  these deployment profiles into explicit validation gates.
 - v1.0 needs explicit work for PostgreSQL, storage hardening beyond the M7
   portability boundary, cloud pilot operations, physical iPhone testing, and
   production-grade validation.

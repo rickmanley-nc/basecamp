@@ -6,6 +6,10 @@ This policy defines acceptable verification environments for Basecamp work. It
 keeps milestone progress moving without pretending a local smoke test proves a
 production install or an iPhone field workflow.
 
+The v1.0 release gate is defined in
+[Basecamp v1.0 MVP Readiness](../product/v1-mvp-readiness.md). Use that
+checklist when deciding whether validation is sufficient for a v1 blocker.
+
 ## Accepted Environments
 
 Local machine:

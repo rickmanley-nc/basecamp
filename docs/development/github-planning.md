@@ -215,6 +215,7 @@ Release tags use semver:
 - `v0.7.x`: self-hosting beta patch releases.
 - `v0.8.0`: cloud pilot foundation.
 - `v0.8.1`: recovery and homelab boundary.
+- `v0.9.0`: MVP readiness gate.
 - `v1.0.0`: MVP readiness.
 
 Patch releases are for corrections inside a milestone, such as `v0.2.1`.

@@ -1396,7 +1396,8 @@ Content standards:
 ## Deployment Architecture
 
 Basecamp targets portable deployment profiles rather than a single orchestrator.
-See [ADR 0010](../adr/0010-production-deployment-targets.md).
+See [ADR 0010](../adr/0010-production-deployment-targets.md) and
+[Basecamp v1.0 MVP Readiness](./v1-mvp-readiness.md).
 
 Core production shape:
 
