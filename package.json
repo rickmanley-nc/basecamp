@@ -17,6 +17,9 @@
     "ops:backup": "pnpm --filter @basecamp/database backup",
     "ops:export": "pnpm --filter @basecamp/database export",
     "ops:import": "pnpm --filter @basecamp/database import",
+    "ops:postgres:import": "pnpm --filter @basecamp/database postgres:import",
+    "ops:postgres:migrate": "pnpm --filter @basecamp/database postgres:migrate",
+    "ops:postgres:status": "pnpm --filter @basecamp/database postgres:status",
     "ops:release-check": "node scripts/ops/release-check.mjs",
     "ops:restore": "pnpm --filter @basecamp/database restore",
     "ops:security-check": "node scripts/ops/security-check.mjs",
@@ -30,6 +33,7 @@
   },
   "devDependencies": {
     "@types/node": "26.2.0",
+    "@types/pg": "^8.23.1",
     "@types/qrcode": "^1.5.6",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.4",

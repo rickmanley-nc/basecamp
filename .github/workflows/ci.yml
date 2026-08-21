@@ -30,3 +30,53 @@ jobs:
 
       - name: Check
         run: pnpm check
+
+  postgres-validation:
+    name: PostgreSQL persistence validation
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: basecamp
+          POSTGRES_USER: basecamp
+          POSTGRES_PASSWORD: change-me-ci-postgres-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U basecamp -d basecamp"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      BASECAMP_DATABASE_URL: postgresql://basecamp:change-me-ci-postgres-password@127.0.0.1:5432/basecamp
+      BASECAMP_POSTGRES_SSL: disable
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.7.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile=false
+
+      - name: PostgreSQL migrate and seed
+        run: pnpm ops:postgres:migrate
+
+      - name: Create portable SQLite export
+        run: pnpm ops:export
+
+      - name: Import portable export into PostgreSQL
+        run: pnpm ops:postgres:import
+
+      - name: PostgreSQL status
+        run: pnpm ops:postgres:status

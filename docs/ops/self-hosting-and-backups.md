@@ -40,12 +40,14 @@ M6 reference adapter:
 Avoid mandatory SaaS dependencies for normal operation. Do not require SSO for
 v1 because eventual offgrid operation must remain possible.
 
-PostgreSQL remains the later production target. The M6 beta uses SQLite because
-that is the implemented application persistence layer. The v0.8 cloud pilot
-foundation adds local username/password authentication. The v0.8.1 recovery
-checkpoint proves cloud-pilot backup/restore for the implemented SQLite and
-filesystem storage path while keeping PostgreSQL and clearer reset/seed controls
-in v1.0 readiness work.
+PostgreSQL is now represented by a production-persistence data path: migrations,
+seed import, status, and portable SQLite-beta import are runnable against a real
+PostgreSQL service. The v0.9.x API server still defaults to SQLite until the
+PostgreSQL runtime adapter is promoted, and v1.0 must not ship while hiding that
+limitation. The v0.8 cloud pilot foundation adds local username/password
+authentication. The v0.8.1 recovery checkpoint proves cloud-pilot backup/restore
+for the implemented SQLite and filesystem storage path while keeping clearer
+reset/seed controls in v1.0 readiness work.
 
 ## Runtime Services
 
@@ -58,9 +60,12 @@ Current M6 services:
 - Reverse proxy.
 - Backup job.
 
-Future services:
+Optional v1 production-persistence validation service:
 
 - PostgreSQL database for production/pilot.
+
+Future services:
+
 - Object storage adapter for cloud pilot evidence/documents.
 - Background worker.
 - Search index.
@@ -151,6 +156,9 @@ pnpm ops:export
 pnpm ops:import
 pnpm ops:user:create
 pnpm ops:user:disable
+pnpm ops:postgres:migrate
+pnpm ops:postgres:status
+pnpm ops:postgres:import
 ```
 
 ## Open Decisions

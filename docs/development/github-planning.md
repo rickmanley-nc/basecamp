@@ -65,9 +65,12 @@ Active milestone order:
 5. M5 - Drills, Skills And Validation
 6. M6 - Self-Hosting Beta
 7. M7 - Cloud Pilot Foundation
-8. v1.0 - MVP Readiness
+8. M8 - Recovery And Homelab Boundary
+9. M9 - MVP Readiness Gate
+10. M10 - PostgreSQL Production Persistence Path
+11. v1.0 - MVP Readiness
 
-M0 is historical after `v0.1.0`.
+M0 through M10 are historical after their corresponding releases.
 
 ## Autonomous Delivery Mode
 
@@ -216,6 +219,7 @@ Release tags use semver:
 - `v0.8.0`: cloud pilot foundation.
 - `v0.8.1`: recovery and homelab boundary.
 - `v0.9.0`: MVP readiness gate.
+- `v0.9.1`: PostgreSQL production persistence path.
 - `v1.0.0`: MVP readiness.
 
 Patch releases are for corrections inside a milestone, such as `v0.2.1`.

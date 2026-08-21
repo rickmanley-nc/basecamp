@@ -70,6 +70,13 @@
     "description": "Testable v1 release criteria, validation matrix, non-goals, and remaining blocker issue map."
   },
   {
+    "title": "M10 - PostgreSQL Production Persistence Path",
+    "state": "closed",
+    "dueOn": "2027-01-05T23:59:59Z",
+    "release": "v0.9.1",
+    "description": "PostgreSQL migration, seed import, status, portable SQLite-beta import bridge, and validation profile."
+  },
+  {
     "title": "v1.0 - MVP Readiness",
     "state": "open",
     "dueOn": "2027-01-15T23:59:59Z",

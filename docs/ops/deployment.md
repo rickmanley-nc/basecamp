@@ -22,9 +22,13 @@ admin-created accounts, placeholder admin token rejection, and a portable
 evidence-reference boundary that does not publish host filesystem paths. The
 v0.8.1 recovery checkpoint adds deployment-profile metadata to admin status,
 backup manifests, and restore results, plus a restore proof for local accounts,
-inventory, evidence storage, reports, and admin readiness. The
-long-term production target remains PostgreSQL. The runnable beta uses SQLite
-because that is the persistence layer implemented by the application today. See
+inventory, evidence storage, reports, and admin readiness.
+
+v0.9.1 adds the PostgreSQL production-persistence data path: PostgreSQL
+migrations, seed import, portable SQLite-beta export import, an optional Compose
+`postgres` profile, and operator status checks. The runnable API server still
+defaults to SQLite in the v0.9.x beta until the PostgreSQL runtime adapter is
+promoted; v1.0 cannot ship with that limitation hidden. See
 [ADR 0009](../adr/0009-self-hosting-beta-sqlite-ops.md) and
 [ADR 0010](../adr/0010-production-deployment-targets.md).
 
@@ -42,6 +46,17 @@ because that is the persistence layer implemented by the application today. See
 The commands below document the M6 reference adapter. v1.0 readiness must prove
 the underlying app, database, storage, secrets, backup, restore, and proxy
 responsibilities are separable from Compose.
+
+Database modes:
+
+- `sqlite-beta`: current local-dev and v0.9.x API runtime default. Data lives in
+  `BASECAMP_DB_PATH` and is protected by the backup/restore path.
+- `postgresql-validation`: v1 production-persistence validation path. Data lives
+  in PostgreSQL via `BASECAMP_DATABASE_URL`; migrations, seed import, status,
+  and portable SQLite import are runnable today.
+- `postgresql-runtime`: required before `v1.0.0` can be shipped as production
+  ready. If the server runtime adapter is not promoted, the v1 release must be
+  held.
 
 For v1, the cloud pilot should use admin-created local accounts with
 username/password login. Do not add SSO as a required dependency because it
@@ -109,6 +124,57 @@ docker compose --env-file basecamp.env config --quiet
 docker compose --env-file basecamp.env up -d --build
 docker compose --env-file basecamp.env ps
 ```
+
+## PostgreSQL Production Persistence
+
+The PostgreSQL path is available for cloud-pilot persistence validation before
+the API server switches its default runtime database. Use it on the accepted v1
+cloud-pilot target or in a clean local container environment.
+
+Operator variables:
+
+- `BASECAMP_DATABASE_URL`: PostgreSQL connection string for admin-run database
+  operations.
+- `BASECAMP_POSTGRES_SSL`: `disable`, `require`, or `allow-self-signed`.
+- `BASECAMP_POSTGRES_DB`, `BASECAMP_POSTGRES_USER`, and
+  `BASECAMP_POSTGRES_PASSWORD`: optional Compose `postgres` profile values.
+
+Run PostgreSQL with the reference Compose profile:
+
+```bash
+cd /opt/basecamp/infra
+docker compose --profile postgres --env-file basecamp.env up -d postgres
+docker compose --profile postgres --env-file basecamp.env run --rm postgres-tools pnpm ops:postgres:migrate
+docker compose --profile postgres --env-file basecamp.env run --rm postgres-tools pnpm ops:postgres:status
+```
+
+The migrate command applies the schema migrations and imports the packaged seed
+content idempotently. The status command reports `database.kind: "postgresql"`,
+migration count, and table counts.
+
+To bridge existing SQLite beta data into PostgreSQL, create a portable export
+from the SQLite deployment, then import that archive into the PostgreSQL
+database:
+
+```bash
+cd /opt/basecamp/infra
+mkdir -p ../var/exports/postgres-bridge
+docker compose --env-file basecamp.env run --rm \
+  -v "$PWD/../var/exports/postgres-bridge:/exports" \
+  -e BASECAMP_EXPORT_DIR=/exports \
+  server pnpm ops:export
+
+docker compose --profile postgres --env-file basecamp.env run --rm \
+  -v "$PWD/../var/exports/postgres-bridge:/imports:ro" \
+  -e BASECAMP_IMPORT_FILE=/imports/basecamp-export.json \
+  postgres-tools pnpm ops:postgres:import
+```
+
+Portable export/import migrates structured application data, CSV-readable
+records, audit events, and evidence/document references. It rejects incompatible
+content schema versions and modified archives. Admin-created local accounts are
+still protected by database backup/restore in the SQLite beta path; recreate or
+explicitly migrate users when the PostgreSQL runtime adapter is promoted.
 
 Create the first admin account after the server has applied migrations. The
 password must be at least 12 characters. The example uses shell prompts so the
@@ -237,9 +303,9 @@ jq '{
 }' /var/backups/basecamp/<backup-directory>/manifest.json
 ```
 
-Expected cloud pilot values for v0.8.1:
+Expected cloud pilot values for v0.9.1:
 
-- `appVersion` is `0.8.1`.
+- `appVersion` is `0.9.1`.
 - `deployment.profile` is `cloud-pilot`.
 - `deployment.configIncluded` is `true` when `BASECAMP_CONFIG_SOURCE` points at
   the real admin config file.

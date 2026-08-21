@@ -18,6 +18,9 @@ const requiredFiles = [
   "packages/database/scripts/restore.ts",
   "packages/database/scripts/export-data.ts",
   "packages/database/scripts/import-data.ts",
+  "packages/database/scripts/postgres-migrate.ts",
+  "packages/database/scripts/postgres-import.ts",
+  "packages/database/scripts/postgres-status.ts",
   "packages/database/scripts/create-user.ts",
   "packages/database/scripts/disable-user.ts"
 ];
@@ -39,6 +42,12 @@ const deployment = await readText("docs/ops/deployment.md");
 for (const service of ["server", "web", "proxy", "backup"]) {
   if (!compose.includes(`${service}:`)) {
     failures.push(`Compose file must include ${service} service.`);
+  }
+}
+
+for (const service of ["postgres", "postgres-tools"]) {
+  if (!compose.includes(`${service}:`) || !compose.includes('profiles: ["postgres"]')) {
+    failures.push(`Compose file must include optional PostgreSQL profile service: ${service}.`);
   }
 }
 
@@ -75,7 +84,12 @@ for (const variable of [
   "BASECAMP_ADMIN_TOKEN",
   "BASECAMP_AUTH_MODE",
   "BASECAMP_DEPLOYMENT_PROFILE",
-  "BASECAMP_CONFIG_SOURCE"
+  "BASECAMP_CONFIG_SOURCE",
+  "BASECAMP_POSTGRES_DB",
+  "BASECAMP_POSTGRES_USER",
+  "BASECAMP_POSTGRES_PASSWORD",
+  "BASECAMP_DATABASE_URL",
+  "BASECAMP_POSTGRES_SSL"
 ]) {
   if (!envExample.includes(variable)) {
     failures.push(`Environment example is missing ${variable}.`);

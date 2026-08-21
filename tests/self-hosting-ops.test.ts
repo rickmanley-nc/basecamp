@@ -582,7 +582,7 @@ describe("M6 self-hosting operations", () => {
     expect(compose).toContain("${BASECAMP_CONFIG_SOURCE");
     expect(envExample).toContain("BASECAMP_ADMIN_TOKEN=change-me");
     expect(envExample).toContain("BASECAMP_AUTH_MODE=local");
-    expect(envExample).toContain("BASECAMP_APP_VERSION=0.8.1");
+    expect(envExample).toContain("BASECAMP_APP_VERSION=0.9.1");
     expect(envExample).toContain("BASECAMP_DEPLOYMENT_PROFILE=cloud-pilot");
     expect(envExample).toContain("BASECAMP_CONFIG_SOURCE=./basecamp.env");
     expect(envExample).toContain("BASECAMP_REMOTE_ACCESS=lan");

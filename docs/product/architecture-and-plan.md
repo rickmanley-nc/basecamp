@@ -1403,7 +1403,9 @@ Core production shape:
 
 - Static web application artifact.
 - Stateless API/sync server.
-- PostgreSQL production database target.
+- PostgreSQL production database target. v0.9.1 includes the migration, seed,
+  status, and portable SQLite import path; the API runtime adapter promotion is
+  still required before `v1.0.0`.
 - Evidence/document storage abstraction, starting with filesystem storage and
   allowing S3-compatible object storage later.
 - Reverse proxy and TLS controlled by the deployment environment.
