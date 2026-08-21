@@ -11,25 +11,27 @@ project clearer.
 ## Release Checklist
 
 1. Confirm milestone scope.
-2. Confirm all required issues are closed or intentionally deferred.
-3. Confirm closed roadmap issues have `## Resolution` comments.
-4. Run `pnpm check`.
-5. Update roadmap and docs.
-6. Confirm migrations, seed data, backup impact, and export impact where
+2. For `v1.0.0`, confirm
+   [Basecamp v1.0 MVP Readiness](../product/v1-mvp-readiness.md) is complete.
+3. Confirm all required issues are closed or intentionally deferred.
+4. Confirm closed roadmap issues have `## Resolution` comments.
+5. Run `pnpm check`.
+6. Update roadmap and docs.
+7. Confirm migrations, seed data, backup impact, and export impact where
    relevant.
-7. Confirm deployment and mobile installation guides are updated when a release
+8. Confirm deployment and mobile installation guides are updated when a release
    changes install, upgrade, pairing, or distribution behavior.
-8. Confirm required validation environments are satisfied or explicitly recorded:
+9. Confirm required validation environments are satisfied or explicitly recorded:
    CI, local machine, clean local environment, separate server, simulator, or
    physical iPhone.
-9. For installable releases, record the deployment profile validated:
+10. For installable releases, record the deployment profile validated:
    `local-dev`, `cloud-pilot`, post-MVP `homelab`, or intentionally deferred.
-10. Confirm release notes and linked PR text contain no personal workstation
+11. Confirm release notes and linked PR text contain no personal workstation
    paths.
-11. Draft release notes.
-12. Tag the release.
-13. Create the GitHub Release.
-14. Close the milestone when appropriate.
+12. Draft release notes.
+13. Tag the release.
+14. Create the GitHub Release.
+15. Close the milestone when appropriate.
 
 For installable self-hosting releases, also run:
 
@@ -96,4 +98,5 @@ Every upgrade note should say:
 - `v0.7.x` - Self-Hosting Beta patch releases
 - `v0.8.0` - Cloud Pilot Foundation
 - `v0.8.1` - Recovery And Homelab Boundary
+- `v0.9.0` - MVP Readiness Gate
 - `v1.0.0` - MVP Readiness

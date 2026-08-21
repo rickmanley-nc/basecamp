@@ -129,6 +129,11 @@ backup manifests, restore results, and `/api/admin/status`. Restore validation
 should prove local users, inventory, evidence files, reports, and admin status
 after restore.
 
+v1 work should follow
+[Basecamp v1.0 MVP Readiness](../product/v1-mvp-readiness.md). When a v1 blocker
+is discovered, add it to the v1.0 GitHub milestone instead of leaving it as a
+loose note in docs or PR text.
+
 ## Branches
 
 - `main` should remain releasable.

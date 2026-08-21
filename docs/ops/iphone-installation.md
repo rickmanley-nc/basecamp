@@ -5,6 +5,10 @@ Last updated: 2026-08-21
 This guide is the operator runbook for installing the Basecamp mobile companion
 on an iPhone.
 
+For the full v1 release gate, see
+[Basecamp v1.0 MVP Readiness](../product/v1-mvp-readiness.md). This guide covers
+the iPhone install and physical-device test path used by that gate.
+
 ## Current Status
 
 M4 adds the Basecamp Mobile foundation, shared command model, offline read model,

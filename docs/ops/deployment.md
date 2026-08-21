@@ -5,6 +5,11 @@ Last updated: 2026-08-21
 This guide is the operator runbook for installing the Basecamp self-hosting beta
 and cloud pilot foundation on an admin-controlled Linux host.
 
+For the full v1 release gate, see
+[Basecamp v1.0 MVP Readiness](../product/v1-mvp-readiness.md). This deployment
+guide covers the server/web operator path; v1 also requires the mobile and
+physical iPhone gates described there.
+
 ## Current Status
 
 M6 added an installable Docker Compose beta for the web app, API server,

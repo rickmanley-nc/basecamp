@@ -73,4 +73,6 @@ Local validation:
 Physical iPhone validation is pending until a signed TestFlight or stable build
 exists. Camera permission, QR/barcode scanning, Local Network permission, offline
 storage, and reconnect sync must be verified on a physical iPhone when native
-screens and distribution are available.
+screens and distribution are available. The exact v1 requirements are tracked in
+[Basecamp v1.0 MVP Readiness](../../docs/product/v1-mvp-readiness.md) and the
+v1.0 GitHub milestone blocker issues.

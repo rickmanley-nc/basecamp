@@ -15,6 +15,7 @@ const requiredFiles = [
   "docs/product/architecture-and-plan.md",
   "docs/architecture/data-model.md",
   "docs/product/roadmap.md",
+  "docs/product/v1-mvp-readiness.md",
   "docs/ui/kaizen-integration.md",
   "docs/development/workflow.md",
   "docs/development/github-planning.md",
