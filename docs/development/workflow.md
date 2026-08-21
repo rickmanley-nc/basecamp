@@ -56,6 +56,18 @@ M2 adds persisted quest and category state to the local database. Useful routes:
 - `PATCH /api/categories/:categoryId/pursuit`
 - `POST /api/quests/:questId/actions`
 
+M3 adds inventory, location, asset tag, and maintenance routes:
+
+- `GET /api/inventory`
+- `POST /api/inventory/quick-entry`
+- `GET /api/assets/:assetId`
+- `POST /api/assets/:assetId/tags`
+- `POST /api/maintenance/policies`
+- `POST /api/maintenance/:policyId/completions`
+
+Set `BASECAMP_PUBLIC_URL` when QR tags should point at a known server or LAN
+host rather than using the request host.
+
 ## Branches
 
 - `main` should remain releasable.

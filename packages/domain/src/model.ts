@@ -10,6 +10,11 @@ export type EvidenceId = BasecampId;
 export type MaintenancePolicyId = BasecampId;
 export type SkillId = BasecampId;
 export type DrillId = BasecampId;
+export type LocationId = BasecampId;
+export type InventoryLotId = BasecampId;
+export type InventoryEventId = BasecampId;
+export type KitId = BasecampId;
+export type AssetTagId = BasecampId;
 
 export type Criticality = "critical" | "important" | "supporting";
 
@@ -330,7 +335,191 @@ export interface InventoryItem {
   type: InventoryItemType;
   categoryId?: CategoryId;
   state: InventoryState;
+  functionalRequirement?: string;
+  unit?: string;
   capabilityState: CapabilityStateSnapshot;
+}
+
+export type LocationKind =
+  | "home"
+  | "family_home"
+  | "work"
+  | "vehicle"
+  | "room"
+  | "storage"
+  | "cache"
+  | "field"
+  | "other";
+
+export type LocationMaturity = "known_location" | "stash" | "outpost" | "basecamp" | "home_base";
+
+export interface Location {
+  id: LocationId;
+  name: string;
+  kind: LocationKind;
+  maturity: LocationMaturity;
+  notes?: string;
+}
+
+export interface LocationRelationship {
+  id: BasecampId;
+  parentLocationId: LocationId;
+  childLocationId: LocationId;
+  relationship: "contains" | "near" | "supports" | "fallback_for";
+}
+
+export interface LocationReadiness {
+  locationId: LocationId;
+  categoryId: CategoryId;
+  score: number;
+  status: "unknown" | "building" | "validated" | "maintenance_due" | "failed";
+  sourceCapabilityOutpostId?: OutpostId;
+  validatedAt?: string;
+}
+
+export interface InventoryLot {
+  id: InventoryLotId;
+  itemId: InventoryItemId;
+  locationId: LocationId;
+  quantity: number;
+  unit: string;
+  state: InventoryState;
+  expiresAt?: string;
+  acquiredAt?: string;
+  notes?: string;
+}
+
+export interface Asset {
+  id: AssetId;
+  name: string;
+  type: InventoryItemType;
+  state: InventoryState;
+  locationId?: LocationId;
+  itemId?: InventoryItemId;
+  categoryId?: CategoryId;
+  serialNumber?: string;
+  notes?: string;
+}
+
+export interface AssetTag {
+  id: AssetTagId;
+  assetId: AssetId;
+  tagCode: string;
+  qrPayload: string;
+  lookupPath: string;
+  printLabel: string;
+  createdAt: string;
+}
+
+export interface Kit {
+  id: KitId;
+  name: string;
+  locationId?: LocationId;
+  categoryId?: CategoryId;
+  state: InventoryState;
+  notes?: string;
+}
+
+export interface KitItem {
+  id: BasecampId;
+  kitId: KitId;
+  itemId: InventoryItemId;
+  requiredQuantity: number;
+  presentQuantity: number;
+  required: boolean;
+  state: InventoryState;
+  notes?: string;
+}
+
+export type InventoryEventType =
+  | "add"
+  | "remove"
+  | "move"
+  | "consume"
+  | "expire"
+  | "inspect"
+  | "fail"
+  | "adjust"
+  | "tag";
+
+export interface InventoryEvent {
+  id: InventoryEventId;
+  eventType: InventoryEventType;
+  itemId?: InventoryItemId;
+  assetId?: AssetId;
+  lotId?: InventoryLotId;
+  fromLocationId?: LocationId;
+  toLocationId?: LocationId;
+  quantityDelta?: number;
+  unit?: string;
+  stateAfter?: InventoryState;
+  notes?: string;
+  occurredAt: string;
+}
+
+export type AcquisitionState =
+  | "already_owned"
+  | "need_to_purchase"
+  | "need_to_make"
+  | "need_to_build"
+  | "need_to_replenish"
+  | "optional"
+  | "substituted";
+
+export interface AcquisitionNeed {
+  id: BasecampId;
+  questId: QuestId;
+  questTitle: string;
+  categoryId: CategoryId;
+  functionalRequirement: string;
+  quantity: string | number;
+  required: boolean;
+  state: AcquisitionState;
+  acceptableAlternatives: string[];
+  specification?: string;
+  estimatedCostUsd?: number;
+  replacementInterval?: string;
+  matchedItemIds: InventoryItemId[];
+}
+
+export type MaintenanceRecurrenceUnit = "day" | "week" | "month" | "year";
+
+export interface MaintenancePolicy {
+  id: MaintenancePolicyId;
+  name: string;
+  scopeType: "asset" | "item" | "location" | "category";
+  intervalCount: number;
+  intervalUnit: MaintenanceRecurrenceUnit;
+  active: boolean;
+  assetId?: AssetId;
+  itemId?: InventoryItemId;
+  locationId?: LocationId;
+  categoryId?: CategoryId;
+  lastCompletedAt?: string;
+  nextDueAt?: string;
+  instructions?: string;
+}
+
+export type MaintenanceEventType = "completed" | "failed" | "inspection" | "replacement" | "skipped";
+
+export interface MaintenanceEvent {
+  id: BasecampId;
+  policyId: MaintenancePolicyId;
+  eventType: MaintenanceEventType;
+  outcome: "passed" | "issue_found" | "failed" | "skipped";
+  occurredAt: string;
+  nextDueAt?: string;
+  notes?: string;
+  followUpQuestTitle?: string;
+}
+
+export interface MaintenanceDueItem {
+  policyId: MaintenancePolicyId;
+  title: string;
+  dueAt: string;
+  status: "upcoming" | "due" | "overdue";
+  scopeLabel: string;
+  followUpQuestTitle?: string;
 }
 
 export type SkillState =

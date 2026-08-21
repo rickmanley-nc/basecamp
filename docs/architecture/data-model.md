@@ -239,6 +239,18 @@ templates. M2 adds early household progress state:
 - `quest_events` for audit-ready lifecycle transitions.
 - `xp_events` for motivational progress with source and reason.
 
+M3 adds the first inventory/location/maintenance migration slice:
+
+- `locations`, `location_relationships`, and `location_readiness` for user-named
+  places, hierarchy, category readiness, and independent progression from
+  `known_location` through `home_base`.
+- `inventory_items`, `inventory_lots`, and `inventory_events` for event-backed
+  quantity changes instead of destructive total overwrites.
+- `assets`, `asset_tags`, `kits`, and `kit_items` for durable tracked objects,
+  Basecamp QR tag payloads, and loadouts.
+- `maintenance_policies` and `maintenance_events` for recurring scope, next due
+  calculation, completion records, and issue/failure follow-up context.
+
 This is not the final production schema; it is the first persistent read/write
 slice that keeps user action history recoverable for future sync.
 
