@@ -43,7 +43,7 @@
   },
   {
     "title": "M6 - Self-Hosting Beta",
-    "state": "open",
+    "state": "closed",
     "dueOn": "2026-12-03T23:59:59Z",
     "release": "v0.7.0",
     "description": "Linux self-hosted beta with deployment, backups, restore, updates, security hardening, and observability."

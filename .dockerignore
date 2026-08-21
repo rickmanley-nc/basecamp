@@ -1,0 +1,12 @@
+node_modules
+.pnpm-store
+apps/web/dist
+coverage
+var
+data
+backups
+infra/basecamp.env
+*.sqlite
+*.sqlite3
+.git
+.DS_Store

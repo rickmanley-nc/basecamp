@@ -4,6 +4,7 @@ import {
   createInventoryDashboardSummary,
   createSeedContentResponse,
   type AssetTagResponse,
+  type AdminAuditEventSummary,
   type CategoryPursuitUpdateRequest,
   type DrillRunRequest,
   type DrillRunResponse,
@@ -13,6 +14,7 @@ import {
   type HealthResponse,
   type MaintenanceCompletionRequest,
   type MaintenancePolicyRequest,
+  type OperationalStatusResponse,
   type QuickInventoryEntryRequest,
   type QuestActionRequest,
   type SkillTrainingRequest,
@@ -22,13 +24,18 @@ import { basecampSeed, seedValidation } from "@basecamp/content";
 import {
   applyMigrations,
   applyPersistedQuestAction,
+  buildOperationalStatus,
   createBasecampAssetTag,
   createDatabase,
+  createPortableExport,
   importSeed,
+  importPortableExport,
+  listAuditEvents,
   listDrillTemplates,
   readAssetWithTags,
   readHouseholdProgress,
   readInventoryState,
+  recordAuditEvent,
   recordXpEvent,
   applySyncCommandBatch,
   recordDrillRun,
@@ -41,14 +48,22 @@ import {
 } from "@basecamp/database";
 import { questActions, type InventoryItemType, type PursuitState } from "@basecamp/domain";
 import { createXpEventForQuest } from "@basecamp/gamification";
+import type { PortableExportArchive } from "@basecamp/database";
 import type { SyncBatchRequest } from "@basecamp/sync";
 import Fastify, { type FastifyInstance } from "fastify";
 import type { DatabaseSync } from "node:sqlite";
 
 export interface BuildServerOptions {
+  adminToken?: string;
+  appVersion?: string;
+  backupDir?: string;
   closeDatabaseOnClose?: boolean;
   database?: DatabaseSync;
+  databasePath?: string;
   logger?: boolean;
+  remoteAccessMode?: "lan" | "vpn" | "reverse_proxy" | "unknown";
+  storageDir?: string;
+  webUrl?: string;
 }
 
 const pursuitStates = new Set<PursuitState>([
@@ -79,6 +94,8 @@ const inventoryItemTypes = new Set<InventoryItemType>([
 export function buildServer(options: BuildServerOptions = {}): FastifyInstance {
   const database = options.database ?? createDatabase();
   const ownsDatabase = options.database === undefined || options.closeDatabaseOnClose === true;
+  const appVersion = options.appVersion ?? process.env.BASECAMP_APP_VERSION ?? "0.7.0-m6";
+  const adminToken = options.adminToken ?? process.env.BASECAMP_ADMIN_TOKEN;
   const server = Fastify({
     logger: options.logger ?? false
   });
@@ -95,9 +112,25 @@ export function buildServer(options: BuildServerOptions = {}): FastifyInstance {
   server.get("/health", async (): Promise<HealthResponse> => ({
     ok: true,
     service: "basecamp-server",
-    version: "0.6.0-m5",
+    version: appVersion,
     checkedAt: new Date().toISOString()
   }));
+
+  server.get("/health/live", async () => ({
+    ok: true,
+    service: "basecamp-server",
+    checkedAt: new Date().toISOString()
+  }));
+
+  server.get("/health/ready", async (request, reply) => {
+    const status = operationalStatus(database, options, appVersion, adminToken);
+
+    if (!status.database.ok || !status.storage.ok) {
+      return reply.code(503).send(status);
+    }
+
+    return status;
+  });
 
   server.get("/api/seed", async () => ({
     ...createSeedContentResponse(basecampSeed),
@@ -127,6 +160,90 @@ export function buildServer(options: BuildServerOptions = {}): FastifyInstance {
       readInventoryState(database)
     ).gapReport
   );
+
+  server.get("/api/admin/status", async (request, reply): Promise<OperationalStatusResponse | unknown> => {
+    if (!isAdminAuthorized(request.headers, adminToken)) {
+      recordAdminAudit(database, "admin.status", "failure");
+      return reply.code(adminToken === undefined ? 503 : 401).send({
+        error: adminToken === undefined ? "Admin token is not configured." : "Admin authorization failed."
+      });
+    }
+
+    recordAdminAudit(database, "admin.status", "success");
+    return operationalStatus(database, options, appVersion, adminToken);
+  });
+
+  server.get("/api/admin/export", async (request, reply) => {
+    if (!isAdminAuthorized(request.headers, adminToken)) {
+      recordAdminAudit(database, "export.create", "failure");
+      return reply.code(adminToken === undefined ? 503 : 401).send({
+        error: adminToken === undefined ? "Admin token is not configured." : "Admin authorization failed."
+      });
+    }
+
+    const archive = createPortableExport(database, {
+      appVersion,
+      contentSchemaVersion: basecampSeed.schemaVersion
+    });
+
+    recordAdminAudit(database, "export.create", "success", {
+      tableCounts: archive.manifest.tableCounts
+    });
+
+    return archive;
+  });
+
+  server.post<{
+    Body: PortableExportArchive;
+  }>("/api/admin/import", async (request, reply) => {
+    if (!isAdminAuthorized(request.headers, adminToken)) {
+      recordAdminAudit(database, "import.apply", "failure");
+      return reply.code(adminToken === undefined ? 503 : 401).send({
+        error: adminToken === undefined ? "Admin token is not configured." : "Admin authorization failed."
+      });
+    }
+
+    try {
+      const result = importPortableExport(database, request.body, {
+        expectedContentSchemaVersion: basecampSeed.schemaVersion
+      });
+
+      recordAdminAudit(database, "import.apply", "success", {
+        tableCounts: result.tableCounts
+      });
+
+      return result;
+    } catch (error) {
+      recordAdminAudit(database, "import.apply", "failure", {
+        message: error instanceof Error ? error.message : "Import failed."
+      });
+
+      return reply.code(400).send({
+        error: error instanceof Error ? error.message : "Import failed."
+      });
+    }
+  });
+
+  server.get("/api/admin/audit", async (request, reply): Promise<{ events: AdminAuditEventSummary[] } | unknown> => {
+    if (!isAdminAuthorized(request.headers, adminToken)) {
+      recordAdminAudit(database, "audit.list", "failure");
+      return reply.code(adminToken === undefined ? 503 : 401).send({
+        error: adminToken === undefined ? "Admin token is not configured." : "Admin authorization failed."
+      });
+    }
+
+    recordAdminAudit(database, "audit.list", "success");
+
+    return {
+      events: listAuditEvents(database).map((event) => ({
+        id: event.id,
+        action: event.action,
+        actor: event.actor,
+        result: event.result,
+        occurredAt: event.occurredAt
+      }))
+    };
+  });
 
   server.get("/api/drills/templates", async (): Promise<DrillTemplatesResponse> => ({
     templates: listDrillTemplates(database)
@@ -496,4 +613,80 @@ function publicBaseUrl(host: string | undefined): string {
   }
 
   return `http://${host ?? "127.0.0.1:4317"}`;
+}
+
+function operationalStatus(
+  database: DatabaseSync,
+  options: BuildServerOptions,
+  appVersion: string,
+  adminToken: string | undefined
+): OperationalStatusResponse {
+  const statusOptions: Parameters<typeof buildOperationalStatus>[1] = {
+    version: appVersion,
+    adminTokenConfigured: adminToken !== undefined && adminToken.trim().length > 0,
+    remoteAccessMode: options.remoteAccessMode ?? remoteAccessModeFromEnv(process.env.BASECAMP_REMOTE_ACCESS)
+  };
+  const databasePath = options.databasePath ?? process.env.BASECAMP_DB_PATH;
+  const storageDir = options.storageDir ?? process.env.BASECAMP_STORAGE_DIR;
+  const backupDir = options.backupDir ?? process.env.BASECAMP_BACKUP_DIR;
+  const webUrl = options.webUrl ?? process.env.BASECAMP_WEB_URL ?? process.env.BASECAMP_PUBLIC_URL;
+
+  if (databasePath !== undefined) {
+    statusOptions.databasePath = databasePath;
+  }
+
+  if (storageDir !== undefined) {
+    statusOptions.storageDir = storageDir;
+  }
+
+  if (backupDir !== undefined) {
+    statusOptions.backupDir = backupDir;
+  }
+
+  if (webUrl !== undefined) {
+    statusOptions.webUrl = webUrl;
+  }
+
+  return buildOperationalStatus(database, statusOptions);
+}
+
+function isAdminAuthorized(
+  headers: Record<string, string | string[] | undefined>,
+  adminToken: string | undefined
+): boolean {
+  if (adminToken === undefined || adminToken.trim().length === 0) {
+    return false;
+  }
+
+  const headerToken = firstHeader(headers["x-basecamp-admin-token"]);
+  const authorization = firstHeader(headers.authorization);
+  const bearerToken = authorization?.startsWith("Bearer ") ? authorization.slice("Bearer ".length) : undefined;
+
+  return headerToken === adminToken || bearerToken === adminToken;
+}
+
+function firstHeader(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function recordAdminAudit(
+  database: DatabaseSync,
+  action: string,
+  result: "success" | "failure",
+  metadata: Record<string, unknown> = {}
+): void {
+  recordAuditEvent(database, {
+    action,
+    actor: "admin-token",
+    result,
+    metadata
+  });
+}
+
+function remoteAccessModeFromEnv(value: string | undefined): NonNullable<BuildServerOptions["remoteAccessMode"]> {
+  if (value === "lan" || value === "vpn" || value === "reverse_proxy") {
+    return value;
+  }
+
+  return "unknown";
 }

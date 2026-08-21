@@ -11,8 +11,10 @@ first vertical slice can run without a database server. M2 adds persisted
 category pursuit overrides, quest instances, quest lifecycle events, and XP
 events. M3 adds inventory, locations, assets, QR tags, kits, and maintenance.
 M4 adds sync clients, command logs, and conflicts. M5 adds evidence records,
-skill progress, training records, drill templates, and drill runs. PostgreSQL
-remains the self-hosted production target in the architecture docs.
+skill progress, training records, drill templates, and drill runs. M6 adds audit
+events, portable JSON/CSV export/import, backup manifests, integrity checks, and
+restore helpers. PostgreSQL remains the self-hosted production target in the
+architecture docs.
 
 ## Local Seed Import
 
@@ -22,3 +24,21 @@ pnpm --filter @basecamp/database db:reset
 
 By default this writes `var/basecamp-dev.sqlite`. Set `BASECAMP_DB_PATH` to
 override the path.
+
+## M6 Ops Commands
+
+```bash
+pnpm --filter @basecamp/database export
+pnpm --filter @basecamp/database import
+pnpm --filter @basecamp/database backup
+pnpm --filter @basecamp/database restore
+```
+
+The root aliases are:
+
+```bash
+pnpm ops:export
+pnpm ops:import
+pnpm ops:backup
+pnpm ops:restore
+```

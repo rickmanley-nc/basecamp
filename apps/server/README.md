@@ -18,6 +18,8 @@ pnpm --filter @basecamp/server dev
 ```
 
 - `GET /health`
+- `GET /health/live`
+- `GET /health/ready`
 - `GET /api/seed`
 - `GET /api/dashboard`
 - `GET /api/inventory`
@@ -34,3 +36,10 @@ pnpm --filter @basecamp/server dev
 - `POST /api/sync`
 - `PATCH /api/categories/:categoryId/pursuit`
 - `POST /api/quests/:questId/actions`
+- `GET /api/admin/status`
+- `GET /api/admin/export`
+- `POST /api/admin/import`
+- `GET /api/admin/audit`
+
+M6 admin routes require `BASECAMP_ADMIN_TOKEN` and either the
+`x-basecamp-admin-token` header or `Authorization: Bearer <token>`.

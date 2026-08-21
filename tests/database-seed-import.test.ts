@@ -40,7 +40,8 @@ describe("database seed import", () => {
       "0002_household_progress_state",
       "0003_inventory_location_maintenance",
       "0004_offline_sync_commands",
-      "0005_drills_skills_evidence"
+      "0005_drills_skills_evidence",
+      "0006_ops_audit"
     ]);
     expect(imported.categories).toBe(basecampSeed.categories.length);
     expect(imported.levels).toBe(basecampSeed.levels.length);

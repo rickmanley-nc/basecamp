@@ -29,6 +29,34 @@ project clearer.
 12. Create the GitHub Release.
 13. Close the milestone when appropriate.
 
+For installable self-hosting releases, also run:
+
+```bash
+pnpm ops:release-check
+pnpm ops:security-check
+pnpm ops:backup
+pnpm ops:export
+```
+
+Run `pnpm ops:restore` against a disposable restore target before calling the
+release self-hosting ready.
+
+## Upgrade Notes Checklist
+
+Installable release notes should link to:
+
+- [Deployment Guide](../ops/deployment.md)
+- [Self-Hosting And Backups](../ops/self-hosting-and-backups.md)
+- [iPhone Installation Guide](../ops/iphone-installation.md) when mobile
+  distribution is affected
+
+Every upgrade note should say:
+
+- Whether a backup is required before upgrade.
+- Whether migrations run automatically on server startup.
+- How rollback should be performed.
+- Which validation environment was used.
+
 ## Release Notes Template
 
 ```markdown

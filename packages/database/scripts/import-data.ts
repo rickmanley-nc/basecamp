@@ -1,0 +1,47 @@
+import { basecampSeed } from "@basecamp/content";
+import {
+  applyMigrations,
+  createDatabase,
+  ensureDatabaseDirectory,
+  importPortableExport,
+  importSeed,
+  recordAuditEvent,
+  type PortableExportArchive
+} from "../src/index";
+import { readFile } from "node:fs/promises";
+
+const databasePath = requiredEnv("BASECAMP_DB_PATH", "var/basecamp-dev.sqlite");
+const importFile = requiredEnv("BASECAMP_IMPORT_FILE", "var/exports/latest/basecamp-export.json");
+
+await ensureDatabaseDirectory(databasePath);
+
+const database = createDatabase(databasePath);
+
+try {
+  applyMigrations(database);
+  importSeed(database, basecampSeed);
+
+  const archive = JSON.parse(await readFile(importFile, "utf8")) as PortableExportArchive;
+  const result = importPortableExport(database, archive, {
+    expectedContentSchemaVersion: basecampSeed.schemaVersion
+  });
+
+  recordAuditEvent(database, {
+    action: "import.apply",
+    actor: "ops-script",
+    result: "success",
+    metadata: {
+      importFile,
+      tableCounts: result.tableCounts
+    }
+  });
+
+  console.log(JSON.stringify(result, null, 2));
+} finally {
+  database.close();
+}
+
+function requiredEnv(name: string, fallback: string): string {
+  const value = process.env[name];
+  return value === undefined || value.trim().length === 0 ? fallback : value;
+}

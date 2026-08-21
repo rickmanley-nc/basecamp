@@ -2,148 +2,257 @@
 
 Last updated: 2026-08-21
 
-This guide is the operator runbook for installing the Basecamp server and web app
-on an admin-controlled host.
+This guide is the operator runbook for installing the Basecamp self-hosting beta
+on an admin-controlled Linux host.
 
 ## Current Status
 
-Basecamp is not production-installable yet. The current repository supports a
-local development preview with a Vite web app, Fastify server, and SQLite-backed
-development database.
+M6 adds an installable Docker Compose beta for the web app, API server,
+reverse proxy, persistent SQLite database volume, persistent storage volume,
+and backup service.
 
-The self-hosted beta target is M6. M6 must produce a user-followable deployment
-guide that installs the web app, API server, database, persistent storage,
-reverse proxy, health checks, backups, restore drill, and upgrade path.
+The long-term production target remains PostgreSQL. For M6, the runnable beta
+uses SQLite because that is the persistence layer implemented by the application
+today. See [ADR 0009](../adr/0009-self-hosting-beta-sqlite-ops.md).
 
-## Current Local Preview
-
-Use this only for development and review. It does not include production auth,
-PostgreSQL, container packaging, backup automation, TLS, or upgrade support.
-
-Local preview validation is acceptable for early milestone work. Self-hosting
-release validation must eventually run on a clean local VM/container environment
-or a separate server provided by the admin. See
-[Verification Policy](../development/verification.md).
+## Install Runbook
 
 Prerequisites:
 
-- Node.js 24 or newer.
-- pnpm 11 or newer.
-- A shell on the machine running the preview.
+- Linux host with Docker Engine and the Docker Compose plugin.
+- Stable LAN address or DNS name.
+- Admin-controlled paths for release assets, config, data, and backups.
+- No secrets committed to git or published in GitHub text.
 
-Run from the repository root:
+Recommended host paths:
+
+- `/opt/basecamp` for release assets.
+- `/etc/basecamp` for configuration.
+- `/var/lib/basecamp` for persistent data when using bind mounts.
+- `/var/backups/basecamp` for local backups when using bind mounts.
+
+Release install:
 
 ```bash
-pnpm install
-pnpm --filter @basecamp/database db:reset
+mkdir -p /opt/basecamp /etc/basecamp /var/lib/basecamp /var/backups/basecamp
+cd /opt/basecamp
+cp infra/basecamp.env.example infra/basecamp.env
 ```
 
-Start the API server:
+Edit `infra/basecamp.env` before startup:
+
+- Set `BASECAMP_PUBLIC_URL` to the LAN or reverse-proxy URL.
+- Set `BASECAMP_WEB_URL` to the web URL if different.
+- Replace `BASECAMP_ADMIN_TOKEN` with a random secret generated outside git.
+- Keep `BASECAMP_REMOTE_ACCESS=lan` unless a VPN or secure reverse proxy is
+  configured.
+
+Start:
 
 ```bash
-pnpm --filter @basecamp/server dev
-```
-
-Start the web app in a second terminal:
-
-```bash
-pnpm --filter @basecamp/web dev
+cd /opt/basecamp/infra
+docker compose --env-file basecamp.env up -d --build
+docker compose ps
 ```
 
 Open:
 
-- Web: `http://127.0.0.1:4318`
-- API health: `http://127.0.0.1:4317/health`
+- Web: `http://basecamp.local:8080` or the configured host.
+- API liveness: `/health/live`
+- API readiness: `/health/ready`
 
-## Self-Hosted Beta Target
+## Health Checks
 
-The M6 deployment must be installable by following a release guide, without
-needing to infer hidden development steps from the repository.
+Compose defines health checks for:
 
-Required services:
+- `server`: `/health/ready`
+- `web`: static web health
+- `proxy`: `/health/live` through the proxy
+- `backup`: presence of a latest successful backup marker
 
-- Web app.
-- API/sync server.
-- PostgreSQL database.
-- Persistent file storage for evidence, photos, documents, exports, and backups.
-- Reverse proxy.
-- Backup job.
-- Health checks for web, server, database, storage, migrations, and backup
-  freshness.
+Administrative status is available at:
 
-Required admin-controlled paths:
+```bash
+curl -H "Authorization: Bearer <admin-token>" \
+  http://basecamp.local:8080/api/admin/status
+```
 
-- `/opt/basecamp` for release assets.
-- `/etc/basecamp` for configuration.
-- `/var/lib/basecamp` for persistent application data.
-- `/var/backups/basecamp` for local backups.
+The status response covers web, server, database, storage, migrations, backup
+recency, and beta security posture.
 
-Expected release artifacts:
+## Backup
 
-- Container images or a documented image source.
-- `compose.yml`.
-- `.env.example`.
-- Migration command.
-- Backup command.
-- Restore command.
-- Upgrade and rollback instructions.
+Backups include:
 
-## Target Server Install Runbook
+- SQLite database file.
+- Evidence/photo/document storage directory.
+- Configuration file when `BASECAMP_CONFIG_PATH` points at it.
+- App version.
+- Seed/content version.
+- Manifest and checksums.
 
-M6 should turn this outline into verified commands:
+Manual backup:
 
-1. Prepare a Linux host with a stable LAN address or DNS name.
-2. Install Docker Engine and the Docker Compose plugin from the official Docker
-   documentation.
-3. Create `/opt/basecamp`, `/etc/basecamp`, `/var/lib/basecamp`, and
-   `/var/backups/basecamp`.
-4. Download or copy the Basecamp release bundle into `/opt/basecamp`.
-5. Copy `.env.example` to `/etc/basecamp/basecamp.env`.
-6. Configure public URL, server URL, database credentials, storage paths, backup
-   paths, and secret values in `/etc/basecamp/basecamp.env`.
-7. Start services with Docker Compose.
-8. Run migrations.
-9. Confirm health checks pass.
-10. Open the web app from a browser on the local network.
-11. Configure remote access only through the documented VPN or secure reverse
-    proxy path.
-12. Run the first backup.
-13. Complete a restore drill before trusting the installation.
+```bash
+cd /opt/basecamp/infra
+docker compose --env-file basecamp.env run --rm backup pnpm ops:backup
+```
+
+The backup service also runs `pnpm ops:backup` on
+`BASECAMP_BACKUP_INTERVAL_SECONDS`, which defaults to daily.
+
+Check backup status:
+
+```bash
+curl -H "x-basecamp-admin-token: <admin-token>" \
+  http://basecamp.local:8080/api/admin/status
+```
+
+## Restore Drill
+
+Run a restore drill before trusting the installation.
+
+1. Stop services.
+2. Choose a backup directory from the backup volume or host backup path.
+3. Restore into an empty target.
+4. Start services.
+5. Confirm `/health/ready` passes.
+6. Open the web app.
+7. Confirm inventory, quests, evidence metadata, reports, and readiness load.
+
+Example restore command:
+
+```bash
+BASECAMP_RESTORE_BACKUP=/var/backups/basecamp/basecamp-backup-YYYY-MM-DDTHH-MM-SS-000Z \
+BASECAMP_RESTORE_OVERWRITE=true \
+pnpm ops:restore
+```
+
+When running through Compose, pass the same variables to the `server` image:
+
+```bash
+docker compose --env-file basecamp.env run --rm \
+  -e BASECAMP_RESTORE_BACKUP=/var/backups/basecamp/<backup-directory> \
+  -e BASECAMP_RESTORE_OVERWRITE=true \
+  server pnpm ops:restore
+```
+
+## Export And Import
+
+Portable export:
+
+```bash
+BASECAMP_EXPORT_DIR=/var/backups/basecamp/export-latest pnpm ops:export
+```
+
+Portable import:
+
+```bash
+BASECAMP_IMPORT_FILE=/var/backups/basecamp/export-latest/basecamp-export.json pnpm ops:import
+```
+
+The export contains structured JSON, CSV files for major operational tables,
+and evidence file references. Import validates the export version, seed/content
+schema version, and checksum before replacing data.
+
+## Upgrade
+
+Before every upgrade:
+
+1. Read the release notes and known limitations.
+2. Run a backup.
+3. Verify the backup manifest.
+4. Pull or copy the new release assets into `/opt/basecamp`.
+5. Review `infra/basecamp.env.example` for new variables.
+6. Start the new stack.
+7. Confirm `/health/ready` and `/api/admin/status`.
+8. Open the web app and confirm dashboard data.
+
+Command outline:
+
+```bash
+cd /opt/basecamp/infra
+docker compose --env-file basecamp.env pull
+docker compose --env-file basecamp.env up -d --build
+docker compose --env-file basecamp.env ps
+```
+
+Migrations run idempotently when the server starts.
+
+## Rollback
+
+Rollback is backup-first:
+
+1. Stop the stack.
+2. Restore the backup taken before upgrade.
+3. Return the release assets to the previous version.
+4. Start the stack.
+5. Confirm health and dashboard state.
+
+Do not roll back by editing the database manually.
+
+## Remote Access
+
+Basecamp contains sensitive preparedness data. Remote access should use:
+
+- VPN-first access when possible.
+- A secure reverse proxy with TLS when VPN is not practical.
+- LAN-only operation for the simplest beta deployment.
+
+Do not expose the beta directly to the public internet without a secure reverse
+proxy, TLS, admin token protection for operational endpoints, and a plan for
+future user authentication.
 
 ## Separate Server Testing
 
-If the admin provides access to a separate server, the deployment issue should
-include a short test plan before changes are made:
+If the admin provides access to a separate server, collect:
 
-- What host is being used.
-- Whether the host can be reset or test data can be destroyed.
-- Whether the validation is LAN-only, VPN, or reverse-proxy based.
-- Which paths will hold release assets, config, persistent data, and backups.
-- Which commands will be run.
-- Which health checks prove success.
-- How rollback or cleanup will be performed.
+- Linux distribution and version.
+- CPU architecture.
+- Available memory and disk.
+- LAN address or DNS name.
+- SSH access method and whether `sudo` is available.
+- Whether Docker Engine and Compose are installed.
+- Desired data and backup paths.
+- Remote access stance: LAN-only, VPN, or secure reverse proxy.
+- Whether test data can be destroyed after validation.
+
+Validation should report:
+
+- Whether validation ran locally, in a clean local environment, or on a separate
+  server.
+- Which release version was installed.
+- Which health checks passed.
+- Whether backup and restore drill succeeded.
+- Any rollback or cleanup performed.
 
 Do not publish credentials, private host details, tokens, or private keys in
-issues, pull requests, releases, or comments.
+issues, pull requests, releases, comments, or tracked files.
 
-## Required Release Validation
+## Troubleshooting
 
-A self-hosting release cannot close its milestone until these are verified:
+- If `server` is unhealthy, inspect `docker compose logs server` and confirm the
+  database and storage volumes are writable.
+- If `proxy` is unhealthy, confirm `server` and `web` are healthy first.
+- If backup status is missing, run a manual backup and recheck
+  `/api/admin/status`.
+- If admin endpoints return `401`, confirm the token header matches
+  `BASECAMP_ADMIN_TOKEN`.
+- If admin endpoints return `503`, configure `BASECAMP_ADMIN_TOKEN`.
+- If import fails, confirm export version, content schema version, and checksum.
 
-- Fresh install from the release artifacts.
-- App loads without internet access after images/assets are present.
-- API health check passes.
-- Web can reach the API.
-- Database migrations run idempotently.
-- Persistent data survives container restart.
-- Backup completes and passes integrity checks.
-- Restore drill succeeds from a fresh deployment.
-- Upgrade path includes backup-before-upgrade and rollback guidance.
-- Public instructions contain no personal workstation paths.
-- Resolution comments identify whether validation ran locally, in a clean local
-  environment, on a separate server, or in CI.
+## Local Preview
 
-## External References
+Development preview still works without Docker:
 
-- [Docker Engine install documentation](https://docs.docker.com/engine/install/)
-- [Docker Compose documentation](https://docs.docker.com/compose/)
+```bash
+pnpm install
+pnpm --filter @basecamp/database db:reset
+pnpm --filter @basecamp/server dev
+pnpm --filter @basecamp/web dev
+```
+
+Local URLs:
+
+- Server: `http://127.0.0.1:4317`
+- Web: `http://127.0.0.1:4318`

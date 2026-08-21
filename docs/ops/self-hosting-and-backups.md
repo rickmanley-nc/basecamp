@@ -11,15 +11,19 @@ can close.
 
 ## Deployment Targets
 
-Recommended initial target:
+M6 beta target:
 
 - Linux host.
-- Containerized `apps/web`, `apps/server`, PostgreSQL, and reverse proxy.
+- Containerized `apps/web`, `apps/server`, persistent SQLite database volume,
+  persistent storage volume, reverse proxy, and backup service.
 - Persistent volumes for database and evidence files.
 - Local DNS name or stable LAN IP.
 - Optional VPN for remote access.
 
 Avoid mandatory SaaS dependencies for normal operation.
+
+PostgreSQL remains the later production target. The M6 beta uses SQLite because
+that is the implemented application persistence layer.
 
 ## Runtime Services
 
@@ -27,7 +31,7 @@ Initial services:
 
 - Web application.
 - API/sync server.
-- PostgreSQL.
+- SQLite database file in a persistent volume.
 - File/object storage path for photos, evidence, documents, and exports.
 - Reverse proxy.
 - Backup job.
@@ -56,7 +60,7 @@ After deployment, Basecamp must not depend on external network access for:
 
 Back up:
 
-- PostgreSQL database.
+- SQLite database.
 - Evidence/photo/document files.
 - Configuration.
 - Encryption keys or documented key recovery material if added.
@@ -72,6 +76,13 @@ Initial policy:
 - Backup integrity check after creation.
 - Visible warning for stale or failed backups.
 - Restore drill before marking backup system complete.
+
+M6 backups include a manifest and checksums. The current commands are:
+
+```bash
+pnpm ops:backup
+pnpm ops:restore
+```
 
 ## Restore Drill
 
@@ -89,13 +100,22 @@ A restore drill should prove:
 Basecamp should support user-owned data export:
 
 - JSON archive for structured data.
-- CSV exports for inventory, maintenance, quests, and scores.
-- Evidence/document archive.
+- CSV exports for inventory, maintenance, quests, skills, drills, evidence, and
+  audit events.
+- Evidence/document references in the archive manifest.
 - Human-readable emergency packet for critical plans.
+
+M6 commands:
+
+```bash
+pnpm ops:export
+pnpm ops:import
+```
 
 ## Open Decisions
 
 - Backup encryption mechanism.
-- Whether embedded MinIO or filesystem storage is better for first release.
+- PostgreSQL adapter timing.
+- Whether embedded object storage is needed after filesystem storage.
 - Restore UX for non-technical users.
 - Remote access guidance: VPN-first, reverse proxy, or both.
