@@ -17,8 +17,8 @@ Design principle:
 
 Install requirement:
 
-- v1 must include local/admin-controlled build and install paths for iPhone and
-  Android. See
+- v1 must include a local/admin-controlled build and install path for iPhone.
+  Android is deferred to the post-v1 Android milestone. See
   [Mobile Build And Installation Guide](../../docs/ops/mobile-build-and-installation.md).
 
 ## M4 Stack
@@ -50,7 +50,7 @@ Confirm the public Expo configuration:
 pnpm --filter @basecamp/mobile expo:config
 ```
 
-Generate native iOS and Android projects locally:
+Generate native projects locally when validating platform build configuration:
 
 ```bash
 pnpm --filter @basecamp/mobile native:prebuild
@@ -62,6 +62,9 @@ Run local platform builds on hosts with the required native toolchains:
 pnpm --filter @basecamp/mobile ios
 pnpm --filter @basecamp/mobile android
 ```
+
+For v1, only the local iPhone build and physical iPhone validation are
+release-blocking. The Android command remains for post-v1 development.
 
 The preview prints the current mobile stack, tab labels, sample Quick Capture
 confirmation, and sample QR scan target. The native Expo entrypoint covers
@@ -94,9 +97,9 @@ The route model is exported from `@basecamp/mobile` and consumes shared
 
 M5 server persistence accepts mobile-captured drill records, skill records, and
 evidence attachments through the sync command vocabulary. The v1 mobile field
-slice adds native capture and upload plumbing, but physical iPhone and Android
-validation is still required for Camera permission, Photos/Documents behavior
-where applicable, persistent device storage, and reconnect behavior.
+slice adds native capture and upload plumbing, but physical iPhone validation is
+still required for Camera permission, Photos/Documents behavior, persistent
+device storage, and reconnect behavior. Android validation is post-v1.
 
 ## Design Boundary
 
@@ -114,14 +117,13 @@ Local validation:
 - `pnpm --filter @basecamp/mobile expo:config`
 - `pnpm --filter @basecamp/mobile native:prebuild`
 - `pnpm --filter @basecamp/mobile ios` on a Mac with full Xcode.
-- `pnpm --filter @basecamp/mobile android` on a host with Android SDK/JDK.
 - `pnpm check`
 
-Physical iPhone and Android validation is pending until locally produced builds
-are installed. Camera permission, QR/barcode scanning, Photos/Documents access
-where applicable, Local Network permission where applicable, offline storage
-across app restart, evidence upload, and reconnect sync must be verified on
-physical devices when native field screens and distribution are available. The
-exact v1 requirements are tracked in
+Physical iPhone validation is pending until a locally produced iPhone build is
+installed. Camera permission, QR/barcode scanning, Photos/Documents access,
+Local Network permission, offline storage across app restart, evidence upload,
+and reconnect sync must be verified on a physical iPhone when native field
+screens and distribution are available. Android validation is tracked after v1.
+The exact v1 requirements are tracked in
 [Basecamp v1.0 MVP Readiness](../../docs/product/v1-mvp-readiness.md) and the
 v1.0 GitHub milestone blocker issues.

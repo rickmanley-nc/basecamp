@@ -32,7 +32,8 @@
         "iosBundleIdentifier": "com.basecamppreparedness.mobile",
         "androidPackageIdentifier": "com.basecamppreparedness.mobile",
         "androidVersionCode": 1,
-        "buildPath": "local_admin_controlled_ios_android",
+        "buildPath": "local_admin_controlled_ios_v1",
+        "androidStatus": "post_v1_deferred_pending_device_validation",
         "serverUrlSetup": "manual_url_or_pairing_qr",
         "authModel": "local_username_password"
       }

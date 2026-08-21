@@ -11,13 +11,14 @@ by [ADR 0011](./0011-local-mobile-build-path.md).
 
 Basecamp Mobile must support field workflows where connectivity is unreliable:
 quick capture, QR/barcode scanning, offline reference, queued commands, and later
-sync to the self-hosted server. It also needs local/admin-controlled iOS and
-Android build paths so app updates do not depend on a cloud build service.
+sync to the self-hosted server. It also needs local/admin-controlled mobile
+build paths so app updates do not depend on a cloud build service.
 
 ## Decision
 
-Use Expo React Native as the mobile stack for the iOS and Android companion app,
-subject to the local build requirements in ADR 0011.
+Use Expo React Native as the mobile stack for the iPhone companion app at v1,
+with Android deferred to the post-v1 milestone. Both paths are subject to the
+local build requirements in ADR 0011.
 
 The M4 foundation starts with:
 
@@ -26,7 +27,7 @@ The M4 foundation starts with:
 - Shared deterministic command primitives in `@basecamp/sync`.
 - A server sync endpoint that accepts idempotent offline command batches and
   returns sync cursors plus user-visible conflicts.
-- Local native project generation and platform builds for iOS and Android.
+- Local native project generation and the v1 iOS build path.
 
 The first app shell remains available as a local TypeScript preview and
 navigation model. The native Expo entrypoint now supports server URL entry,
@@ -48,7 +49,7 @@ outbox persistence, evidence upload, and reconnect sync attempts.
 - Shared TypeScript packages stay the contract between web, server, and mobile.
 - Mobile camera, local-network, Photos/Documents access, offline storage across
   app restart, evidence upload, and reconnect behavior still require physical
-  iPhone and Android validation before v1.
+  iPhone validation before v1. Android physical validation is deferred to v1.1.
 - App artifacts must be produced through local/admin-controlled build hosts.
   Platform distribution channels remain separate from the build system.
 
@@ -56,8 +57,8 @@ outbox persistence, evidence upload, and reconnect sync attempts.
 
 Shared mobile logic validates locally through `pnpm check` and
 `pnpm --filter @basecamp/mobile dev`. Expo configuration validates with
-`pnpm --filter @basecamp/mobile expo:config`. Physical iPhone and Android
-validation for install, camera, Photos/Documents access where applicable, Local
-Network permission where applicable, offline device storage, evidence upload,
-and reconnect behavior remains pending until locally produced signed builds are
-installed.
+`pnpm --filter @basecamp/mobile expo:config`. Physical iPhone validation for
+install, camera, Photos/Documents access, Local Network permission, offline
+device storage, evidence upload, and reconnect behavior remains pending until a
+locally produced signed iPhone build is installed. Android validation remains
+pending for the post-v1 milestone.

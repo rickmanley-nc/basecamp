@@ -907,6 +907,9 @@ Recommended approach:
 - React Native with Expo modules for iOS/Android delivery, shared TypeScript
   domain/API packages, barcode/QR/photo support, offline storage, rapid
   iteration, and local/admin-controlled native builds.
+- Launch v1 with iPhone after physical-device validation; defer Android to the
+  post-v1 Android milestone because no Android test phone is currently
+  available.
 - Local SQLite cache and durable sync outbox.
 - Use mobile-native components and shared design tokens rather than directly
   reusing Kaizen React web components.

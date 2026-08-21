@@ -46,7 +46,7 @@ describe("mobile app shell", () => {
 
     expect(shell.stack).toBe("Expo React Native");
     expect(shell.minimumIosVersion).toBe("17.0");
-    expect(shell.buildPath).toBe("local_admin_controlled_ios_android");
+    expect(shell.buildPath).toBe("local_admin_controlled_ios_v1");
     expect(shell.screens.map((screen) => screen.route)).toEqual([
       "home",
       "capture",
@@ -74,7 +74,8 @@ describe("mobile app shell", () => {
       iosBuildNumber: "1",
       minimumIosVersion: "17.0",
       androidVersionCode: 1,
-      buildPath: "local_admin_controlled_ios_android",
+      buildPath: "local_admin_controlled_ios_v1",
+      androidStatus: "post_v1_deferred_pending_device_validation",
       iosBundleIdentifier: "com.basecamppreparedness.mobile",
       androidPackageIdentifier: "com.basecamppreparedness.mobile",
       serverUrlSetup: "manual_url_or_pairing_qr",
@@ -116,7 +117,8 @@ describe("mobile app shell", () => {
     expect(appConfig.expo.android.package).toBe(mobileDistribution.androidPackageIdentifier);
     expect(appConfig.expo.android.versionCode).toBe(mobileDistribution.androidVersionCode);
     expect(appConfig.expo.extra.basecamp).toMatchObject({
-      buildPath: "local_admin_controlled_ios_android",
+      buildPath: "local_admin_controlled_ios_v1",
+      androidStatus: "post_v1_deferred_pending_device_validation",
       authModel: "local_username_password"
     });
     expect(appConfig.expo.plugins).toContain("expo-secure-store");

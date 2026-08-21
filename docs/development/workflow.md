@@ -85,17 +85,19 @@ Quick Capture queueing, CameraView scan handling, photo/document evidence
 selection, SecureStore token storage, AsyncStorage outbox persistence, evidence
 upload, and reconnect sync attempts.
 
-The v1 mobile build path is local/admin-controlled for both iOS and Android:
+The v1 mobile build path is local/admin-controlled for iPhone:
 
 - iOS builds require macOS with the full Xcode app. Xcode command-line tools are
   not enough.
-- Android builds require Android SDK/JDK tooling and can run on Linux or macOS.
 - Cloud build services are not part of the required v1 path.
 
-Physical iPhone and Android checks for install, Camera permission,
-Photos/Documents access where applicable, Local Network permission where
-applicable, offline device storage across app restart, evidence upload, and
-reconnect sync remain pending until locally produced builds are installed.
+Android remains post-v1. The `android` script is retained for future local
+build work, but Android validation should not block the web plus iPhone launch.
+
+Physical iPhone checks for install, Camera permission, Photos/Documents access,
+Local Network permission, offline device storage across app restart, evidence
+upload, and reconnect sync remain pending until a locally produced iPhone build
+is installed.
 
 M5 adds drills, skills, evidence, and reports:
 
@@ -234,9 +236,9 @@ For product code:
 - Docs or ADRs are updated for architecture changes.
 - Closed roadmap issues have `## Resolution` comments with the specific change,
   validation, and follow-up status.
-- Validation environment is documented, and physical mobile-device or
-  separate-server testing is not replaced with local-only testing when the issue
-  requires real device or deployment proof.
+- Validation environment is documented, and physical iPhone or separate-server
+  testing is not replaced with local-only testing when the issue requires real
+  device or deployment proof.
 
 For content:
 

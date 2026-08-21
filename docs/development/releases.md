@@ -22,8 +22,9 @@ project clearer.
 8. Confirm deployment and mobile installation guides are updated when a release
    changes install, upgrade, pairing, or distribution behavior.
 9. Confirm required validation environments are satisfied or explicitly recorded:
-   CI, local machine, clean local environment, separate server, simulator,
-   physical iPhone, or physical Android device.
+   CI, local machine, clean local environment, separate server, simulator, or
+   physical iPhone. Physical Android validation applies to the post-v1 Android
+   milestone.
 10. For installable releases, record the deployment profile validated:
    `local-dev`, `cloud-pilot`, post-MVP `homelab`, or intentionally deferred.
 11. Confirm release notes and linked PR text contain no personal workstation
@@ -54,13 +55,17 @@ pnpm --filter @basecamp/mobile expo:config
 pnpm --filter @basecamp/mobile native:prebuild
 ```
 
-On a Mac with full Xcode, validate the local iOS build path. On a host with
-Android SDK/JDK tooling, validate the local Android build path. Record the build
-host class, platform tool versions, install path, iOS version, Android version,
-marketing version, iOS build number, Android version code, server URL mode,
-validation environment, and whether physical iPhone and Android installs were
-completed. Do not close a v1 mobile blocker that requires physical-device proof
-unless that device validation has actually been recorded.
+For v1, validate the local iPhone build path on a Mac with full Xcode. Record
+the build host class, Xcode version, install path, iOS version, marketing
+version, iOS build number, server URL mode, validation environment, and whether
+a physical iPhone install was completed. Do not close a v1 mobile blocker that
+requires physical-device proof unless that iPhone validation has actually been
+recorded.
+
+For the post-v1 Android milestone, validate the local Android build path on a
+host with Android SDK/JDK tooling and a physical Android device. Record Android
+SDK/JDK/Gradle versions, Android version, version code, artifact type, install
+path, server URL mode, and physical-device validation result.
 
 For PostgreSQL persistence releases, also validate against a disposable
 PostgreSQL database:
@@ -137,4 +142,5 @@ Every upgrade note should say:
 - `v0.9.0` - MVP Readiness Gate
 - `v0.9.1` - PostgreSQL Production Persistence Path
 - `v0.9.2` - PostgreSQL API Runtime
-- `v1.0.0` - MVP Readiness
+- `v1.0.0` - Web plus iPhone MVP
+- `v1.1.0` - Android Mobile
