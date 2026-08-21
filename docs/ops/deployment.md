@@ -113,6 +113,8 @@ Edit `infra/basecamp.env` before startup:
   For the v1 cloud pilot PostgreSQL runtime, set
   `BASECAMP_DATABASE_KIND=postgresql` and set `BASECAMP_DATABASE_URL` to the
   PostgreSQL connection string.
+- Keep `BASECAMP_QA_CONTROLS_ENABLED=false` in normal operation. Only enable it
+  for disposable cloud-pilot QA reset or seed windows.
 
 The real env file is intentionally ignored by git and is not loaded through a
 service-level Compose `env_file` entry. Pass it explicitly with
@@ -247,6 +249,96 @@ The status response covers web, server, database, storage, deployment profile,
 backup recency, and beta security posture. It should report
 `deployment.profile: "cloud-pilot"`, `localAuthMode: "local"`, and
 `localUsersConfigured: true` before real pilot use.
+
+Additional admin observability is available at:
+
+```bash
+curl -H "Authorization: Bearer ${BASECAMP_SESSION_TOKEN}" \
+  http://basecamp.local:8080/api/admin/observability
+unset BASECAMP_SESSION_TOKEN
+```
+
+The observability response includes the operational status, recent audit-event
+summaries, and a log policy that is safe to summarize in public support text. It
+does not return credentials, request bodies, database paths, storage paths, or
+private host details.
+
+## Cloud Pilot QA Reset And Seed
+
+QA reset and seed controls are for disposable cloud-pilot validation data only.
+They are disabled by default and refuse the `homelab` deployment profile.
+
+Use reset when a cloud-pilot test needs to clear user-entered QA data while
+keeping seed content, admin-created local users, active sessions, and audit
+history. Use seed when packaged starter content should be re-imported
+idempotently without deleting real user data.
+
+Before reset:
+
+1. Confirm `BASECAMP_DEPLOYMENT_PROFILE=cloud-pilot`.
+2. Run a backup if there is any real pilot data worth preserving.
+3. Confirm the target data is disposable QA data.
+4. Confirm the env file and command output will not be pasted into public text.
+
+One-off seed:
+
+```bash
+cd /opt/basecamp/infra
+docker compose --env-file basecamp.env run --rm \
+  -e BASECAMP_QA_CONTROLS_ENABLED=true \
+  -e BASECAMP_QA_SEED_CONFIRMATION="SEED CONTENT" \
+  server pnpm ops:qa:seed
+```
+
+One-off reset without deleting evidence bytes:
+
+```bash
+cd /opt/basecamp/infra
+docker compose --env-file basecamp.env run --rm \
+  -e BASECAMP_QA_CONTROLS_ENABLED=true \
+  -e BASECAMP_QA_RESET_CONFIRMATION="RESET QA DATA" \
+  server pnpm ops:qa:reset
+```
+
+One-off reset with evidence storage cleanup:
+
+```bash
+cd /opt/basecamp/infra
+docker compose --env-file basecamp.env run --rm \
+  -e BASECAMP_QA_CONTROLS_ENABLED=true \
+  -e BASECAMP_QA_RESET_CONFIRMATION="RESET QA DATA" \
+  -e BASECAMP_QA_DELETE_EVIDENCE_STORAGE=true \
+  server pnpm ops:qa:reset
+```
+
+The equivalent admin API endpoints are:
+
+- `POST /api/admin/qa/seed` with `{ "confirmation": "SEED CONTENT" }`
+- `POST /api/admin/qa/reset` with
+  `{ "confirmation": "RESET QA DATA", "deleteEvidenceStorage": true }`
+
+API use requires a local admin bearer session or the fallback admin token. The
+server process must have `BASECAMP_QA_CONTROLS_ENABLED=true` for the request
+window; turn it off again after the validation window if it was enabled in the
+runtime environment.
+
+Reset deletes disposable user workflow tables: quest instances/events, XP
+events, category pursuits, locations, inventory, assets, kits, maintenance
+policies/events, sync queues/conflicts, evidence records, skill progress,
+training records, and drill runs. Reset preserves schema migrations, seed
+content, local users, active sessions, and audit events. When evidence cleanup
+is requested, only the deployment-owned `evidence` storage subtree is removed.
+
+Cleanup and rollback:
+
+- If reset was intentional, run `GET /api/admin/observability` and confirm the
+  status still reports the expected deployment profile, database kind, storage,
+  backup posture, and auth posture.
+- If reset was not intentional, restore from the backup taken before reset.
+- If evidence storage was deleted, restore storage bytes from backup with the
+  matching database backup.
+- Do not copy cloud-pilot data into a future homelab deployment except through
+  an explicit admin export/import or restore decision.
 
 ## Backup
 

@@ -170,7 +170,13 @@ pnpm ops:user:disable
 pnpm ops:postgres:migrate
 pnpm ops:postgres:status
 pnpm ops:postgres:import
+pnpm ops:qa:seed
+pnpm ops:qa:reset
 ```
+
+QA seed/reset commands require `BASECAMP_QA_CONTROLS_ENABLED=true` and exact
+confirmation environment variables. They are for disposable cloud-pilot QA data,
+preserve local users and audit history, and refuse the `homelab` profile.
 
 ## Open Decisions
 
@@ -178,6 +184,5 @@ pnpm ops:postgres:import
 - PostgreSQL restore drill proof for cloud pilot readiness.
 - Whether embedded object storage is needed after filesystem storage, and what
   S3-compatible contract is required for cloud pilot.
-- Cloud pilot reset/seed data controls.
 - Restore UX for non-technical users.
 - Remote access guidance: VPN-first, reverse proxy, or both.

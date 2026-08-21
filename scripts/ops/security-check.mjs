@@ -18,7 +18,8 @@ for (const required of [
   "BASECAMP_STORAGE_DIR",
   "BASECAMP_POSTGRES_PASSWORD",
   "BASECAMP_DATABASE_URL",
-  "BASECAMP_POSTGRES_SSL"
+  "BASECAMP_POSTGRES_SSL",
+  "BASECAMP_QA_CONTROLS_ENABLED"
 ]) {
   if (!envExample.includes(required)) {
     failures.push(`Missing security-related environment variable: ${required}`);

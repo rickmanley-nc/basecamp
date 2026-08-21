@@ -55,7 +55,8 @@ Deployment profiles:
   claims.
 - `cloud-pilot`: v1 MVP server for testing with two real users, isolated pilot
   data, admin-created local accounts, username/password login, reset/seed
-  controls for QA, logs/metrics, local-disk backups, and no SSO dependency.
+  controls for disposable QA windows, logs/metrics, local-disk backups, and no
+  SSO dependency.
 - `homelab`: post-MVP single-node admin-controlled home network deployment,
   likely LAN-only with UniFi-managed IP, hostname, DNS, and routing. TLS should
   be added when this profile is brought online, especially for remote access.
@@ -93,6 +94,10 @@ proxy responsibilities are separable from Compose.
   SQLite as the default local-dev and beta fallback.
 - PostgreSQL backup status is now database-kind aware, but final PostgreSQL
   restore drill proof remains part of the v1 backup/restore gate.
+- Cloud-pilot QA reset and seed controls require an explicit enable flag and
+  confirmation phrase, preserve local users and audit history, and refuse the
+  `homelab` profile so pilot cleanup does not become a future homelab data
+  mixing path.
 - Release notes and issue comments should identify which deployment profile was
   validated.
 - Cloud pilot data must be treated as separate from future homelab data unless an

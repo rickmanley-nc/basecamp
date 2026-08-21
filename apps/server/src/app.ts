@@ -5,6 +5,11 @@ import {
   createSeedContentResponse,
   type AssetTagResponse,
   type AdminAuditEventSummary,
+  type AdminObservabilityResponse,
+  type AdminQaResetRequest,
+  type AdminQaResetResponse,
+  type AdminQaSeedRequest,
+  type AdminQaSeedResponse,
   type AuthLoginRequest,
   type AuthLoginResponse,
   type AuthSessionResponse,
@@ -48,6 +53,7 @@ import {
   recordAuditEvent,
   recordXpEvent,
   applySyncCommandBatch,
+  resetQaData,
   recordDrillRun,
   recordMaintenanceCompletion,
   recordQuickInventoryEntry,
@@ -66,7 +72,7 @@ import type { PortableExportArchive } from "@basecamp/database";
 import type { DeploymentProfile } from "@basecamp/database";
 import type { SyncBatchRequest } from "@basecamp/sync";
 import Fastify, { type FastifyInstance } from "fastify";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 export interface BuildServerOptions {
@@ -82,6 +88,7 @@ export interface BuildServerOptions {
   remoteAccessMode?: "lan" | "vpn" | "reverse_proxy" | "unknown";
   deploymentProfile?: DeploymentProfile;
   authMode?: "none" | "local";
+  qaControlsEnabled?: boolean;
   storageDir?: string;
   webUrl?: string;
 }
@@ -112,6 +119,8 @@ const inventoryItemTypes = new Set<InventoryItemType>([
 ]);
 
 const maxEvidenceUploadBytes = 15 * 1024 * 1024;
+const resetQaConfirmation = "RESET QA DATA";
+const seedContentConfirmation = "SEED CONTENT";
 
 export function buildServer(options: BuildServerOptions = {}): FastifyInstance {
   const database = options.database ?? createDatabase();
@@ -336,6 +345,130 @@ export function buildServer(options: BuildServerOptions = {}): FastifyInstance {
         result: event.result,
         occurredAt: event.occurredAt
       }))
+    };
+  });
+
+  server.get(
+    "/api/admin/observability",
+    async (request, reply): Promise<AdminObservabilityResponse | unknown> => {
+      const adminAuth = adminAuthorization(database, request.headers, adminToken);
+
+      if (!adminAuth.authorized) {
+        recordAdminAudit(database, "observability.view", "failure");
+        return reply.code(adminAuth.misconfigured ? 503 : 401).send({ error: adminAuth.error });
+      }
+
+      const status = operationalStatus(database, options, appVersion, adminToken, authMode);
+      const recentAuditEvents = listAuditEvents(database)
+        .slice(-25)
+        .map((event) => ({
+          id: event.id,
+          action: event.action,
+          actor: event.actor,
+          result: event.result,
+          occurredAt: event.occurredAt
+        }));
+
+      recordAdminAudit(database, "observability.view", "success", {}, adminAuth.actor);
+
+      return {
+        status,
+        recentAuditEvents,
+        logPolicy: {
+          secretsRedacted: true,
+          publicTextSafe: true,
+          notes: [
+            "Support output uses status and audit summaries instead of request bodies.",
+            "Do not paste server logs into public issues unless private values are redacted first."
+          ]
+        }
+      };
+    }
+  );
+
+  server.post<{
+    Body: AdminQaResetRequest;
+  }>("/api/admin/qa/reset", async (request, reply): Promise<AdminQaResetResponse | unknown> => {
+    const adminAuth = adminAuthorization(database, request.headers, adminToken);
+
+    if (!adminAuth.authorized) {
+      recordAdminAudit(database, "qa.reset", "failure");
+      return reply.code(adminAuth.misconfigured ? 503 : 401).send({ error: adminAuth.error });
+    }
+
+    const guard = qaControlsGuard(options);
+
+    if (!guard.allowed) {
+      recordAdminAudit(database, "qa.reset", "failure", { reason: guard.reason }, adminAuth.actor);
+      return reply.code(403).send({ error: guard.reason });
+    }
+
+    const body = request.body ?? { confirmation: "" };
+
+    if (body.confirmation !== resetQaConfirmation) {
+      recordAdminAudit(database, "qa.reset", "failure", { reason: "confirmation" }, adminAuth.actor);
+      return reply.code(400).send({ error: `Confirmation must equal ${resetQaConfirmation}.` });
+    }
+
+    const result = resetQaData(database);
+    const storageDeleted = deleteQaEvidenceStorage(options, body.deleteEvidenceStorage === true);
+    importSeed(database, basecampSeed);
+    const status = operationalStatus(database, options, appVersion, adminToken, authMode);
+
+    recordAdminAudit(database, "qa.reset", "success", {
+      deploymentProfile: guard.profile,
+      deletedRows: result.deletedRows,
+      evidenceStorageDeleted: storageDeleted
+    }, adminAuth.actor);
+
+    return {
+      resetAt: result.resetAt,
+      deploymentProfile: guard.profile,
+      databaseKind: databaseKind(database),
+      deletedRows: result.deletedRows,
+      preservedTables: result.preservedTables,
+      evidenceStorageDeleted: storageDeleted,
+      status
+    };
+  });
+
+  server.post<{
+    Body: AdminQaSeedRequest;
+  }>("/api/admin/qa/seed", async (request, reply): Promise<AdminQaSeedResponse | unknown> => {
+    const adminAuth = adminAuthorization(database, request.headers, adminToken);
+
+    if (!adminAuth.authorized) {
+      recordAdminAudit(database, "qa.seed", "failure");
+      return reply.code(adminAuth.misconfigured ? 503 : 401).send({ error: adminAuth.error });
+    }
+
+    const guard = qaControlsGuard(options);
+
+    if (!guard.allowed) {
+      recordAdminAudit(database, "qa.seed", "failure", { reason: guard.reason }, adminAuth.actor);
+      return reply.code(403).send({ error: guard.reason });
+    }
+
+    const body = request.body ?? { confirmation: "" };
+
+    if (body.confirmation !== seedContentConfirmation) {
+      recordAdminAudit(database, "qa.seed", "failure", { reason: "confirmation" }, adminAuth.actor);
+      return reply.code(400).send({ error: `Confirmation must equal ${seedContentConfirmation}.` });
+    }
+
+    const imported = importSeed(database, basecampSeed);
+    const status = operationalStatus(database, options, appVersion, adminToken, authMode);
+
+    recordAdminAudit(database, "qa.seed", "success", {
+      deploymentProfile: guard.profile,
+      imported
+    }, adminAuth.actor);
+
+    return {
+      seededAt: new Date().toISOString(),
+      deploymentProfile: guard.profile,
+      imported,
+      status
     };
   });
 
@@ -888,6 +1021,58 @@ function operationalStatus(
   return buildOperationalStatus(database, statusOptions);
 }
 
+interface QaControlsGuard {
+  allowed: boolean;
+  profile: DeploymentProfile;
+  reason?: string;
+}
+
+function qaControlsGuard(options: BuildServerOptions): QaControlsGuard {
+  const profile = options.deploymentProfile ?? deploymentProfileFromEnv(process.env.BASECAMP_DEPLOYMENT_PROFILE);
+  const enabled = options.qaControlsEnabled ?? booleanFromEnv(process.env.BASECAMP_QA_CONTROLS_ENABLED);
+
+  if (profile === "homelab") {
+    return {
+      allowed: false,
+      profile,
+      reason: "QA reset and seed controls are disabled for homelab deployments."
+    };
+  }
+
+  if (!enabled) {
+    return {
+      allowed: false,
+      profile,
+      reason: "QA reset and seed controls require BASECAMP_QA_CONTROLS_ENABLED=true."
+    };
+  }
+
+  return { allowed: true, profile };
+}
+
+function deleteQaEvidenceStorage(options: BuildServerOptions, shouldDelete: boolean): boolean {
+  if (!shouldDelete) {
+    return false;
+  }
+
+  const storageDir = options.storageDir ?? process.env.BASECAMP_STORAGE_DIR;
+
+  if (storageDir === undefined || storageDir.trim().length === 0) {
+    return false;
+  }
+
+  const evidenceDir = path.resolve(storageDir, "evidence");
+  const storageRoot = path.resolve(storageDir);
+
+  if (evidenceDir === storageRoot || !evidenceDir.startsWith(`${storageRoot}${path.sep}`)) {
+    throw new Error("Evidence storage reset target must stay inside the storage directory.");
+  }
+
+  rmSync(evidenceDir, { recursive: true, force: true });
+
+  return true;
+}
+
 interface AdminAuthorizationResult {
   authorized: boolean;
   actor: string;
@@ -1031,4 +1216,8 @@ function deploymentProfileFromEnv(value: string | undefined): DeploymentProfile 
   }
 
   return value === undefined || value.trim().length === 0 ? "local-dev" : "unknown";
+}
+
+function booleanFromEnv(value: string | undefined): boolean {
+  return value === "true" || value === "1";
 }

@@ -41,6 +41,8 @@ pnpm --filter @basecamp/database user:disable
 pnpm --filter @basecamp/database postgres:migrate
 pnpm --filter @basecamp/database postgres:status
 pnpm --filter @basecamp/database postgres:import
+pnpm --filter @basecamp/database qa:seed
+pnpm --filter @basecamp/database qa:reset
 ```
 
 The root aliases are:
@@ -55,6 +57,8 @@ pnpm ops:user:disable
 pnpm ops:postgres:migrate
 pnpm ops:postgres:status
 pnpm ops:postgres:import
+pnpm ops:qa:seed
+pnpm ops:qa:reset
 ```
 
 The PostgreSQL commands require `BASECAMP_DATABASE_URL` or `DATABASE_URL`.
@@ -66,3 +70,10 @@ Runtime-aware commands such as `ops:backup`, `ops:export`, `ops:import`,
 PostgreSQL when `BASECAMP_DATABASE_KIND=postgresql` is set. PostgreSQL backup
 creates a Basecamp logical database snapshot; SQLite restore remains the
 implemented `ops:restore` path until PostgreSQL restore-drill proof is closed.
+
+`ops:qa:seed` and `ops:qa:reset` are runtime-aware cloud-pilot QA controls.
+They require `BASECAMP_QA_CONTROLS_ENABLED=true` plus
+`BASECAMP_QA_SEED_CONFIRMATION="SEED CONTENT"` or
+`BASECAMP_QA_RESET_CONFIRMATION="RESET QA DATA"`. Reset preserves local users,
+active sessions, seed content, and audit history, and refuses
+`BASECAMP_DEPLOYMENT_PROFILE=homelab`.

@@ -170,6 +170,12 @@ export interface OperationalStatus {
   };
 }
 
+export interface QaDataResetResult {
+  resetAt: string;
+  deletedRows: Record<string, number>;
+  preservedTables: string[];
+}
+
 export const portableExportTables = [
   "seed_imports",
   "categories",
@@ -215,6 +221,80 @@ const csvExportTables = [
   "evidence_records",
   "audit_events"
 ] as const;
+
+export const qaResetUserDataTables = [
+  "sync_conflicts",
+  "sync_commands",
+  "sync_clients",
+  "maintenance_events",
+  "maintenance_policies",
+  "inventory_events",
+  "kit_items",
+  "kits",
+  "asset_tags",
+  "assets",
+  "inventory_lots",
+  "inventory_items",
+  "location_readiness",
+  "location_relationships",
+  "locations",
+  "drill_runs",
+  "training_records",
+  "skill_progress",
+  "evidence_records",
+  "xp_events",
+  "quest_events",
+  "quest_instances",
+  "category_pursuits"
+] as const;
+
+const qaResetPreservedTables = [
+  "schema_migrations",
+  "seed_imports",
+  "categories",
+  "capability_levels",
+  "quest_templates",
+  "drill_templates",
+  "local_users",
+  "auth_sessions",
+  "audit_events"
+] as const;
+
+export function resetQaData(
+  database: BasecampDatabase,
+  options: { resetAt?: string } = {}
+): QaDataResetResult {
+  const resetAt = options.resetAt ?? new Date().toISOString();
+  const deletedRows: Record<string, number> = {};
+
+  database.exec("BEGIN");
+
+  try {
+    for (const table of qaResetUserDataTables) {
+      if (!tableExists(database, table)) {
+        deletedRows[table] = 0;
+        continue;
+      }
+
+      const count = database.prepare(`SELECT COUNT(*) as count FROM ${quoteIdentifier(table)}`).get() as {
+        count: number;
+      };
+      database.prepare(`DELETE FROM ${quoteIdentifier(table)}`).run();
+      deletedRows[table] = count.count;
+    }
+
+    database.exec("COMMIT");
+  } catch (error) {
+    database.exec("ROLLBACK");
+    throw error;
+  }
+
+  return {
+    resetAt,
+    deletedRows,
+    preservedTables: [...qaResetPreservedTables]
+  };
+}
 
 export function createPortableExport(
   database: BasecampDatabase,

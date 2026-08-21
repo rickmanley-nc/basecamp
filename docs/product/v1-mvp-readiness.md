@@ -157,7 +157,10 @@ The v1.0 milestone should remain open until these blockers are complete:
   until simulator and physical iPhone validation prove the implemented behavior.
 - Physical iPhone field validation.
 - PostgreSQL cloud-pilot backup/restore proof and operational validation.
-- Cloud pilot reset, seed, and observability controls.
+- Cloud pilot reset, seed, and observability controls. The guarded routes and
+  ops commands exist and are covered by local clean-environment tests, but the
+  blocker remains open until the controls are exercised on the cloud-pilot
+  server when safe.
 - Final v1 release-candidate validation and release notes.
 
 ## Non-Goals For v1.0

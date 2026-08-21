@@ -121,12 +121,20 @@ M6 server health/admin routes:
 - `GET /api/admin/export`
 - `POST /api/admin/import`
 - `GET /api/admin/audit`
+- `GET /api/admin/observability`
+- `POST /api/admin/qa/seed`
+- `POST /api/admin/qa/reset`
 
 Cloud pilot routes use local username/password auth when
 `BASECAMP_AUTH_MODE=local`. Admin routes require a local admin bearer session or
 the fallback `BASECAMP_ADMIN_TOKEN`. Self-hosting validation should use the
 Deployment Guide and report whether it ran locally, in a clean container
 environment, or on a separate server.
+
+Cloud-pilot QA controls are disabled by default. `pnpm ops:qa:seed` and
+`pnpm ops:qa:reset` require `BASECAMP_QA_CONTROLS_ENABLED=true`, exact
+confirmation variables, and a non-`homelab` deployment profile. Use them only
+for disposable validation data after a backup when real pilot data is present.
 
 The self-hosting Compose stack does not use service-level `env_file` entries.
 Operators must pass the env file explicitly with `--env-file` on every Compose

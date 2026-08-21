@@ -22,6 +22,7 @@ services:
       BASECAMP_STORAGE_DIR: /var/lib/basecamp/storage
       BASECAMP_BACKUP_DIR: /var/backups/basecamp
       BASECAMP_REMOTE_ACCESS: ${BASECAMP_REMOTE_ACCESS:-lan}
+      BASECAMP_QA_CONTROLS_ENABLED: ${BASECAMP_QA_CONTROLS_ENABLED:-false}
       BASECAMP_LOG_LEVEL: ${BASECAMP_LOG_LEVEL:-info}
     volumes:
       - basecamp_database:/var/lib/basecamp
@@ -63,8 +64,10 @@ services:
         condition: service_healthy
     environment:
       BASECAMP_APP_VERSION: ${BASECAMP_APP_VERSION:-0.9.2}
+      BASECAMP_DEPLOYMENT_PROFILE: ${BASECAMP_DEPLOYMENT_PROFILE:-cloud-pilot}
       BASECAMP_DATABASE_URL: postgresql://${BASECAMP_POSTGRES_USER:-basecamp}:${BASECAMP_POSTGRES_PASSWORD:-change-me-generate-a-random-password}@postgres:5432/${BASECAMP_POSTGRES_DB:-basecamp}
       BASECAMP_POSTGRES_SSL: disable
+      BASECAMP_QA_CONTROLS_ENABLED: ${BASECAMP_QA_CONTROLS_ENABLED:-false}
     command: ["pnpm", "ops:postgres:status"]
 
   web:
@@ -121,6 +124,7 @@ services:
       BASECAMP_BACKUP_DIR: /var/backups/basecamp
       BASECAMP_CONFIG_PATH: /etc/basecamp/basecamp.env
       BASECAMP_BACKUP_INTERVAL_SECONDS: ${BASECAMP_BACKUP_INTERVAL_SECONDS:-86400}
+      BASECAMP_QA_CONTROLS_ENABLED: ${BASECAMP_QA_CONTROLS_ENABLED:-false}
     command: ["sh", "-lc", "while true; do pnpm ops:backup; sleep ${BASECAMP_BACKUP_INTERVAL_SECONDS:-86400}; done"]
     volumes:
       - basecamp_database:/var/lib/basecamp

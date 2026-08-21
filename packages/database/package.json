@@ -17,6 +17,8 @@
     "postgres:import": "tsx scripts/postgres-import.ts",
     "postgres:migrate": "tsx scripts/postgres-migrate.ts",
     "postgres:status": "tsx scripts/postgres-status.ts",
+    "qa:reset": "tsx scripts/qa-reset.ts",
+    "qa:seed": "tsx scripts/qa-seed.ts",
     "user:disable": "tsx scripts/disable-user.ts",
     "user:create": "tsx scripts/create-user.ts",
     "restore": "tsx scripts/restore.ts",
