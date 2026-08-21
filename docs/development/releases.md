@@ -1,6 +1,6 @@
 # Release Process
 
-Last updated: 2026-08-20
+Last updated: 2026-08-21
 
 ## Release Philosophy
 
@@ -12,16 +12,17 @@ project clearer.
 
 1. Confirm milestone scope.
 2. Confirm all required issues are closed or intentionally deferred.
-3. Run `pnpm check`.
-4. Update roadmap and docs.
-5. Confirm migrations, seed data, backup impact, and export impact where
+3. Confirm closed roadmap issues have `## Resolution` comments.
+4. Run `pnpm check`.
+5. Update roadmap and docs.
+6. Confirm migrations, seed data, backup impact, and export impact where
    relevant.
-6. Confirm release notes and linked PR text contain no personal workstation
+7. Confirm release notes and linked PR text contain no personal workstation
    paths.
-7. Draft release notes.
-8. Tag the release.
-9. Create the GitHub Release.
-10. Close the milestone when appropriate.
+8. Draft release notes.
+9. Tag the release.
+10. Create the GitHub Release.
+11. Close the milestone when appropriate.
 
 ## Release Notes Template
 

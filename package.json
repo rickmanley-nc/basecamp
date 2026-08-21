@@ -15,6 +15,7 @@
     "check": "pnpm check:repo && pnpm validate && pnpm typecheck && pnpm test && pnpm build",
     "check:repo": "node scripts/check-repo.mjs",
     "roadmap:sync": "node scripts/sync-github-roadmap.mjs",
+    "roadmap:resolution-audit": "node scripts/check-github-issue-resolution-comments.mjs",
     "test": "vitest run",
     "typecheck": "pnpm -r --if-present typecheck",
     "validate": "pnpm -r --if-present validate"

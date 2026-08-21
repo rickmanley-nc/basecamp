@@ -1,6 +1,6 @@
 # GitHub Planning Workflow
 
-Last updated: 2026-08-20
+Last updated: 2026-08-21
 
 ## Planning Contract
 
@@ -53,7 +53,8 @@ Default rule:
 2. Pick the highest-priority unblocked issue.
 3. Prefer issues that unblock other issues.
 4. Keep each PR focused.
-5. Update issue status through PR links and closing keywords.
+5. Update issue status through resolution comments, PR links, and closing
+   keywords.
 
 Active milestone order:
 
@@ -77,6 +78,7 @@ The agent should:
 - Create a short-lived branch.
 - Open a PR for CI, review history, and issue linkage.
 - Wait for required checks.
+- Post a resolution comment on every issue the PR closes.
 - Squash-merge passing PRs without waiting for user action.
 - Delete the remote branch after merge.
 - Delete the local branch after pulling `main`.
@@ -113,6 +115,50 @@ Use closing keywords when the PR fully completes an issue:
 Closes #123
 ```
 
+## Issue Resolution Comments
+
+Every closed roadmap issue must have a dedicated issue comment explaining how it
+was resolved. A linked PR is not enough, because the issue should remain
+reviewable on its own.
+
+Post this comment before merging a PR that uses closing keywords. If an issue is
+closed by automation first, post the comment immediately after merge.
+
+Resolution comment format:
+
+```markdown
+## Resolution
+
+Resolved by PR #123 and released in v0.4.0.
+
+What changed:
+- Specific behavior, model, route, UI, or documentation delivered.
+- Acceptance criteria that were satisfied.
+
+Validation:
+- `pnpm check`
+- Any focused smoke test, migration check, or manual verification.
+
+Follow-up:
+- None.
+```
+
+Resolution comments must follow
+[Privacy And Portability](./privacy-and-portability.md): use repo-relative
+paths, portable commands, and neutral examples.
+
+Audit closed roadmap issues with:
+
+```bash
+pnpm roadmap:resolution-audit -- --repo rickmanley-nc/basecamp
+```
+
+For a single milestone:
+
+```bash
+pnpm roadmap:resolution-audit -- --repo rickmanley-nc/basecamp --milestone "M2 - Readiness And Quest Core"
+```
+
 Repository merge settings:
 
 - Squash merge is enabled.
@@ -147,6 +193,7 @@ Branch cleanup:
 Before closing a milestone:
 
 - All required issues are closed or explicitly deferred.
+- Closed issues have resolution comments.
 - `pnpm check` passes.
 - Relevant docs are updated.
 - Release notes are drafted.
