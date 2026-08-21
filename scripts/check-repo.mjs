@@ -27,6 +27,7 @@ const requiredFiles = [
   "docs/adr/0004-vite-react-fastify-vertical-slice.md",
   "docs/adr/0005-sqlite-baseline-postgresql-target.md",
   "docs/adr/0006-readiness-quest-core-engine.md",
+  "docs/adr/0007-location-progression-and-home-bases.md",
   ".github/roadmap/labels.json",
   ".github/roadmap/milestones.json",
   ".github/roadmap/issues.json",

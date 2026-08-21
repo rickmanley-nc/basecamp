@@ -116,10 +116,10 @@
     "body": "## Outcome\n\nUsers can intentionally hold a completed level or defer a category without Basecamp repeatedly pushing it.\n\n## Acceptance Criteria\n\n- Category pursuit states are user-editable.\n- Recommendation engine respects later, paused, and not currently pursuing states.\n- Dashboard still shows gaps clearly.\n\n## Validation\n\n- Tests cover recommendation suppression for deferred categories."
   },
   {
-    "title": "Implement inventory, locations, assets, kits, and QR tag data model",
+    "title": "Implement inventory, location progression, assets, kits, and QR tag data model",
     "milestone": "M3 - Inventory, BOMs And Maintenance",
     "labels": ["roadmap", "type:feature", "priority:high", "area:database", "area:domain"],
-    "body": "## Outcome\n\nBasecamp can represent consumables, durable assets, locations, kits/loadouts, and Basecamp QR asset tags.\n\n## Acceptance Criteria\n\n- Model covers inventory items, lots, assets, locations, kits, kit items, and asset tags.\n- States include owned, located, installed, configured, tested, in service, maintenance due, failed, retired, and expired.\n- Inventory events are modeled rather than only overwriting totals.\n\n## Validation\n\n- Migration and model tests cover core inventory scenarios."
+    "body": "## Outcome\n\nBasecamp can represent consumables, durable assets, user-named locations, location progression, kits/loadouts, and Basecamp QR asset tags.\n\n## Acceptance Criteria\n\n- Model covers inventory items, lots, assets, locations, location hierarchy, location readiness, kits, kit items, and asset tags.\n- Locations can be named by the user and can progress independently from known location to stash, outpost, basecamp, and home base.\n- Multiple locations can reach home base maturity.\n- Physical outpost locations are distinct from, but linkable to, gamified category outpost achievements.\n- States include owned, located, installed, configured, tested, in service, maintenance due, failed, retired, and expired.\n- Inventory events are modeled rather than only overwriting totals.\n\n## Validation\n\n- Migration and model tests cover core inventory scenarios and location progression scenarios."
   },
   {
     "title": "Implement BOM and acquisition rollup v1",

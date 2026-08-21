@@ -133,6 +133,38 @@ Potential future thematic language:
 These names are optional presentation language. The product must preserve clear
 labels like "Level 3 - 2 Weeks."
 
+## Location Progression
+
+Basecamp also treats physical or logical places as progressable preparedness
+entities. A user can define multiple named locations, such as a primary house,
+a parent house, a vehicle, a cabin, a cache, or a field site.
+
+Locations progress from known places into more capable operating bases:
+
+| Tier | Meaning |
+| --- | --- |
+| Known Location | A place exists in Basecamp but has little or no validated capability. |
+| Stash | A limited supply, kit, or cache is present. |
+| Outpost | The place has validated, independently useful capability for one or more categories. |
+| Basecamp | The place supports multiple categories and recurring maintenance. |
+| Home Base | The place can serve as a durable base of operations with multi-category readiness. |
+
+Multiple locations can reach Home Base status. A household might have a primary
+home and a family member's house in Basecamp at the same time, with each one
+progressing independently. One location may be a Home Base while another remains
+a Known Location or Stash until enough quests, inventory, maintenance, and
+validation work are completed there.
+
+This means "outpost" has two related uses:
+
+- A location maturity tier: a physical place that has progressed to Outpost.
+- A gamification achievement: a category capability badge such as Water Outpost.
+
+The product should keep those concepts distinct but linkable. For example, a
+Water Outpost achievement can contribute to a specific physical location's
+Outpost or Home Base progression when the validated water capability is stored,
+maintained, and usable there.
+
 ## User-Controlled Progression
 
 Basecamp does not force a fixed curriculum. The user can pursue Water Level 3,
@@ -802,6 +834,7 @@ Core entity groups:
 - Categories and capability levels
 - Quests, accomplishments, steps, dependencies, and unlocks
 - Inventory, assets, locations, kits/loadouts, and asset tags
+- Location progression from known place to outpost to home base
 - BOMs, acquisition requirements, substitutions, and projects
 - Skills, practice events, validations, and certifications
 - Drills, scenarios, results, failures, lessons, and follow-up quests
@@ -1480,7 +1513,8 @@ Phase 2: Readiness and quest core
 Phase 3: Inventory, BOMs, and acquisition
 
 - Inventory model.
-- Locations, kits/loadouts, assets, and QR tags.
+- Locations, location progression, multiple home bases, kits/loadouts, assets,
+  and QR tags.
 - BOM model and acquisition rollups.
 - Maintenance schedules and completion flows.
 - Barcode lookup spike.

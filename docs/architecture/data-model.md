@@ -75,7 +75,9 @@ Category pursuit statuses:
 
 | Entity | Purpose |
 | --- | --- |
-| `location` | Home, garage, vehicle, bin, room, shelf, cache, or field location. |
+| `location` | User-named physical or logical place such as home, parent house, garage, vehicle, bin, room, shelf, cache, outpost, or field location. |
+| `location_relationship` | Parent/child location hierarchy such as home > garage > shelf or vehicle > trunk kit. |
+| `location_readiness` | Location maturity and category readiness toward stash, outpost, basecamp, or home base status. |
 | `inventory_item` | Logical item type such as drinking water or handheld radio. |
 | `inventory_lot` | Quantity, expiration, batch, purchase, or rotation group. |
 | `asset` | Durable tracked object such as generator, radio, battery, kit, or tool. |
@@ -98,6 +100,20 @@ Inventory states:
 - failed
 - retired
 - expired
+
+Location maturity tiers:
+
+- known_location
+- stash
+- outpost
+- basecamp
+- home_base
+
+Multiple locations can hold `home_base` maturity. Location maturity is derived
+from inventory, kits, assets, maintenance, quests, evidence, drills, and
+category readiness at that location. Gamified outpost awards can contribute to a
+location's maturity, but physical location outposts and category achievement
+outposts remain separate concepts.
 
 ### BOM, Projects, And Acquisition
 
@@ -230,7 +246,7 @@ slice that keeps user action history recoverable for future sync.
 
 1. Create identity, category, level, quest template, and seed tables.
 2. Add quest instances, accomplishments, dependencies, and evidence.
-3. Add inventory, locations, assets, and QR tags.
+3. Add inventory, locations, location progression, assets, and QR tags.
 4. Add BOMs, projects, and acquisition needs.
 5. Add skills, drills, and maintenance.
 6. Add scoring, XP, badges, outposts, and milestones.
