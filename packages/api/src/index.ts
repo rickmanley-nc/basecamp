@@ -3,6 +3,13 @@ import type {
   Asset,
   AssetTag,
   BasecampSeed,
+  DrillCriterionResult,
+  DrillRun,
+  DrillTemplate,
+  EvidenceKind,
+  EvidenceLink,
+  EvidenceMetadata,
+  EvidenceRecord,
   HouseholdProgressSnapshot,
   InventoryItem,
   InventoryLot,
@@ -14,10 +21,13 @@ import type {
   MaintenancePolicy,
   PreparednessCategory,
   QuestStatus,
-  QuestTemplate
+  QuestTemplate,
+  SkillState,
+  TrainingRecord
 } from "@basecamp/domain";
 import { rollupAcquisitionNeeds } from "@basecamp/domain";
 import {
+  buildGapAnalysisReport,
   buildCategoryProgressionPaths,
   calculateBadgeProgress,
   calculateCapabilityOutpostProgress,
@@ -29,6 +39,7 @@ import {
   type CategoryProgressionPath,
   type CapabilityOutpostProgress,
   type CriticalGap,
+  type GapAnalysisReport,
   type MilestoneProgress,
   type ProgressionNodeState,
   type RecommendationKind
@@ -45,6 +56,11 @@ export const apiRoutes = {
   assetLookup: "/api/assets/:assetId",
   maintenancePolicy: "/api/maintenance/policies",
   maintenanceCompletion: "/api/maintenance/:policyId/completions",
+  evidence: "/api/evidence",
+  skillTraining: "/api/skills/training",
+  drillTemplates: "/api/drills/templates",
+  drillRun: "/api/drills/:templateId/runs",
+  gapReport: "/api/reports/gaps",
   sync: "/api/sync",
   categoryPursuit: "/api/categories/:categoryId/pursuit",
   questAction: "/api/quests/:questId/actions"
@@ -184,6 +200,7 @@ export interface DashboardSummary {
     title: string;
     due: string;
   }>;
+  gapReport: GapAnalysisReport;
   inventory: InventoryDashboardSummary;
   recentBadges: Array<{
     id: string;
@@ -239,6 +256,60 @@ export interface AssetTagResponse extends AssetTagSummary {
   asset: AssetSummary;
 }
 
+export interface EvidenceRecordRequest {
+  kind: EvidenceKind;
+  title: string;
+  links: EvidenceLink[];
+  metadata: EvidenceMetadata;
+  id?: string;
+}
+
+export interface EvidenceRecordResponse {
+  evidence: EvidenceRecord;
+}
+
+export interface SkillTrainingRequest {
+  skillId: string;
+  courseName: string;
+  completedAt: string;
+  name?: string;
+  categoryId?: string;
+  provider?: string;
+  expiresAt?: string;
+  evidenceIds?: string[];
+  notes?: string;
+  stateAwarded?: Exclude<SkillState, "untrained">;
+}
+
+export interface SkillTrainingResponse {
+  skill: {
+    skillId: string;
+    name?: string;
+    categoryId?: string;
+    state: SkillState;
+    expiresAt?: string;
+  };
+  trainingRecord: TrainingRecord;
+  dashboard: DashboardSummary;
+}
+
+export interface DrillRunRequest {
+  completedAt: string;
+  criteriaResults: DrillCriterionResult[];
+  startedAt?: string;
+  lessons?: string;
+  evidenceIds?: string[];
+}
+
+export interface DrillTemplatesResponse {
+  templates: DrillTemplate[];
+}
+
+export interface DrillRunResponse {
+  run: DrillRun;
+  dashboard: DashboardSummary;
+}
+
 export function createSeedContentResponse(seed: BasecampSeed): SeedContentResponse {
   return {
     schemaVersion: seed.schemaVersion,
@@ -279,6 +350,10 @@ export function createDashboardSummary(
   const milestoneProgress = calculateMilestoneProgress(seed, progress);
   const totalXp = (progress.xpEvents ?? []).reduce((total, event) => total + event.xpAwarded, 0);
   const inventory = createInventoryDashboardSummary(seed, progress, inventorySource);
+  const gapReport = buildGapAnalysisReport(seed, progress, {
+    acquisitionNeeds: inventory.acquisitionNeeds,
+    maintenanceDue: inventory.maintenanceDue
+  });
   const pathMaintenance = categoryPaths
     .flatMap((path) => path.nodes)
     .filter((node) => node.state === "maintenance_required")
@@ -332,6 +407,7 @@ export function createDashboardSummary(
       })),
       ...pathMaintenance
     ].slice(0, 3),
+    gapReport,
     inventory,
     recentBadges: badgeProgress
       .filter((badge) => badge.earnedTiers.length > 0)

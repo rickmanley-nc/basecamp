@@ -19,4 +19,8 @@ events, server mutation routes, and the readiness-core web shell.
 
 M3 adds inventory, location maturity, BOM rollup, maintenance, QR tag, and web
 dashboard tests. M4 adds Quick Capture parser, QR/barcode scan workflow, durable
-outbox, conflict policy, sync persistence/API, and mobile shell tests.
+outbox, conflict policy, sync persistence/API, and mobile shell tests. M5 adds
+drill run success/failure tests, skill progression and expiration tests,
+evidence link/version/deletion tests, validation ceiling recovery tests, gap
+report section tests, persistence tests, server route tests, and web dashboard
+render coverage for the gap report.

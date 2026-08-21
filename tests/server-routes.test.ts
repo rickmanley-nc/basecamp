@@ -128,6 +128,58 @@ describe("server routes", () => {
         commands: [syncInventoryCommand]
       }
     });
+    const drillTemplates = await server.inject("/api/drills/templates");
+    const drillTemplate = drillTemplates
+      .json()
+      .templates.find((candidate: { id: string }) => candidate.id === "drill-drill-one-hour-power-outage");
+    const evidence = await server.inject({
+      method: "POST",
+      url: "/api/evidence",
+      payload: {
+        kind: "photo",
+        title: "Power drill evidence",
+        links: [
+          { entityType: "drill", entityId: drillTemplate.id },
+          { entityType: "asset", entityId: asset.id }
+        ],
+        metadata: {
+          capturedAt: "2026-08-21T00:10:00.000Z",
+          fileName: "power-drill.jpg",
+          mimeType: "image/jpeg"
+        }
+      }
+    });
+    const skillTraining = await server.inject({
+      method: "POST",
+      url: "/api/skills/training",
+      payload: {
+        skillId: "skill-first-aid-cpr",
+        name: "First Aid/CPR",
+        categoryId: "skills-training",
+        courseName: "First Aid/CPR",
+        completedAt: "2026-08-21T00:11:00.000Z",
+        expiresAt: "2027-08-21",
+        evidenceIds: [evidence.json().evidence.id],
+        stateAwarded: "validated"
+      }
+    });
+    const drillRun = await server.inject({
+      method: "POST",
+      url: `/api/drills/${drillTemplate.id}/runs`,
+      payload: {
+        completedAt: "2026-08-21T00:12:00.000Z",
+        criteriaResults: [
+          {
+            criterionId: drillTemplate.successCriteria[0].id,
+            passed: false,
+            notes: "Battery station was empty."
+          }
+        ],
+        evidenceIds: [evidence.json().evidence.id],
+        lessons: "Charge the station before the next drill."
+      }
+    });
+    const gapReport = await server.inject("/api/reports/gaps");
 
     expect(health.statusCode).toBe(200);
     expect(health.json()).toMatchObject({ ok: true, service: "basecamp-server" });
@@ -174,6 +226,24 @@ describe("server routes", () => {
     });
     expect(syncReplay.statusCode).toBe(200);
     expect(syncReplay.json().replayedCommandCount).toBe(1);
+    expect(drillTemplates.statusCode).toBe(200);
+    expect(drillTemplates.json().templates.length).toBeGreaterThan(0);
+    expect(evidence.statusCode).toBe(200);
+    expect(evidence.json().evidence.links).toHaveLength(2);
+    expect(skillTraining.statusCode).toBe(200);
+    expect(skillTraining.json().skill).toMatchObject({
+      skillId: "skill-first-aid-cpr",
+      state: "validated"
+    });
+    expect(drillRun.statusCode).toBe(200);
+    expect(drillRun.json().run).toMatchObject({
+      result: "failed"
+    });
+    expect(drillRun.json().dashboard.gapReport.followUpQuests.some(
+      (followUp: { sourceType: string }) => followUp.sourceType === "drill"
+    )).toBe(true);
+    expect(gapReport.statusCode).toBe(200);
+    expect(gapReport.json().validationGaps.length).toBeGreaterThan(0);
 
     await server.close();
     database.close();

@@ -9,8 +9,10 @@ SQLite-compatible snapshots for offline/mobile caches and portable exports.
 M1 uses a local SQLite baseline via Node's built-in `node:sqlite` module so the
 first vertical slice can run without a database server. M2 adds persisted
 category pursuit overrides, quest instances, quest lifecycle events, and XP
-events. PostgreSQL remains the self-hosted production target in the architecture
-docs.
+events. M3 adds inventory, locations, assets, QR tags, kits, and maintenance.
+M4 adds sync clients, command logs, and conflicts. M5 adds evidence records,
+skill progress, training records, drill templates, and drill runs. PostgreSQL
+remains the self-hosted production target in the architecture docs.
 
 ## Local Seed Import
 

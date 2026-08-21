@@ -164,6 +164,48 @@ export interface EvidenceReference {
   description: string;
 }
 
+export type EvidenceLinkEntityType =
+  | "quest"
+  | "accomplishment"
+  | "skill"
+  | "drill"
+  | "asset"
+  | "maintenance"
+  | "inventory_event";
+
+export interface EvidenceLink {
+  entityType: EvidenceLinkEntityType;
+  entityId: BasecampId;
+}
+
+export interface EvidenceMetadata {
+  capturedAt: string;
+  fileName?: string;
+  mimeType?: string;
+  byteSize?: number;
+  localUri?: string;
+  contentHash?: string;
+  width?: number;
+  height?: number;
+  notes?: string;
+}
+
+export type EvidenceStatus = "active" | "superseded" | "deleted";
+
+export interface EvidenceRecord {
+  id: EvidenceId;
+  kind: EvidenceKind;
+  title: string;
+  links: EvidenceLink[];
+  metadata: EvidenceMetadata;
+  status: EvidenceStatus;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+  supersedesEvidenceId?: EvidenceId;
+  deletionReason?: string;
+}
+
 export interface MaintenanceReference {
   policyId?: MaintenancePolicyId;
   assetId?: AssetId;
@@ -258,6 +300,9 @@ export interface HouseholdProgressSnapshot {
   maintenanceRequiredCategoryIds?: CategoryId[];
   interestCategoryIds?: CategoryId[];
   xpEvents?: XpEvent[];
+  skillProgress?: SkillProgress[];
+  drillRuns?: DrillRun[];
+  evidenceRecords?: EvidenceRecord[];
 }
 
 export type BadgeTier = "bronze" | "silver" | "gold" | "platinum" | "master";
@@ -530,12 +575,76 @@ export type SkillState =
   | "validated"
   | "advanced";
 
+export interface TrainingRecord {
+  id: BasecampId;
+  skillId: SkillId;
+  courseName: string;
+  completedAt: string;
+  provider?: string;
+  expiresAt?: string;
+  evidenceIds?: EvidenceId[];
+  notes?: string;
+}
+
 export interface SkillProgress {
   skillId: SkillId;
+  name?: string;
+  categoryId?: CategoryId;
   state: SkillState;
+  trainingRecords?: TrainingRecord[];
+  evidenceIds?: EvidenceId[];
   evidence?: EvidenceReference[];
   lastPracticedAt?: string;
   validatedAt?: string;
+  expiresAt?: string;
+}
+
+export interface DrillSuccessCriterion {
+  id: BasecampId;
+  label: string;
+  required: boolean;
+}
+
+export interface DrillTemplate {
+  id: DrillId;
+  title: string;
+  categoryId: CategoryId;
+  scenario: string;
+  estimatedMinutes: number;
+  successCriteria: DrillSuccessCriterion[];
+  evidence?: EvidenceReference[];
+  recommendedQuestIds?: QuestId[];
+}
+
+export interface DrillCriterionResult {
+  criterionId: BasecampId;
+  passed: boolean;
+  notes?: string;
+}
+
+export interface FollowUpQuestSuggestion {
+  id: BasecampId;
+  title: string;
+  categoryId: CategoryId;
+  reason: string;
+  sourceType: "drill" | "skill" | "validation" | "maintenance" | "gap_report";
+  sourceId: BasecampId;
+}
+
+export type DrillRunResult = "passed" | "partial" | "failed";
+
+export interface DrillRun {
+  id: BasecampId;
+  templateId: DrillId;
+  categoryId: CategoryId;
+  result: DrillRunResult;
+  startedAt?: string;
+  completedAt: string;
+  criteriaResults: DrillCriterionResult[];
+  failures: string[];
+  lessons?: string;
+  evidenceIds?: EvidenceId[];
+  followUpQuestSuggestions: FollowUpQuestSuggestion[];
 }
 
 export interface BasecampSeed {

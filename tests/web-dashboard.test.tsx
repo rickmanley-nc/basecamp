@@ -3,7 +3,7 @@ import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 describe("web dashboard shell", () => {
-  it("renders the M3 readiness, inventory, and maintenance surface", () => {
+  it("renders the M5 readiness, inventory, maintenance, and validation report surface", () => {
     const html = renderToString(<App />);
 
     expect(html).toContain("Basecamp Operations");
@@ -15,6 +15,7 @@ describe("web dashboard shell", () => {
     expect(html).toContain("Assets And QR Tags");
     expect(html).toContain("Category Pursuit");
     expect(html).toContain("Quest Backlog");
+    expect(html).toContain("Gap Report");
     expect(html).toContain("Critical Gaps");
   });
 });

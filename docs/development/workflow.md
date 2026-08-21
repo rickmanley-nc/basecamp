@@ -78,6 +78,18 @@ for TestFlight installation, Camera permission, Local Network permission, offlin
 device storage, and reconnect sync remain pending until a signed iPhone build
 exists.
 
+M5 adds drills, skills, evidence, and reports:
+
+- `GET /api/reports/gaps`
+- `GET /api/drills/templates`
+- `POST /api/drills/:templateId/runs`
+- `POST /api/evidence`
+- `POST /api/skills/training`
+
+The M5 gap report separates critical category gaps, intentional deferrals,
+validation gaps, acquisition gaps, and maintenance gaps. Drill failure follow-up
+suggestions and skill expiration impacts are covered by local tests.
+
 ## Branches
 
 - `main` should remain releasable.

@@ -36,7 +36,7 @@
   },
   {
     "title": "M5 - Drills, Skills And Validation",
-    "state": "open",
+    "state": "closed",
     "dueOn": "2026-11-12T23:59:59Z",
     "release": "v0.6.0",
     "description": "Drills, skills, evidence, validation ceilings, follow-up quests, and readiness reports."

@@ -27,3 +27,6 @@ the local Basecamp server on port `4317`.
 M2 renders the readiness core: ranked recommendations, category pursuit
 controls, progression path lists, active/saved/deferred quest buckets, critical
 gaps, badges, and capability outposts.
+
+M5 adds the gap report dashboard surface with critical, validation, acquisition,
+maintenance, and deferred gap counts plus suggested follow-up quests.
