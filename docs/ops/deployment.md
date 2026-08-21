@@ -3,18 +3,21 @@
 Last updated: 2026-08-21
 
 This guide is the operator runbook for installing the Basecamp self-hosting beta
-on an admin-controlled Linux host.
+and cloud pilot foundation on an admin-controlled Linux host.
 
 ## Current Status
 
-M6 adds an installable Docker Compose beta for the web app, API server,
+M6 added an installable Docker Compose beta for the web app, API server,
 reverse proxy, persistent SQLite database volume, persistent storage volume,
 and backup service. Compose is the current reference single-node deployment
 adapter, not the final production architecture.
 
-The long-term production target remains PostgreSQL. For M6, the runnable beta
-uses SQLite because that is the persistence layer implemented by the application
-today. See [ADR 0009](../adr/0009-self-hosting-beta-sqlite-ops.md) and
+v0.8 adds the cloud pilot foundation: local username/password login,
+admin-created accounts, placeholder admin token rejection, and a portable
+evidence-reference boundary that does not publish host filesystem paths. The
+long-term production target remains PostgreSQL. The runnable beta uses SQLite
+because that is the persistence layer implemented by the application today. See
+[ADR 0009](../adr/0009-self-hosting-beta-sqlite-ops.md) and
 [ADR 0010](../adr/0010-production-deployment-targets.md).
 
 ## Deployment Profiles
@@ -47,6 +50,7 @@ online.
 Prerequisites:
 
 - Linux host with Docker Engine and the Docker Compose plugin.
+- `jq` for the curl-based status examples.
 - Stable LAN/private address or DNS name for the cloud pilot.
 - Admin-controlled paths for release assets, config, data, and backups.
 - No secrets committed to git or published in GitHub text.
@@ -70,7 +74,11 @@ Edit `infra/basecamp.env` before startup:
 
 - Set `BASECAMP_PUBLIC_URL` to the LAN or reverse-proxy URL.
 - Set `BASECAMP_WEB_URL` to the web URL if different.
-- Replace `BASECAMP_ADMIN_TOKEN` with a random secret generated outside git.
+- Keep `BASECAMP_AUTH_MODE=local` for the cloud pilot.
+- Replace `BASECAMP_ADMIN_TOKEN` with a random break-glass operational secret
+  generated outside git, or leave it unset in the real env file after a local
+  admin account exists. The placeholder value is rejected by the server and does
+  not count as configured authentication.
 - Keep `BASECAMP_CONFIG_SOURCE=./basecamp.env` when the file lives in
   `/opt/basecamp/infra`; set it to an absolute host path such as
   `/etc/basecamp/basecamp.env` when config is stored outside the release tree.
@@ -92,6 +100,34 @@ docker compose --env-file basecamp.env up -d --build
 docker compose --env-file basecamp.env ps
 ```
 
+Create the first admin account after the server has applied migrations. The
+password must be at least 12 characters. The example uses shell prompts so the
+password is not typed directly into command history:
+
+```bash
+cd /opt/basecamp/infra
+read -r -p "Basecamp admin username: " BASECAMP_USER_USERNAME
+read -r -p "Basecamp admin display name: " BASECAMP_USER_DISPLAY_NAME
+read -r -s -p "Basecamp admin password: " BASECAMP_USER_PASSWORD
+echo
+export BASECAMP_USER_USERNAME BASECAMP_USER_DISPLAY_NAME BASECAMP_USER_PASSWORD
+docker compose --env-file basecamp.env run --rm server pnpm ops:user:create
+unset BASECAMP_USER_PASSWORD
+```
+
+The user creation command prints the created user record without the password.
+If the env file lives at `/etc/basecamp/basecamp.env`, use that same path with
+`--env-file` for this command.
+
+To revoke a pilot user's access, set `BASECAMP_USER_USERNAME` to that username
+and run:
+
+```bash
+docker compose --env-file basecamp.env run --rm server pnpm ops:user:disable
+```
+
+The disable command marks the local user disabled and revokes active sessions.
+
 Open:
 
 - Web: `http://basecamp.local:8080` or the configured host.
@@ -110,12 +146,19 @@ Compose defines health checks for:
 Administrative status is available at:
 
 ```bash
-curl -H "Authorization: Bearer <admin-token>" \
+BASECAMP_SESSION_TOKEN=$(curl -s \
+  -H "Content-Type: application/json" \
+  -d '{"username":"<admin-username>","password":"<admin-password>"}' \
+  http://basecamp.local:8080/api/auth/login | jq -r .token)
+
+curl -H "Authorization: Bearer ${BASECAMP_SESSION_TOKEN}" \
   http://basecamp.local:8080/api/admin/status
+unset BASECAMP_SESSION_TOKEN
 ```
 
 The status response covers web, server, database, storage, migrations, backup
-recency, and beta security posture.
+recency, and beta security posture. It should report `localAuthMode: "local"`
+and `localUsersConfigured: true` before real pilot use.
 
 ## Backup
 
@@ -145,7 +188,7 @@ manifest can include the admin configuration file. Do not publish that file.
 Check backup status:
 
 ```bash
-curl -H "x-basecamp-admin-token: <admin-token>" \
+curl -H "Authorization: Bearer <admin-session-token>" \
   http://basecamp.local:8080/api/admin/status
 ```
 
@@ -192,9 +235,12 @@ Portable import:
 BASECAMP_IMPORT_FILE=/var/backups/basecamp/export-latest/basecamp-export.json pnpm ops:import
 ```
 
-The export contains structured JSON, CSV files for major operational tables,
-and evidence file references. Import validates the export version, seed/content
-schema version, and checksum before replacing data.
+The export contains structured JSON, CSV files for major operational tables, and
+portable evidence file references. Host filesystem paths such as
+`/Users/<admin>/Evidence/...`, `/home/<admin>/...`, or Windows profile paths are
+not emitted into the evidence manifest. Local account tables and active sessions
+are deployment-local; use backup/restore, not portable export/import, when the
+goal is to preserve accounts on the same deployment profile.
 
 ## Upgrade
 
@@ -242,8 +288,8 @@ Basecamp contains sensitive preparedness data. Remote access should use:
 - LAN-only operation for the simplest beta deployment.
 
 Do not expose the beta directly to the public internet without a secure reverse
-proxy, TLS, admin token protection for operational endpoints, and a plan for
-future user authentication.
+proxy, TLS, local username/password authentication, and admin protection for
+operational endpoints.
 
 ## Separate Server Testing
 
@@ -278,9 +324,16 @@ issues, pull requests, releases, comments, or tracked files.
 - If `proxy` is unhealthy, confirm `server` and `web` are healthy first.
 - If backup status is missing, run a manual backup and recheck
   `/api/admin/status`.
-- If admin endpoints return `401`, confirm the token header matches
-  `BASECAMP_ADMIN_TOKEN`.
-- If admin endpoints return `503`, configure `BASECAMP_ADMIN_TOKEN`.
+- If normal API routes return `401`, sign in with a local username/password
+  account.
+- If login fails for the first admin, rerun `pnpm ops:user:create` with a new
+  username or restore a backup containing the account.
+- If a pilot user should lose access, run `pnpm ops:user:disable` for that
+  username.
+- If admin endpoints return `401`, sign in as a local admin or confirm the
+  fallback token header matches `BASECAMP_ADMIN_TOKEN`.
+- If admin endpoints return `503`, create a local admin user or configure a
+  non-placeholder `BASECAMP_ADMIN_TOKEN`.
 - If import fails, confirm export version, content schema version, and checksum.
 
 ## Local Preview

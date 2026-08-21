@@ -10,6 +10,7 @@ const failures = [];
 
 for (const required of [
   "BASECAMP_ADMIN_TOKEN",
+  "BASECAMP_AUTH_MODE",
   "BASECAMP_REMOTE_ACCESS",
   "BASECAMP_BACKUP_DIR",
   "BASECAMP_STORAGE_DIR"
@@ -29,7 +30,7 @@ for (const unsafe of ["privileged: true", "network_mode: host"]) {
   }
 }
 
-for (const phrase of ["VPN", "secure reverse proxy", "admin token", "Do not publish credentials"]) {
+for (const phrase of ["VPN", "secure reverse proxy", "admin token", "username/password", "Do not publish credentials"]) {
   if (!deployment.includes(phrase)) {
     failures.push(`Deployment guide must mention ${phrase}.`);
   }
@@ -53,4 +54,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log("Basecamp M6 security checklist passed.");
+console.log("Basecamp security checklist passed.");

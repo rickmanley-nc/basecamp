@@ -3,6 +3,8 @@ import {
   applyMigrations,
   createBackup,
   createDatabase,
+  disableLocalUser,
+  createLocalUser,
   createPortableExport,
   importPortableExport,
   importSeed,
@@ -46,7 +48,8 @@ describe("M6 self-hosting operations", () => {
       metadata: {
         capturedAt: "2026-08-21T00:00:00.000Z",
         fileName: "water-shelf.jpg",
-        localUri: "basecamp://local/evidence/water-shelf.jpg"
+        localUri: "/Users/<admin>/Evidence/water-shelf.jpg",
+        storageKey: "evidence/water-shelf.jpg"
       }
     });
     recordSkillTraining(source, {
@@ -78,8 +81,11 @@ describe("M6 self-hosting operations", () => {
     expect(archive.csv.inventory_items).toContain("Commercial sealed water");
     expect(archive.evidenceFiles[0]).toMatchObject({
       evidenceId: evidence.id,
-      portablePath: `evidence/${evidence.id}/water-shelf.jpg`
+      storageKey: "evidence/water-shelf.jpg",
+      portablePath: "evidence/water-shelf.jpg"
     });
+    expect(archive.evidenceFiles[0]?.sourceUri).toBeUndefined();
+    expect(JSON.stringify(archive.evidenceFiles)).not.toContain("/Users/");
     expect(imported.tableCounts.inventory_items).toBe(1);
     expect(inventory.items[0]).toMatchObject({ name: "Commercial sealed water" });
     expect(listEvidenceRecords(target)[0]).toMatchObject({ title: "Water shelf" });
@@ -181,7 +187,7 @@ describe("M6 self-hosting operations", () => {
     await rm(root, { recursive: true, force: true });
   });
 
-  it("protects admin status, export, import, and audit routes with the beta admin token", async () => {
+  it("protects admin status, export, import, and audit routes with the fallback admin token", async () => {
     const root = await mkdtemp(path.join(os.tmpdir(), "basecamp-admin-"));
     const databasePath = path.join(root, "basecamp.sqlite");
     const storageDir = path.join(root, "storage");
@@ -240,6 +246,127 @@ describe("M6 self-hosting operations", () => {
     await rm(root, { recursive: true, force: true });
   });
 
+  it("supports admin-created username/password accounts and bearer sessions", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "basecamp-local-auth-"));
+    const databasePath = path.join(root, "basecamp.sqlite");
+    const storageDir = path.join(root, "storage");
+    const backupDir = path.join(root, "backups");
+    const database = createDatabase(databasePath);
+    const server = buildServer({
+      database,
+      closeDatabaseOnClose: true,
+      databasePath,
+      storageDir,
+      backupDir,
+      authMode: "local",
+      appVersion: "0.8.0",
+      remoteAccessMode: "lan",
+      webUrl: "http://basecamp.local:8080"
+    });
+
+    createLocalUser(database, {
+      username: "Admin",
+      password: "correct horse battery staple",
+      displayName: "Basecamp Admin",
+      role: "admin"
+    });
+    createLocalUser(database, {
+      username: "friend",
+      password: "correct horse battery staple",
+      displayName: "Pilot Friend",
+      role: "member"
+    });
+
+    const deniedDashboard = await server.inject("/api/dashboard");
+    const deniedAdmin = await server.inject("/api/admin/status");
+    const failedLogin = await server.inject({
+      method: "POST",
+      url: "/api/auth/login",
+      payload: { username: "admin", password: "wrong password" }
+    });
+    const login = await server.inject({
+      method: "POST",
+      url: "/api/auth/login",
+      payload: { username: "admin", password: "correct horse battery staple" }
+    });
+    const token = login.json().token as string;
+    const friendLogin = await server.inject({
+      method: "POST",
+      url: "/api/auth/login",
+      payload: { username: "friend", password: "correct horse battery staple" }
+    });
+    const friendToken = friendLogin.json().token as string;
+    const dashboard = await server.inject({
+      method: "GET",
+      url: "/api/dashboard",
+      headers: { authorization: `Bearer ${token}` }
+    });
+    const session = await server.inject({
+      method: "GET",
+      url: "/api/auth/session",
+      headers: { authorization: `Bearer ${token}` }
+    });
+    const adminStatus = await server.inject({
+      method: "GET",
+      url: "/api/admin/status",
+      headers: { authorization: `Bearer ${token}` }
+    });
+    disableLocalUser(database, "friend");
+    const deniedDisabledSession = await server.inject({
+      method: "GET",
+      url: "/api/dashboard",
+      headers: { authorization: `Bearer ${friendToken}` }
+    });
+    const deniedDisabledLogin = await server.inject({
+      method: "POST",
+      url: "/api/auth/login",
+      payload: { username: "friend", password: "correct horse battery staple" }
+    });
+    const logout = await server.inject({
+      method: "POST",
+      url: "/api/auth/logout",
+      headers: { authorization: `Bearer ${token}` }
+    });
+    const deniedAfterLogout = await server.inject({
+      method: "GET",
+      url: "/api/dashboard",
+      headers: { authorization: `Bearer ${token}` }
+    });
+
+    expect(deniedDashboard.statusCode).toBe(401);
+    expect(deniedAdmin.statusCode).toBe(401);
+    expect(failedLogin.statusCode).toBe(401);
+    expect(login.statusCode).toBe(200);
+    expect(token.length).toBeGreaterThan(30);
+    expect(login.json().user).toMatchObject({
+      username: "admin",
+      displayName: "Basecamp Admin",
+      role: "admin"
+    });
+    expect(friendLogin.statusCode).toBe(200);
+    expect(dashboard.statusCode).toBe(200);
+    expect(session.statusCode).toBe(200);
+    expect(adminStatus.statusCode).toBe(200);
+    expect(adminStatus.json()).toMatchObject({
+      version: "0.8.0",
+      security: {
+        adminTokenConfigured: false,
+        localAuthMode: "local",
+        localUsersConfigured: true,
+        adminTokenPlaceholder: false,
+        remoteAccessMode: "lan"
+      }
+    });
+    expect(deniedDisabledSession.statusCode).toBe(401);
+    expect(deniedDisabledLogin.statusCode).toBe(401);
+    expect(logout.statusCode).toBe(200);
+    expect(deniedAfterLogout.statusCode).toBe(401);
+    expect(listAuditEvents(database).map((event) => event.action)).toContain("auth.login");
+
+    await server.close();
+    await rm(root, { recursive: true, force: true });
+  });
+
   it("ships self-hosting release artifacts with health checks and safe defaults", () => {
     const compose = readFileSync("infra/compose.yml", "utf8");
     const envExample = readFileSync("infra/basecamp.env.example", "utf8");
@@ -256,11 +383,13 @@ describe("M6 self-hosting operations", () => {
     expect(compose).not.toContain("env_file:");
     expect(compose).toContain("BASECAMP_APP_VERSION:");
     expect(compose).toContain("BASECAMP_ADMIN_TOKEN:");
+    expect(compose).toContain("BASECAMP_AUTH_MODE:");
     expect(compose).toContain("BASECAMP_REMOTE_ACCESS:");
     expect(compose).toContain("BASECAMP_CONFIG_PATH:");
     expect(compose).toContain("${BASECAMP_CONFIG_SOURCE");
     expect(envExample).toContain("BASECAMP_ADMIN_TOKEN=change-me");
-    expect(envExample).toContain("BASECAMP_APP_VERSION=0.7.2");
+    expect(envExample).toContain("BASECAMP_AUTH_MODE=local");
+    expect(envExample).toContain("BASECAMP_APP_VERSION=0.8.0");
     expect(envExample).toContain("BASECAMP_CONFIG_SOURCE=./basecamp.env");
     expect(envExample).toContain("BASECAMP_REMOTE_ACCESS=lan");
     expect(caddy).toContain("reverse_proxy server:4317");

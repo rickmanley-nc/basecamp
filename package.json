@@ -20,6 +20,8 @@
     "ops:release-check": "node scripts/ops/release-check.mjs",
     "ops:restore": "pnpm --filter @basecamp/database restore",
     "ops:security-check": "node scripts/ops/security-check.mjs",
+    "ops:user:disable": "pnpm --filter @basecamp/database user:disable",
+    "ops:user:create": "pnpm --filter @basecamp/database user:create",
     "roadmap:sync": "node scripts/sync-github-roadmap.mjs",
     "roadmap:resolution-audit": "node scripts/check-github-issue-resolution-comments.mjs",
     "test": "vitest run",

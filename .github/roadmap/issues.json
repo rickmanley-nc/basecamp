@@ -249,7 +249,7 @@
   },
   {
     "title": "Define evidence storage abstraction and cloud pilot storage path",
-    "milestone": "v1.0 - MVP Readiness",
+    "milestone": "M7 - Cloud Pilot Foundation",
     "labels": ["roadmap", "type:architecture", "priority:high", "area:database", "area:infra", "security"],
     "body": "## Outcome\n\nEvidence, photos, documents, exports, and imports can remain portable while the v1 cloud pilot starts with local filesystem storage.\n\n## Acceptance Criteria\n\n- Storage boundary is documented for filesystem storage first.\n- S3-compatible object storage remains a future adapter, not a v1 blocker unless the cloud pilot requires it.\n- Evidence records do not expose private host paths in public text or portable exports.\n- Backup/restore scope covers storage metadata and bytes for the cloud pilot profile.\n- Future homelab SAN/NAS backup destination is documented separately from the v1 cloud pilot storage path.\n\n## Validation\n\n- Storage contract tests or fixtures prove evidence references remain portable.\n- Documentation identifies the cloud pilot deployment profile."
   },
@@ -261,13 +261,13 @@
   },
   {
     "title": "Define cloud pilot deployment profile and real-user test controls",
-    "milestone": "v1.0 - MVP Readiness",
+    "milestone": "M7 - Cloud Pilot Foundation",
     "labels": ["roadmap", "type:architecture", "type:docs", "priority:high", "area:infra", "security"],
     "body": "## Outcome\n\nBasecamp can be tested by the admin and one trusted friend on the v1 cloud pilot server using real user data.\n\n## Acceptance Criteria\n\n- Cloud pilot profile documents the target host: x86_64/amd64, Ubuntu 22.04 LTS, 12 GB or 16 GB RAM.\n- Ubuntu 22.04 LTS is accepted for v1 while it remains in standard security maintenance through May 2027.\n- Ubuntu 24.04 LTS migration is deferred until the admin explicitly requests it.\n- Pilot data is real user-entered data by default; fake/demo data is only for CI, QA, and repeatable fixtures.\n- Profile documents LAN/private access expectations and requires TLS before any public internet access with real data or passwords.\n- Profile documents admin-created username/password accounts and explicitly excludes required SSO.\n- Profile documents local disk backups, logs/metrics, cleanup, and reset/seed controls.\n- Release notes can identify cloud pilot validation separately from later homelab validation.\n\n## Validation\n\n- Cloud pilot checklist is followed on the accepted Ubuntu 22.04 LTS x86_64/amd64 cloud pilot target, or explicitly deferred with the blocker recorded.\n- Resolution comment records the deployment profile used."
   },
   {
     "title": "Implement production authentication and secret-management baseline",
-    "milestone": "v1.0 - MVP Readiness",
+    "milestone": "M7 - Cloud Pilot Foundation",
     "labels": ["roadmap", "type:feature", "priority:high", "area:server", "area:infra", "security"],
     "body": "## Outcome\n\nBasecamp moves beyond the M6 shared admin token with local authentication that works for cloud pilot and eventual offgrid homelab use.\n\n## Acceptance Criteria\n\n- Admin-created accounts are supported.\n- Username/password login is supported for v1.\n- SSO is not required or assumed.\n- Secrets can be supplied through the deployment environment without committing them to git.\n- Admin operations, export/import, backup, restore, and user-sensitive actions are audited.\n- Cloud pilot access can be limited, revoked, and reset without touching later homelab data.\n\n## Validation\n\n- Security checklist passes for the cloud pilot profile.\n- Tests cover protected routes, password handling boundaries, and audit behavior."
   },

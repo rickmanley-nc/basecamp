@@ -64,7 +64,8 @@ Active milestone order:
 4. M4 - Mobile And Offline Sync
 5. M5 - Drills, Skills And Validation
 6. M6 - Self-Hosting Beta
-7. v1.0 - MVP Readiness
+7. M7 - Cloud Pilot Foundation
+8. v1.0 - MVP Readiness
 
 M0 is historical after `v0.1.0`.
 
@@ -212,6 +213,7 @@ Release tags use semver:
 - `v0.6.0`: drills, skills, validation.
 - `v0.7.0`: self-hosting beta.
 - `v0.7.x`: self-hosting beta patch releases.
+- `v0.8.0`: cloud pilot foundation.
 - `v1.0.0`: MVP readiness.
 
 Patch releases are for corrections inside a milestone, such as `v0.2.1`.

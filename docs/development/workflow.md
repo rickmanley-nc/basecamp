@@ -109,8 +109,10 @@ M6 server health/admin routes:
 - `POST /api/admin/import`
 - `GET /api/admin/audit`
 
-Admin routes require `BASECAMP_ADMIN_TOKEN`. Self-hosting validation should use
-the Deployment Guide and report whether it ran locally, in a clean container
+Cloud pilot routes use local username/password auth when
+`BASECAMP_AUTH_MODE=local`. Admin routes require a local admin bearer session or
+the fallback `BASECAMP_ADMIN_TOKEN`. Self-hosting validation should use the
+Deployment Guide and report whether it ran locally, in a clean container
 environment, or on a separate server.
 
 The self-hosting Compose stack does not use service-level `env_file` entries.

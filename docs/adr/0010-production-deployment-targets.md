@@ -75,9 +75,11 @@ proxy responsibilities are separable from Compose.
   deployment.
 - Compose files must not become the only place where production behavior is
   defined.
-- v1.0 needs explicit work for PostgreSQL, storage abstraction, local
-  username/password authentication, deployment profiles, cloud pilot operations,
-  physical iPhone testing, and production-grade validation.
+- v1.0 needs explicit work for PostgreSQL, storage hardening beyond the M7
+  portability boundary, cloud pilot operations, physical iPhone testing, and
+  production-grade validation.
+- M7 provides the first cloud pilot local-auth baseline with admin-created
+  username/password accounts and no SSO dependency.
 - Release notes and issue comments should identify which deployment profile was
   validated.
 - Cloud pilot data must be treated as separate from future homelab data unless an

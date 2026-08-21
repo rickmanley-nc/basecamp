@@ -34,6 +34,9 @@ pnpm --filter @basecamp/server dev
 - `POST /api/evidence`
 - `POST /api/skills/training`
 - `POST /api/sync`
+- `POST /api/auth/login`
+- `GET /api/auth/session`
+- `POST /api/auth/logout`
 - `PATCH /api/categories/:categoryId/pursuit`
 - `POST /api/quests/:questId/actions`
 - `GET /api/admin/status`
@@ -41,5 +44,7 @@ pnpm --filter @basecamp/server dev
 - `POST /api/admin/import`
 - `GET /api/admin/audit`
 
-M6 admin routes require `BASECAMP_ADMIN_TOKEN` and either the
-`x-basecamp-admin-token` header or `Authorization: Bearer <token>`.
+Cloud pilot routes use admin-created local username/password accounts when
+`BASECAMP_AUTH_MODE=local`. Admin routes accept a local admin bearer session and
+can also use `BASECAMP_ADMIN_TOKEN` as a fallback operational token when that
+token is set to a non-placeholder value.

@@ -41,7 +41,8 @@ describe("database seed import", () => {
       "0003_inventory_location_maintenance",
       "0004_offline_sync_commands",
       "0005_drills_skills_evidence",
-      "0006_ops_audit"
+      "0006_ops_audit",
+      "0007_local_auth"
     ]);
     expect(imported.categories).toBe(basecampSeed.categories.length);
     expect(imported.levels).toBe(basecampSeed.levels.length);

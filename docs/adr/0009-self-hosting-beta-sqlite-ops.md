@@ -39,8 +39,10 @@ structured JSON, CSV exports, and evidence references.
 ## Security Boundary
 
 M6 protects administrative operations with a shared admin token and documents
-VPN or secure reverse proxy access for remote use. Full user authentication and
-multi-user authorization are still future work.
+VPN or secure reverse proxy access for remote use. M7 supersedes this for the
+cloud pilot by adding admin-created local username/password accounts, bearer
+sessions, user disable commands, and placeholder admin-token rejection while
+keeping the token as an optional fallback operational control.
 
 ## Migration Path
 

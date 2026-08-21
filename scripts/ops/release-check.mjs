@@ -17,7 +17,9 @@ const requiredFiles = [
   "packages/database/scripts/backup.ts",
   "packages/database/scripts/restore.ts",
   "packages/database/scripts/export-data.ts",
-  "packages/database/scripts/import-data.ts"
+  "packages/database/scripts/import-data.ts",
+  "packages/database/scripts/create-user.ts",
+  "packages/database/scripts/disable-user.ts"
 ];
 
 const failures = [];
@@ -26,7 +28,7 @@ for (const file of requiredFiles) {
   try {
     await access(path.join(root, file));
   } catch {
-    failures.push(`Missing M6 release artifact: ${file}`);
+    failures.push(`Missing self-hosting release artifact: ${file}`);
   }
 }
 
@@ -51,6 +53,7 @@ if (compose.includes("env_file:")) {
 for (const variable of [
   "BASECAMP_APP_VERSION",
   "BASECAMP_ADMIN_TOKEN",
+  "BASECAMP_AUTH_MODE",
   "BASECAMP_REMOTE_ACCESS",
   "BASECAMP_CONFIG_PATH"
 ]) {
@@ -69,6 +72,7 @@ for (const variable of [
   "BASECAMP_STORAGE_DIR",
   "BASECAMP_BACKUP_DIR",
   "BASECAMP_ADMIN_TOKEN",
+  "BASECAMP_AUTH_MODE",
   "BASECAMP_CONFIG_SOURCE"
 ]) {
   if (!envExample.includes(variable)) {
@@ -110,7 +114,7 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log("Basecamp M6 release artifact check passed.");
+console.log("Basecamp release artifact check passed.");
 
 async function readText(file) {
   try {

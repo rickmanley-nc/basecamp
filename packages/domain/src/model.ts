@@ -184,6 +184,7 @@ export interface EvidenceMetadata {
   mimeType?: string;
   byteSize?: number;
   localUri?: string;
+  storageKey?: string;
   contentHash?: string;
   width?: number;
   height?: number;

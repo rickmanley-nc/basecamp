@@ -14,6 +14,7 @@ export interface PortableEvidenceFile {
   status: string;
   sourceUri?: string;
   fileName?: string;
+  storageKey?: string;
   contentHash?: string;
   portablePath: string;
   includedInArchive: boolean;
@@ -129,6 +130,9 @@ export interface OperationalStatus {
   backup: BackupStatus;
   security: {
     adminTokenConfigured: boolean;
+    localAuthMode: "disabled" | "local";
+    localUsersConfigured: boolean;
+    adminTokenPlaceholder: boolean;
     remoteAccessMode: "lan" | "vpn" | "reverse_proxy" | "unknown";
   };
 }
@@ -556,6 +560,9 @@ export function buildOperationalStatus(
     storageDir?: string;
     backupDir?: string;
     adminTokenConfigured: boolean;
+    localAuthMode?: OperationalStatus["security"]["localAuthMode"];
+    localUsersConfigured?: boolean;
+    adminTokenPlaceholder?: boolean;
     webUrl?: string;
     remoteAccessMode?: OperationalStatus["security"]["remoteAccessMode"];
     now?: string;
@@ -573,8 +580,12 @@ export function buildOperationalStatus(
   const databaseOk = migrationCount > 0 && databaseWritable;
   const storageOk = storageWritable;
 
+  const localAuthMode = options.localAuthMode ?? "disabled";
+  const localUsersConfigured = options.localUsersConfigured ?? false;
+  const authOk = localAuthMode === "local" ? localUsersConfigured : options.adminTokenConfigured;
+
   return {
-    ok: databaseOk && storageOk && backup.configured && options.adminTokenConfigured,
+    ok: databaseOk && storageOk && backup.configured && authOk,
     checkedAt,
     version: options.version,
     web: {
@@ -601,6 +612,9 @@ export function buildOperationalStatus(
     backup,
     security: {
       adminTokenConfigured: options.adminTokenConfigured,
+      localAuthMode,
+      localUsersConfigured,
+      adminTokenPlaceholder: options.adminTokenPlaceholder ?? false,
       remoteAccessMode: options.remoteAccessMode ?? "unknown"
     }
   };
@@ -676,22 +690,53 @@ function evidenceFilesFromRows(rows: DatabaseRow[]): PortableEvidenceFile[] {
     const metadata = JSON.parse(String(row.metadata_json ?? "{}")) as {
       localUri?: string;
       fileName?: string;
+      storageKey?: string;
       contentHash?: string;
     };
     const id = String(row.id);
     const fileName = metadata.fileName ?? `${id}.evidence`;
+    const sourceUri = portableSourceUri(metadata.localUri);
+    const storageKey = portableStorageKey(metadata.storageKey);
 
     return {
       evidenceId: id,
       title: String(row.title ?? id),
       status: String(row.status ?? "active"),
-      ...(metadata.localUri === undefined ? {} : { sourceUri: metadata.localUri }),
+      ...(sourceUri === undefined ? {} : { sourceUri }),
       ...(metadata.fileName === undefined ? {} : { fileName: metadata.fileName }),
+      ...(storageKey === undefined ? {} : { storageKey }),
       ...(metadata.contentHash === undefined ? {} : { contentHash: metadata.contentHash }),
-      portablePath: `evidence/${id}/${fileName}`,
+      portablePath: storageKey ?? `evidence/${id}/${fileName}`,
       includedInArchive: false
     };
   });
+}
+
+function portableSourceUri(value: string | undefined): string | undefined {
+  if (value === undefined || isHostFilesystemReference(value)) {
+    return undefined;
+  }
+
+  return value;
+}
+
+function portableStorageKey(value: string | undefined): string | undefined {
+  if (value === undefined || value.startsWith("/") || value.includes("..") || isHostFilesystemReference(value)) {
+    return undefined;
+  }
+
+  return value;
+}
+
+function isHostFilesystemReference(value: string): boolean {
+  return (
+    value.startsWith("file:") ||
+    value.startsWith("/") ||
+    /^[A-Za-z]:[\\/]/.test(value) ||
+    /\/Users\/[^/]+/.test(value) ||
+    /\/home\/[^/]+/.test(value) ||
+    /[A-Za-z]:[\\/]Users[\\/][^\\/]+/.test(value)
+  );
 }
 
 function csvCell(value: DatabaseScalar | string): string {

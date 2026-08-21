@@ -94,4 +94,5 @@ Every upgrade note should say:
 - `v0.6.0` - Drills, Skills And Validation
 - `v0.7.0` - Self-Hosting Beta
 - `v0.7.x` - Self-Hosting Beta patch releases
+- `v0.8.0` - Cloud Pilot Foundation
 - `v1.0.0` - MVP Readiness

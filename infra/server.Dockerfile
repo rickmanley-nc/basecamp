@@ -5,7 +5,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=4317
-ENV BASECAMP_APP_VERSION=0.7.2
+ENV BASECAMP_APP_VERSION=0.8.0
 ENV BASECAMP_DB_PATH=/var/lib/basecamp/basecamp.sqlite
 ENV BASECAMP_STORAGE_DIR=/var/lib/basecamp/storage
 ENV BASECAMP_BACKUP_DIR=/var/backups/basecamp
