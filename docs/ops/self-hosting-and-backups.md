@@ -1,9 +1,13 @@
 # Self-Hosting And Backups
 
-Last updated: 2026-08-20
+Last updated: 2026-08-21
 
 Basecamp must run on a self-hosted Linux server and remain useful over a local
 network without internet access.
+
+The operator install path lives in [Deployment Guide](./deployment.md). Backup
+and restore steps must be included there before the self-hosting beta milestone
+can close.
 
 ## Deployment Targets
 

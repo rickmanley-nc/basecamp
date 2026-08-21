@@ -17,12 +17,14 @@ project clearer.
 5. Update roadmap and docs.
 6. Confirm migrations, seed data, backup impact, and export impact where
    relevant.
-7. Confirm release notes and linked PR text contain no personal workstation
+7. Confirm deployment and mobile installation guides are updated when a release
+   changes install, upgrade, pairing, or distribution behavior.
+8. Confirm release notes and linked PR text contain no personal workstation
    paths.
-8. Draft release notes.
-9. Tag the release.
-10. Create the GitHub Release.
-11. Close the milestone when appropriate.
+9. Draft release notes.
+10. Tag the release.
+11. Create the GitHub Release.
+12. Close the milestone when appropriate.
 
 ## Release Notes Template
 

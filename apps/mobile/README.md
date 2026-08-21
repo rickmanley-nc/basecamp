@@ -14,3 +14,8 @@ Responsibilities:
 Design principle:
 
 - Mobile screens prioritize a few-tap action path over administration.
+
+Install requirement:
+
+- M4 must include an iPhone install guide for non-developer users. See
+  [iPhone Installation Guide](../../docs/ops/iphone-installation.md).
