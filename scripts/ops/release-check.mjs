@@ -44,6 +44,16 @@ if ((compose.match(/healthcheck:/g) ?? []).length < 3) {
   failures.push("Compose file must define health checks for primary services.");
 }
 
+if (compose.includes("env_file:")) {
+  failures.push("Compose file should map --env-file values explicitly instead of requiring a local env_file.");
+}
+
+for (const variable of ["BASECAMP_APP_VERSION", "BASECAMP_ADMIN_TOKEN", "BASECAMP_REMOTE_ACCESS"]) {
+  if (!compose.includes(`${variable}:`)) {
+    failures.push(`Compose file must pass ${variable} into containers from the operator env file.`);
+  }
+}
+
 for (const variable of [
   "BASECAMP_PUBLIC_URL",
   "BASECAMP_DB_PATH",
