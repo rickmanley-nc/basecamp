@@ -113,6 +113,8 @@ Primary work:
 
 ### M4 - Mobile And Offline Sync
 
+Status: complete once `v0.5.0` is released.
+
 Outcome:
 
 - Mobile supports field use, scanning, Quick Capture, offline reference, and
@@ -129,6 +131,9 @@ Primary work:
 - Durable command outbox.
 - Sync API v1.
 - Conflict policy tests.
+- Physical iPhone camera, installation, Local Network, offline storage, and
+  reconnect validation are documented and pending until signed TestFlight or
+  stable distribution exists.
 
 ### M5 - Drills, Skills And Validation
 

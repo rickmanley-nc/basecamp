@@ -8,7 +8,7 @@ Owns:
 - Request/response schemas.
 - Client helpers for web and mobile.
 - Error and pagination conventions.
-- Dashboard, seed, category pursuit, and quest action contracts shared by web
-  and server.
+- Dashboard, seed, category pursuit, quest action, inventory, asset tag,
+  maintenance, and sync route contracts shared by web, mobile, and server.
 
 API contracts should expose user workflows, not raw tables.

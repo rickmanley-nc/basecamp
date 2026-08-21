@@ -20,5 +20,12 @@ pnpm --filter @basecamp/server dev
 - `GET /health`
 - `GET /api/seed`
 - `GET /api/dashboard`
+- `GET /api/inventory`
+- `POST /api/inventory/quick-entry`
+- `GET /api/assets/:assetId`
+- `POST /api/assets/:assetId/tags`
+- `POST /api/maintenance/policies`
+- `POST /api/maintenance/:policyId/completions`
+- `POST /api/sync`
 - `PATCH /api/categories/:categoryId/pursuit`
 - `POST /api/quests/:questId/actions`

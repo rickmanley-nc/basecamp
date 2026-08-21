@@ -67,11 +67,15 @@ URLs; do not publish local workstation paths.
 
 ## Offline And Mobile Status
 
-M3 stores stable tag payloads and exposes the lookup route. Physical iPhone QR
-camera validation belongs to M4 because the mobile scanner is not implemented
-yet. Until M4, tag lookup can be validated locally with API calls and web/server
-smoke tests; real camera permission, offline scan behavior, and reconnect sync
-must be validated on a physical iPhone when mobile scanning is built.
+M3 stores stable tag payloads and exposes the lookup route. M4 adds the shared
+mobile QR/barcode scan workflow contract so a Basecamp asset QR payload opens
+the matching asset actions and a commercial barcode creates an inventory
+confirmation command.
+
+Physical iPhone camera validation remains pending until a signed mobile build
+with native scanner screens exists. Real Camera permission, Local Network
+permission, offline scan behavior, and reconnect sync must be validated on a
+physical iPhone when that build is available.
 
 ## Maintenance
 

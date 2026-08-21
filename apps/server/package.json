@@ -10,6 +10,7 @@
     "@basecamp/database": "workspace:*",
     "@basecamp/domain": "workspace:*",
     "@basecamp/gamification": "workspace:*",
+    "@basecamp/sync": "workspace:*",
     "fastify": "5.12.1"
   },
   "type": "module",

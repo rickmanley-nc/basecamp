@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@basecamp/content": "workspace:*",
-    "@basecamp/domain": "workspace:*"
+    "@basecamp/domain": "workspace:*",
+    "@basecamp/sync": "workspace:*"
   }
 }
