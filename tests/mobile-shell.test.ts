@@ -10,7 +10,7 @@ import {
   createSyncBatchRequest,
   defaultEvidenceLink,
   localLoginEndpoint,
-  mobileBetaDistribution,
+  mobileDistribution,
   normalizeBasecampServerUrl,
   previewScanWorkflow,
   queueAssetActionCommand,
@@ -39,14 +39,14 @@ describe("mobile app shell", () => {
         }
       ]
     }), {
-      clientId: "iphone-test",
+      clientId: "mobile-test",
       generatedAt: "2026-08-21T00:00:00.000Z",
       cursor: "sync:0"
     });
 
     expect(shell.stack).toBe("Expo React Native");
     expect(shell.minimumIosVersion).toBe("17.0");
-    expect(shell.installChannel).toBe("TestFlight configured");
+    expect(shell.buildPath).toBe("local_admin_controlled_ios_android");
     expect(shell.screens.map((screen) => screen.route)).toEqual([
       "home",
       "capture",
@@ -67,20 +67,22 @@ describe("mobile app shell", () => {
     });
   });
 
-  it("defines the iPhone beta distribution metadata and local sign-in request", () => {
-    expect(mobileBetaDistribution).toMatchObject({
+  it("defines the local mobile distribution metadata and local sign-in request", () => {
+    expect(mobileDistribution).toMatchObject({
       appName: "Basecamp Mobile",
       appVersion: "1.0.0-beta.1",
       iosBuildNumber: "1",
       minimumIosVersion: "17.0",
-      installChannel: "TestFlight",
+      androidVersionCode: 1,
+      buildPath: "local_admin_controlled_ios_android",
       iosBundleIdentifier: "com.basecamppreparedness.mobile",
-      betaExpiresAfterDays: 90,
+      androidPackageIdentifier: "com.basecamppreparedness.mobile",
       serverUrlSetup: "manual_url_or_pairing_qr",
       authModel: "local_username_password"
     });
-    expect(mobileBetaDistribution.buildCommand).toBe("pnpm --filter @basecamp/mobile build:ios:testflight");
-    expect(mobileBetaDistribution.submitCommand).toBe("pnpm --filter @basecamp/mobile submit:ios:testflight");
+    expect(mobileDistribution.nativeProjectCommand).toBe("pnpm --filter @basecamp/mobile native:prebuild");
+    expect(mobileDistribution.iosLocalRunCommand).toBe("pnpm --filter @basecamp/mobile ios");
+    expect(mobileDistribution.androidLocalRunCommand).toBe("pnpm --filter @basecamp/mobile android");
     expect(normalizeBasecampServerUrl("basecamp.local:4317")).toBe("http://basecamp.local:4317");
     expect(localLoginEndpoint("https://basecamp.example/")).toBe("https://basecamp.example/api/auth/login");
     expect(() => normalizeBasecampServerUrl("ftp://basecamp.example")).toThrow(/http or https/);
@@ -103,32 +105,26 @@ describe("mobile app shell", () => {
     });
   });
 
-  it("keeps Expo and EAS iOS build config aligned with the distribution contract", () => {
+  it("keeps Expo app metadata aligned with the local distribution contract", () => {
     const appConfig = JSON.parse(readFileSync(new URL("../apps/mobile/app.json", import.meta.url), "utf8"));
-    const easConfig = JSON.parse(readFileSync(new URL("../apps/mobile/eas.json", import.meta.url), "utf8"));
 
-    expect(appConfig.expo.name).toBe(mobileBetaDistribution.appName);
-    expect(appConfig.expo.version).toBe(mobileBetaDistribution.appVersion);
-    expect(appConfig.expo.ios.bundleIdentifier).toBe(mobileBetaDistribution.iosBundleIdentifier);
-    expect(appConfig.expo.ios.buildNumber).toBe(mobileBetaDistribution.iosBuildNumber);
-    expect(appConfig.expo.ios.infoPlist.MinimumOSVersion).toBe(mobileBetaDistribution.minimumIosVersion);
+    expect(appConfig.expo.name).toBe(mobileDistribution.appName);
+    expect(appConfig.expo.version).toBe(mobileDistribution.appVersion);
+    expect(appConfig.expo.ios.bundleIdentifier).toBe(mobileDistribution.iosBundleIdentifier);
+    expect(appConfig.expo.ios.buildNumber).toBe(mobileDistribution.iosBuildNumber);
+    expect(appConfig.expo.ios.infoPlist.MinimumOSVersion).toBe(mobileDistribution.minimumIosVersion);
+    expect(appConfig.expo.android.package).toBe(mobileDistribution.androidPackageIdentifier);
+    expect(appConfig.expo.android.versionCode).toBe(mobileDistribution.androidVersionCode);
     expect(appConfig.expo.extra.basecamp).toMatchObject({
-      installChannel: "TestFlight",
+      buildPath: "local_admin_controlled_ios_android",
       authModel: "local_username_password"
     });
     expect(appConfig.expo.plugins).toContain("expo-secure-store");
-    expect(easConfig.cli.version).toBe(">= 22.2.0");
-    expect(easConfig.build.testflight).toMatchObject({
-      distribution: "store",
-      channel: "testflight",
-      autoIncrement: "buildNumber"
-    });
-    expect(easConfig.submit.testflight.ios).toEqual({});
   });
 
   it("models native field screens and durable command queue behavior", () => {
     const screens = createMobileFieldScreens();
-    let outbox = createCommandOutbox("iphone-field-test");
+    let outbox = createCommandOutbox("mobile-field-test");
 
     expect(screens.map((screen) => screen.route)).toEqual([
       "home",
@@ -144,7 +140,7 @@ describe("mobile app shell", () => {
     outbox = quickCapture.outbox;
 
     expect(quickCapture.command).toMatchObject({
-      commandId: "iphone-field-test-000001",
+      commandId: "mobile-field-test-000001",
       entityType: "quest",
       intent: {
         type: "quest.set_status",
@@ -158,7 +154,7 @@ describe("mobile app shell", () => {
 
     expect(barcodeWorkflow.target).toBe("inventory_barcode");
     expect(barcodeQueued?.command).toMatchObject({
-      commandId: "iphone-field-test-000002",
+      commandId: "mobile-field-test-000002",
       entityType: "inventory",
       intent: {
         type: "inventory.adjust_quantity",
@@ -189,7 +185,7 @@ describe("mobile app shell", () => {
     outbox = assetQueued.outbox;
 
     expect(assetQueued.command).toMatchObject({
-      commandId: "iphone-field-test-000003",
+      commandId: "mobile-field-test-000003",
       entityType: "asset",
       intent: {
         type: "asset.report_issue",
@@ -201,9 +197,9 @@ describe("mobile app shell", () => {
 
     expect(restored).toEqual(outbox);
     expect(createSyncBatchRequest(restored).commands.map((command) => command.commandId)).toEqual([
-      "iphone-field-test-000001",
-      "iphone-field-test-000002",
-      "iphone-field-test-000003"
+      "mobile-field-test-000001",
+      "mobile-field-test-000002",
+      "mobile-field-test-000003"
     ]);
   });
 

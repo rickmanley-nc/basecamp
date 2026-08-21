@@ -904,8 +904,9 @@ Migration path:
 
 Recommended approach:
 
-- React Native with Expo for iOS/Android delivery, shared TypeScript domain/API
-  packages, barcode/QR/photo support, offline storage, and rapid iteration.
+- React Native with Expo modules for iOS/Android delivery, shared TypeScript
+  domain/API packages, barcode/QR/photo support, offline storage, rapid
+  iteration, and local/admin-controlled native builds.
 - Local SQLite cache and durable sync outbox.
 - Use mobile-native components and shared design tokens rather than directly
   reusing Kaizen React web components.
@@ -1510,6 +1511,7 @@ Decision summaries are recorded as ADRs:
 - [ADR 0006: Readiness Quest Core Engine](../adr/0006-readiness-quest-core-engine.md)
 - [ADR 0007: Location Progression And Home Bases](../adr/0007-location-progression-and-home-bases.md)
 - [ADR 0008: Mobile Expo Offline Sync](../adr/0008-mobile-expo-offline-sync.md)
+- [ADR 0011: Local Mobile Build Path](../adr/0011-local-mobile-build-path.md)
 - [ADR 0009: Self-Hosting Beta SQLite Ops](../adr/0009-self-hosting-beta-sqlite-ops.md)
 - [ADR 0010: Production Deployment Targets And Profiles](../adr/0010-production-deployment-targets.md)
 

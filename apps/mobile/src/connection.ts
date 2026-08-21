@@ -1,25 +1,28 @@
 import type { AuthLoginRequest } from "@basecamp/api";
 
-export const mobileBetaDistribution = {
+export const mobileDistribution = {
   appName: "Basecamp Mobile",
   appVersion: "1.0.0-beta.1",
   iosBuildNumber: "1",
   minimumIosVersion: "17.0",
-  installChannel: "TestFlight",
+  androidVersionCode: 1,
+  buildPath: "local_admin_controlled_ios_android",
   expoSdkVersion: "57.0.15",
   iosBundleIdentifier: "com.basecamppreparedness.mobile",
-  betaExpiresAfterDays: 90,
-  buildProfile: "testflight",
-  buildCommand: "pnpm --filter @basecamp/mobile build:ios:testflight",
-  submitCommand: "pnpm --filter @basecamp/mobile submit:ios:testflight",
-  updateBehavior: "Install the newest non-expired build from the TestFlight app.",
+  androidPackageIdentifier: "com.basecamppreparedness.mobile",
+  nativeProjectCommand: "pnpm --filter @basecamp/mobile native:prebuild",
+  iosLocalRunCommand: "pnpm --filter @basecamp/mobile ios",
+  androidLocalRunCommand: "pnpm --filter @basecamp/mobile android",
+  iosReleaseArtifact: "Locally archived and exported iOS app from Xcode.",
+  androidReleaseArtifact: "Locally built APK or AAB from Gradle.",
+  updateBehavior: "Install the newest locally produced, admin-approved mobile artifact for the device platform.",
   rollbackExpectation:
-    "Reinstall a previous non-expired TestFlight build when available; otherwise publish a new build with a higher build number.",
+    "Reinstall a previous admin-retained artifact when platform signing rules allow it; otherwise build a newer signed artifact that restores the desired behavior.",
   serverUrlSetup: "manual_url_or_pairing_qr",
   authModel: "local_username_password"
 } as const;
 
-export type MobileInstallChannel = typeof mobileBetaDistribution.installChannel;
+export type MobileBuildPath = typeof mobileDistribution.buildPath;
 
 export interface MobileLoginRequest {
   endpoint: string;
