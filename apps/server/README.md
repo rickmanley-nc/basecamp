@@ -21,11 +21,16 @@ pnpm --filter @basecamp/server dev
 - `GET /api/seed`
 - `GET /api/dashboard`
 - `GET /api/inventory`
+- `GET /api/reports/gaps`
 - `POST /api/inventory/quick-entry`
 - `GET /api/assets/:assetId`
 - `POST /api/assets/:assetId/tags`
 - `POST /api/maintenance/policies`
 - `POST /api/maintenance/:policyId/completions`
+- `GET /api/drills/templates`
+- `POST /api/drills/:templateId/runs`
+- `POST /api/evidence`
+- `POST /api/skills/training`
 - `POST /api/sync`
 - `PATCH /api/categories/:categoryId/pursuit`
 - `POST /api/quests/:questId/actions`

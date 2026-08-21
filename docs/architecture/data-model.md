@@ -95,6 +95,7 @@ Inventory states:
 - installed
 - configured
 - tested
+- validated
 - in_service
 - maintenance_due
 - failed
@@ -139,18 +140,24 @@ Acquisition states:
 
 | Entity | Purpose |
 | --- | --- |
-| `skill` | First aid, radio operation, navigation, soldering, etc. |
-| `skill_level` | Untrained, familiar, practiced, competent, validated, advanced. |
-| `skill_event` | Practice, course, validation, certification, or failure event. |
-| `certification` | External certificate or course record. |
+| `skill_progress` | Current skill state, category, evidence IDs, training history, practice, validation, and expiration. |
+| `training_record` | External course, provider, completion date, expiration, evidence IDs, and notes. |
+
+Skill states:
+
+- untrained
+- familiar
+- practiced
+- competent
+- validated
+- advanced
 
 ### Drills
 
 | Entity | Purpose |
 | --- | --- |
 | `drill_template` | Scenario, success criteria, and expected evidence. |
-| `drill_run` | Actual drill execution. |
-| `drill_result` | Outcome, failures, lessons, and follow-up action links. |
+| `drill_run` | Actual drill execution, criterion results, failures, lessons, evidence IDs, and follow-up quest suggestions. |
 | `follow_up_quest` | Suggested quest created from a failure or lesson. |
 
 ### Maintenance
@@ -166,9 +173,14 @@ Acquisition states:
 
 | Entity | Purpose |
 | --- | --- |
-| `evidence` | Photo, document, note, scan, checklist, reading, measurement, or drill result. |
+| `evidence` | Photo, document, note, scan, checklist, reading, measurement, drill result, or training record. |
+| `evidence_link` | Link from evidence to quests, accomplishments, skills, drills, assets, maintenance, or inventory events. |
 | `source_reference` | Vetted source, manual, course, public guidance, or local instruction. |
-| `attachment` | Stored photo/document metadata. |
+| `attachment` | Stored photo/document metadata including file name, MIME type, byte size, local URI, content hash, and dimensions. |
+
+Evidence records are versioned. A newer record can supersede an older one, and
+deleted evidence is retained as a tombstone with a deletion reason so audit
+history remains understandable.
 
 ### Gamification And Scoring
 
@@ -209,7 +221,9 @@ Readiness scoring uses state from:
 - Explicit user deferral.
 
 Validation ceilings prevent a high score when a category has mostly purchased
-but untested equipment.
+but untested equipment. M5 records ceiling reasons so reports can distinguish
+purchase-only progress, configured-only progress, practice without validation,
+expired training, maintenance issues, and failed validation.
 
 ## Event Model
 

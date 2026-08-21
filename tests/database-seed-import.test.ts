@@ -7,14 +7,21 @@ import {
   countRows,
   createDatabase,
   importSeed,
+  listDrillRuns,
+  listDrillTemplates,
+  listEvidenceRecords,
   listQuestEvents,
+  listSkillProgress,
   readHouseholdProgress,
   readInventoryState,
   listSyncConflicts,
+  recordDrillRun,
   recordMaintenanceCompletion,
   recordQuickInventoryEntry,
+  recordSkillTraining,
   setCategoryPursuit,
   upsertAsset,
+  upsertEvidenceRecord,
   upsertLocation,
   upsertMaintenancePolicy
 } from "@basecamp/database";
@@ -32,11 +39,13 @@ describe("database seed import", () => {
       "0001_basecamp_seed_baseline",
       "0002_household_progress_state",
       "0003_inventory_location_maintenance",
-      "0004_offline_sync_commands"
+      "0004_offline_sync_commands",
+      "0005_drills_skills_evidence"
     ]);
     expect(imported.categories).toBe(basecampSeed.categories.length);
     expect(imported.levels).toBe(basecampSeed.levels.length);
     expect(imported.quests).toBe(basecampSeed.quests.length);
+    expect(imported.drillTemplates).toBeGreaterThan(0);
     expect(countRows(database, "seed_imports")).toBe(1);
 
     database.close();
@@ -226,6 +235,73 @@ describe("database seed import", () => {
       name: "Water"
     });
     expect(listSyncConflicts(database)).toHaveLength(1);
+
+    database.close();
+  });
+
+  it("persists M5 evidence, skill training, drill templates, and drill runs", () => {
+    const database = createDatabase();
+
+    applyMigrations(database);
+    importSeed(database, basecampSeed);
+    const evidence = upsertEvidenceRecord(database, {
+      kind: "photo",
+      title: "First aid card",
+      links: [
+        { entityType: "quest", entityId: "skills-record-first-aid-cpr-training" },
+        { entityType: "skill", entityId: "skill-first-aid-cpr" }
+      ],
+      metadata: {
+        capturedAt: "2026-08-21T00:00:00.000Z",
+        fileName: "first-aid-card.jpg",
+        mimeType: "image/jpeg"
+      }
+    });
+    const skill = recordSkillTraining(database, {
+      skillId: "skill-first-aid-cpr",
+      name: "First Aid/CPR",
+      categoryId: "skills-training",
+      courseName: "First Aid/CPR",
+      provider: "County training center",
+      completedAt: "2026-08-21T00:01:00.000Z",
+      expiresAt: "2027-08-21",
+      evidenceIds: [evidence.id],
+      stateAwarded: "validated"
+    });
+    const template = listDrillTemplates(database).find(
+      (candidate) => candidate.id === "drill-drill-one-hour-power-outage"
+    )!;
+    const run = recordDrillRun(database, template.id, {
+      completedAt: "2026-08-21T00:02:00.000Z",
+      criteriaResults: [
+        {
+          criterionId: template.successCriteria[0]!.id,
+          passed: false,
+          notes: "Battery station was not charged."
+        }
+      ],
+      evidenceIds: [evidence.id],
+      lessons: "Add a charging reminder."
+    });
+    const progress = readHouseholdProgress(database);
+
+    expect(listEvidenceRecords(database)[0]).toMatchObject({
+      id: evidence.id,
+      title: "First aid card"
+    });
+    expect(skill.skill).toMatchObject({
+      skillId: "skill-first-aid-cpr",
+      state: "validated"
+    });
+    expect(listSkillProgress(database)[0]?.trainingRecords?.[0]).toMatchObject({
+      courseName: "First Aid/CPR"
+    });
+    expect(run.run.result).toBe("failed");
+    expect(run.run.followUpQuestSuggestions).toHaveLength(1);
+    expect(listDrillRuns(database)).toHaveLength(1);
+    expect(progress.evidenceRecords).toHaveLength(1);
+    expect(progress.skillProgress).toHaveLength(1);
+    expect(progress.drillRuns).toHaveLength(1);
 
     database.close();
   });

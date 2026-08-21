@@ -7,6 +7,7 @@ Owns:
 - Category, capability level, quest, accomplishment, dependency, project, BOM, inventory, asset, skill, drill, maintenance, evidence, badge, capability outpost, milestone, and readiness-score types.
 - Domain invariants that should be shared by web, mobile, server, content, gamification, and sync.
 - Seed content mapping through `defineSeedDataset`, which turns the looser JSON seed shape into typed Basecamp domain templates.
+- M5 drill run, skill training, evidence versioning/deletion, and follow-up quest helper functions.
 
 Does not own:
 

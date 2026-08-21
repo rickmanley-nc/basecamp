@@ -137,6 +137,8 @@ Primary work:
 
 ### M5 - Drills, Skills And Validation
 
+Status: complete once `v0.6.0` is released.
+
 Outcome:
 
 - Basecamp can prove capability through practice, drills, evidence, and
@@ -151,6 +153,12 @@ Primary work:
 - Photo/evidence capture.
 - Validation ceilings in scoring.
 - Gap analysis reports.
+
+M5 adds persisted drill templates and drill runs, skill training records with
+expiration impact, evidence records linked to multiple entity types, readiness
+ceiling reasons, and a dashboard gap report. The report separates critical
+category gaps, intentional deferrals, validation gaps, acquisition gaps, and
+maintenance gaps, then suggests follow-up quests.
 
 ### M6 - Self-Hosting Beta
 

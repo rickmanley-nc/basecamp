@@ -5,11 +5,18 @@ import {
   createSeedContentResponse,
   type AssetTagResponse,
   type CategoryPursuitUpdateRequest,
+  type DrillRunRequest,
+  type DrillRunResponse,
+  type DrillTemplatesResponse,
+  type EvidenceRecordRequest,
+  type EvidenceRecordResponse,
   type HealthResponse,
   type MaintenanceCompletionRequest,
   type MaintenancePolicyRequest,
   type QuickInventoryEntryRequest,
-  type QuestActionRequest
+  type QuestActionRequest,
+  type SkillTrainingRequest,
+  type SkillTrainingResponse
 } from "@basecamp/api";
 import { basecampSeed, seedValidation } from "@basecamp/content";
 import {
@@ -18,14 +25,18 @@ import {
   createBasecampAssetTag,
   createDatabase,
   importSeed,
+  listDrillTemplates,
   readAssetWithTags,
   readHouseholdProgress,
   readInventoryState,
   recordXpEvent,
   applySyncCommandBatch,
+  recordDrillRun,
   recordMaintenanceCompletion,
   recordQuickInventoryEntry,
+  recordSkillTraining,
   setCategoryPursuit,
+  upsertEvidenceRecord,
   upsertMaintenancePolicy
 } from "@basecamp/database";
 import { questActions, type InventoryItemType, type PursuitState } from "@basecamp/domain";
@@ -84,7 +95,7 @@ export function buildServer(options: BuildServerOptions = {}): FastifyInstance {
   server.get("/health", async (): Promise<HealthResponse> => ({
     ok: true,
     service: "basecamp-server",
-    version: "0.5.0-m4",
+    version: "0.6.0-m5",
     checkedAt: new Date().toISOString()
   }));
 
@@ -108,6 +119,128 @@ export function buildServer(options: BuildServerOptions = {}): FastifyInstance {
       readInventoryState(database)
     )
   );
+
+  server.get("/api/reports/gaps", async () =>
+    createDashboardSummary(
+      basecampSeed,
+      readHouseholdProgress(database),
+      readInventoryState(database)
+    ).gapReport
+  );
+
+  server.get("/api/drills/templates", async (): Promise<DrillTemplatesResponse> => ({
+    templates: listDrillTemplates(database)
+  }));
+
+  server.post<{
+    Params: { templateId: string };
+    Body: DrillRunRequest;
+  }>("/api/drills/:templateId/runs", async (request, reply): Promise<DrillRunResponse | unknown> => {
+    if (request.body.completedAt.trim().length === 0) {
+      return reply.code(400).send({ error: "Drill completion time is required." });
+    }
+
+    if (!Array.isArray(request.body.criteriaResults)) {
+      return reply.code(400).send({ error: "Drill criteria results are required." });
+    }
+
+    try {
+      const result = recordDrillRun(database, request.params.templateId, {
+        completedAt: request.body.completedAt,
+        criteriaResults: request.body.criteriaResults,
+        ...(request.body.startedAt === undefined ? {} : { startedAt: request.body.startedAt }),
+        ...(request.body.lessons === undefined ? {} : { lessons: request.body.lessons }),
+        ...(request.body.evidenceIds === undefined ? {} : { evidenceIds: request.body.evidenceIds })
+      });
+
+      return {
+        run: result.run,
+        dashboard: createDashboardSummary(basecampSeed, result.progress, readInventoryState(database))
+      };
+    } catch (error) {
+      return reply.code(404).send({
+        error: error instanceof Error ? error.message : "Drill run failed."
+      });
+    }
+  });
+
+  server.post<{
+    Body: EvidenceRecordRequest;
+  }>("/api/evidence", async (request, reply): Promise<EvidenceRecordResponse | unknown> => {
+    if (request.body.title.trim().length === 0) {
+      return reply.code(400).send({ error: "Evidence title is required." });
+    }
+
+    if (!Array.isArray(request.body.links) || request.body.links.length === 0) {
+      return reply.code(400).send({ error: "Evidence must link to at least one entity." });
+    }
+
+    if (
+      request.body.metadata === undefined ||
+      typeof request.body.metadata.capturedAt !== "string" ||
+      request.body.metadata.capturedAt.trim().length === 0
+    ) {
+      return reply.code(400).send({ error: "Evidence capture time is required." });
+    }
+
+    const evidence = upsertEvidenceRecord(database, {
+      kind: request.body.kind,
+      title: request.body.title,
+      links: request.body.links,
+      metadata: request.body.metadata,
+      ...(request.body.id === undefined ? {} : { id: request.body.id })
+    });
+
+    return { evidence };
+  });
+
+  server.post<{
+    Body: SkillTrainingRequest;
+  }>("/api/skills/training", async (request, reply): Promise<SkillTrainingResponse | unknown> => {
+    if (request.body.skillId.trim().length === 0) {
+      return reply.code(400).send({ error: "Skill ID is required." });
+    }
+
+    if (request.body.courseName.trim().length === 0) {
+      return reply.code(400).send({ error: "Course name is required." });
+    }
+
+    if (request.body.completedAt.trim().length === 0) {
+      return reply.code(400).send({ error: "Training completion time is required." });
+    }
+
+    if (
+      request.body.categoryId !== undefined &&
+      !basecampSeed.categories.some((category) => category.id === request.body.categoryId)
+    ) {
+      return reply.code(400).send({ error: "Unknown category." });
+    }
+
+    const result = recordSkillTraining(database, {
+      skillId: request.body.skillId,
+      courseName: request.body.courseName,
+      completedAt: request.body.completedAt,
+      ...(request.body.name === undefined ? {} : { name: request.body.name }),
+      ...(request.body.categoryId === undefined ? {} : { categoryId: request.body.categoryId }),
+      ...(request.body.provider === undefined ? {} : { provider: request.body.provider }),
+      ...(request.body.expiresAt === undefined ? {} : { expiresAt: request.body.expiresAt }),
+      ...(request.body.evidenceIds === undefined ? {} : { evidenceIds: request.body.evidenceIds }),
+      ...(request.body.notes === undefined ? {} : { notes: request.body.notes }),
+      ...(request.body.stateAwarded === undefined ? {} : { stateAwarded: request.body.stateAwarded })
+    });
+
+    return {
+      skill: {
+        skillId: result.skill.skillId,
+        ...(result.skill.name === undefined ? {} : { name: result.skill.name }),
+        ...(result.skill.categoryId === undefined ? {} : { categoryId: result.skill.categoryId }),
+        state: result.skill.state,
+        ...(result.skill.expiresAt === undefined ? {} : { expiresAt: result.skill.expiresAt })
+      },
+      trainingRecord: result.trainingRecord,
+      dashboard: createDashboardSummary(basecampSeed, result.progress, readInventoryState(database))
+    };
+  });
 
   server.post<{
     Body: SyncBatchRequest;

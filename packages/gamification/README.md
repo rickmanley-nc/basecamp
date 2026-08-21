@@ -16,5 +16,14 @@ M2 owns:
 - XP caps for purchase-only actions.
 - Badge, capability outpost, and milestone progress calculation.
 
+M5 adds:
+
+- Validation ceiling reasons for purchase-only, configured-only, unvalidated
+  practice, expired skills, maintenance, and failed drills.
+- Skill and drill contributions to readiness scoring.
+- Gap analysis reports that separate critical gaps, intentional deferrals,
+  validation gaps, acquisition gaps, and maintenance gaps.
+- Follow-up quest suggestions from failed drills and report recommendations.
+
 Capability outposts are gamified category achievements. Physical location
 outposts belong to the inventory and location progression model.

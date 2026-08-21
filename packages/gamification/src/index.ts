@@ -1,4 +1,5 @@
 import type {
+  AcquisitionNeed,
   BadgeTemplate,
   BadgeTier,
   BasecampId,
@@ -6,7 +7,10 @@ import type {
   CategoryId,
   Criticality,
   DependencyType,
+  DrillRun,
+  FollowUpQuestSuggestion,
   HouseholdProgressSnapshot,
+  MaintenanceDueItem,
   MilestoneTemplate,
   OutpostTemplate,
   PursuitState,
@@ -15,8 +19,11 @@ import type {
   QuestStatus,
   QuestTemplate,
   QuestTaxonomy,
+  SkillProgress,
+  SkillState,
   XpEvent
 } from "@basecamp/domain";
+import { drillRunNeedsFollowUp, drillRunValidatesCategory, skillStateAt } from "@basecamp/domain";
 
 export type ReadinessComponent =
   | "knowledge"
@@ -46,6 +53,7 @@ export interface CategoryReadiness {
   components: Record<ReadinessComponent, number>;
   completedQuestIds: QuestId[];
   ceiling: number;
+  ceilingReasons: string[];
 }
 
 export interface CriticalGap {
@@ -60,6 +68,11 @@ export interface ReadinessSummary {
   preparednessLevel: string;
   categories: CategoryReadiness[];
   criticalGaps: CriticalGap[];
+}
+
+export interface ValidationCeilingDecision {
+  ceiling: number;
+  reasons: string[];
 }
 
 export interface DependencyResolution {
@@ -170,6 +183,26 @@ export interface MilestoneProgress {
   progressPercent: number;
 }
 
+export interface GapReportItem {
+  id: BasecampId;
+  categoryId: CategoryId;
+  categoryName: string;
+  title: string;
+  reason: string;
+  severity: Criticality;
+  suggestedQuestIds: QuestId[];
+}
+
+export interface GapAnalysisReport {
+  criticalCategoryGaps: GapReportItem[];
+  unknownCategoryGaps: GapReportItem[];
+  intentionalDeferrals: GapReportItem[];
+  validationGaps: GapReportItem[];
+  acquisitionGaps: GapReportItem[];
+  maintenanceGaps: GapReportItem[];
+  followUpQuests: FollowUpQuestSuggestion[];
+}
+
 export const readinessComponentWeights: Record<ReadinessComponent, number> = {
   knowledge: 12,
   suppliesEquipment: 16,
@@ -215,7 +248,10 @@ export function createEmptyProgressSnapshot(): HouseholdProgressSnapshot {
     maintenanceRequiredQuestIds: [],
     maintenanceRequiredCategoryIds: [],
     interestCategoryIds: [],
-    xpEvents: []
+    xpEvents: [],
+    skillProgress: [],
+    drillRuns: [],
+    evidenceRecords: []
   };
 }
 
@@ -262,39 +298,42 @@ export function calculateCategoryReadiness(
     addQuestComponentContributions(components, quest);
   }
 
+  addSkillComponentContributions(components, progress.skillProgress ?? [], categoryId);
+  addDrillComponentContributions(components, progress.drillRuns ?? [], categoryId);
+
   if (categoryCompletedQuests.length > 1) {
     components.redundancy = Math.max(components.redundancy, 0.5);
   }
 
-  const failed = hasAny(progress.failedValidationQuestIds, categoryCompletedQuests.map((quest) => quest.id));
+  const failed =
+    hasAny(progress.failedValidationQuestIds, categoryCompletedQuests.map((quest) => quest.id)) ||
+    hasActiveDrillFailure(progress.drillRuns ?? [], categoryId);
   const maintenanceRequired =
     hasAny(progress.maintenanceRequiredQuestIds, categoryCompletedQuests.map((quest) => quest.id)) ||
     new Set(progress.maintenanceRequiredCategoryIds ?? []).has(categoryId);
   const purchaseOnly = categoryCompletedQuests.length > 0 && categoryCompletedQuests.every(isPurchaseOnlyQuest);
   const hasValidation = components.validation > 0;
-  let ceiling = 100;
-
-  if (purchaseOnly) {
-    ceiling = Math.min(ceiling, 35);
-  }
-
-  if (!hasValidation && categoryCompletedQuests.length > 0) {
-    ceiling = Math.min(ceiling, 65);
-  }
-
-  if (maintenanceRequired) {
-    ceiling = Math.min(ceiling, 70);
-  }
-
-  if (failed) {
-    ceiling = Math.min(ceiling, 50);
-  }
+  const ceilingDecision = determineValidationCeiling({
+    hasAnyProgress:
+      categoryCompletedQuests.length > 0 ||
+      (progress.skillProgress ?? []).some((skill) => skill.categoryId === categoryId) ||
+      (progress.drillRuns ?? []).some((run) => run.categoryId === categoryId),
+    purchaseOnly,
+    hasConfiguration: components.configuration > 0,
+    hasPractice: components.practice > 0,
+    hasValidation,
+    hasExpiredSkill: (progress.skillProgress ?? []).some(
+      (skill) => skill.categoryId === categoryId && skill.expiresAt !== undefined && skillStateAt(skill) !== skill.state
+    ),
+    maintenanceRequired,
+    failedValidation: failed
+  });
 
   const rawScore = Object.entries(components).reduce(
     (total, [component, value]) => total + readinessComponentWeights[component as ReadinessComponent] * value,
     0
   );
-  const score = Math.round(Math.min(ceiling, rawScore));
+  const score = Math.round(Math.min(ceilingDecision.ceiling, rawScore));
   const pursuitState = pursuitStateFor(seed, progress, categoryId);
 
   return {
@@ -307,8 +346,58 @@ export function calculateCategoryReadiness(
     status: categoryStatus(category.criticality, pursuitState, score, failed, maintenanceRequired),
     components,
     completedQuestIds: categoryCompletedQuests.map((quest) => quest.id),
-    ceiling
+    ceiling: ceilingDecision.ceiling,
+    ceilingReasons: ceilingDecision.reasons
   };
+}
+
+export function determineValidationCeiling(input: {
+  hasAnyProgress: boolean;
+  purchaseOnly: boolean;
+  hasConfiguration: boolean;
+  hasPractice: boolean;
+  hasValidation: boolean;
+  hasExpiredSkill: boolean;
+  maintenanceRequired: boolean;
+  failedValidation: boolean;
+}): ValidationCeilingDecision {
+  let ceiling = 100;
+  const reasons: string[] = [];
+
+  if (input.purchaseOnly) {
+    ceiling = Math.min(ceiling, 35);
+    reasons.push("Purchase-only progress cannot prove operational capability.");
+  }
+
+  if (input.hasAnyProgress && !input.hasValidation) {
+    if (input.hasConfiguration && !input.hasPractice) {
+      ceiling = Math.min(ceiling, 55);
+      reasons.push("Configured gear still needs practice or a validation drill.");
+    } else if (input.hasPractice) {
+      ceiling = Math.min(ceiling, 75);
+      reasons.push("Practice helps, but validation evidence is still missing.");
+    } else {
+      ceiling = Math.min(ceiling, 65);
+      reasons.push("Progress exists, but validation evidence is missing.");
+    }
+  }
+
+  if (input.hasExpiredSkill) {
+    ceiling = Math.min(ceiling, 60);
+    reasons.push("Expired training limits readiness until renewed or revalidated.");
+  }
+
+  if (input.maintenanceRequired) {
+    ceiling = Math.min(ceiling, 70);
+    reasons.push("Maintenance due limits readiness until checked.");
+  }
+
+  if (input.failedValidation) {
+    ceiling = Math.min(ceiling, 45);
+    reasons.push("A failed drill or validation caps readiness until follow-up work is done.");
+  }
+
+  return { ceiling, reasons };
 }
 
 export function resolveQuestDependencies(
@@ -555,6 +644,130 @@ export function calculateMilestoneProgress(
   return seed.milestones.map((milestone) => evaluateMilestone(seed, progress, milestone));
 }
 
+export function buildGapAnalysisReport(
+  seed: BasecampSeed,
+  progress: HouseholdProgressSnapshot = createEmptyProgressSnapshot(),
+  options: {
+    acquisitionNeeds?: AcquisitionNeed[];
+    maintenanceDue?: MaintenanceDueItem[];
+  } = {}
+): GapAnalysisReport {
+  const readiness = calculateReadiness(seed, progress);
+  const recommendations = recommendQuests(seed, progress, 8);
+  const questById = new Map(seed.quests.map((quest) => [quest.id, quest]));
+  const categoryById = new Map(seed.categories.map((category) => [category.id, category]));
+  const completed = completedQuestIds(progress);
+  const criticalCategoryGaps = readiness.categories
+    .filter((category) => category.criticality === "critical")
+    .filter((category) => category.score < 40 && category.status !== "deferred")
+    .map((category) =>
+      categoryGapItem(
+        category,
+        "critical",
+        "Critical readiness is below the operating threshold.",
+        recommendedQuestIdsForCategory(recommendations, category.categoryId)
+      )
+    );
+  const unknownCategoryGaps = readiness.categories
+    .filter(
+      (category) =>
+        category.completedQuestIds.length === 0 &&
+        Object.values(category.components).every((component) => component === 0)
+    )
+    .filter((category) => !suppressedPursuitStates.has(category.pursuitState))
+    .map((category) =>
+      categoryGapItem(
+        category,
+        "unknown",
+        "No completed work or validation records exist for this category yet.",
+        recommendedQuestIdsForCategory(recommendations, category.categoryId)
+      )
+    );
+  const intentionalDeferrals = readiness.categories
+    .filter((category) => suppressedPursuitStates.has(category.pursuitState))
+    .map((category) =>
+      categoryGapItem(
+        category,
+        "deferred",
+        "This category is intentionally held, paused, or deferred.",
+        recommendedQuestIdsForCategory(recommendations, category.categoryId)
+      )
+    );
+  const validationGaps = readiness.categories
+    .filter((category) => category.ceilingReasons.length > 0)
+    .map((category) =>
+      categoryGapItem(
+        category,
+        "validation",
+        category.ceilingReasons.join(" "),
+        recommendedQuestIdsForCategory(
+          recommendations.filter((recommendation) => recommendation.kind === "drill" || recommendation.kind === "skill"),
+          category.categoryId
+        )
+      )
+    );
+  const acquisitionGaps = (options.acquisitionNeeds ?? [])
+    .filter((need) => need.required)
+    .filter((need) => !["already_owned", "substituted"].includes(need.state))
+    .map((need): GapReportItem => {
+      const category = categoryById.get(need.categoryId);
+
+      return {
+        id: `acquisition-gap-${need.id}`,
+        categoryId: need.categoryId,
+        categoryName: category?.name ?? need.categoryId,
+        title: need.functionalRequirement,
+        reason: `Needed for ${need.questTitle}: ${need.state.replaceAll("_", " ")}.`,
+        severity: category?.criticality ?? "important",
+        suggestedQuestIds: [need.questId]
+      };
+    });
+  const maintenanceGaps = [
+    ...(options.maintenanceDue ?? [])
+      .filter((item) => item.status === "due" || item.status === "overdue")
+      .map((item): GapReportItem => ({
+        id: `maintenance-gap-${item.policyId}`,
+        categoryId: "maintenance",
+        categoryName: "Maintenance",
+        title: item.title,
+        reason: `${item.scopeLabel} is ${item.status}.`,
+        severity: item.status === "overdue" ? "critical" : "important",
+        suggestedQuestIds: []
+      })),
+    ...readiness.categories
+      .filter((category) => category.status === "maintenance_required")
+      .map((category) =>
+        categoryGapItem(
+          category,
+          "maintenance",
+          "Maintenance issue is limiting this category.",
+          recommendedQuestIdsForCategory(recommendations, category.categoryId)
+        )
+      )
+  ];
+  const drillFollowUps = (progress.drillRuns ?? [])
+    .flatMap((run) => run.followUpQuestSuggestions)
+    .filter((suggestion) => questById.get(suggestion.sourceId) === undefined || !completed.has(suggestion.sourceId));
+  const reportFollowUps = recommendations.map((recommendation): FollowUpQuestSuggestion => ({
+    id: `gap-report-${recommendation.quest.id}`,
+    title: recommendation.quest.title,
+    categoryId: recommendation.quest.categoryId,
+    reason: recommendation.reasons.join(" "),
+    sourceType: "gap_report",
+    sourceId: recommendation.quest.id
+  }));
+
+  return {
+    criticalCategoryGaps,
+    unknownCategoryGaps,
+    intentionalDeferrals,
+    validationGaps,
+    acquisitionGaps,
+    maintenanceGaps,
+    followUpQuests: uniqueFollowUps([...drillFollowUps, ...reportFollowUps])
+  };
+}
+
 export function pursuitStateFor(
   seed: BasecampSeed,
   progress: HouseholdProgressSnapshot,
@@ -599,6 +812,40 @@ function addQuestComponentContributions(
 
   if (hasAnyTaxonomy(taxonomy, ["build", "test", "validation"])) {
     components.redundancy = Math.max(components.redundancy, 0.5);
+  }
+}
+
+function addSkillComponentContributions(
+  components: Record<ReadinessComponent, number>,
+  skills: SkillProgress[],
+  categoryId: CategoryId
+): void {
+  for (const skill of skills.filter((candidate) => candidate.categoryId === categoryId)) {
+    const state = skillStateAt(skill);
+    components.knowledge = Math.max(components.knowledge, stateAtLeast(state, "familiar") ? 1 : 0);
+    components.practice = Math.max(
+      components.practice,
+      stateAtLeast(state, "practiced") ? 1 : stateAtLeast(state, "familiar") ? 0.4 : 0
+    );
+
+    if (stateAtLeast(state, "validated")) {
+      components.validation = Math.max(components.validation, 1);
+    }
+  }
+}
+
+function addDrillComponentContributions(
+  components: Record<ReadinessComponent, number>,
+  drillRuns: DrillRun[],
+  categoryId: CategoryId
+): void {
+  for (const run of drillRuns.filter((candidate) => candidate.categoryId === categoryId)) {
+    components.practice = Math.max(components.practice, 0.7);
+
+    if (drillRunValidatesCategory(run)) {
+      components.validation = Math.max(components.validation, 1);
+      components.practice = Math.max(components.practice, 1);
+    }
   }
 }
 
@@ -903,6 +1150,20 @@ function hasAny<T>(values: T[] | undefined, candidates: T[]): boolean {
   return candidates.some((candidate) => valueSet.has(candidate));
 }
 
+function hasActiveDrillFailure(drillRuns: DrillRun[], categoryId: CategoryId): boolean {
+  const latestByTemplate = new Map<string, DrillRun>();
+
+  for (const run of drillRuns.filter((candidate) => candidate.categoryId === categoryId)) {
+    const existing = latestByTemplate.get(run.templateId);
+
+    if (existing === undefined || existing.completedAt < run.completedAt) {
+      latestByTemplate.set(run.templateId, run);
+    }
+  }
+
+  return Array.from(latestByTemplate.values()).some((run) => drillRunNeedsFollowUp(run));
+}
+
 function hasAnyTaxonomy(taxonomy: Set<QuestTaxonomy>, candidates: QuestTaxonomy[]): boolean {
   return candidates.some((candidate) => taxonomy.has(candidate));
 }
@@ -976,4 +1237,60 @@ function milestoneReferencesCategory(
 ): boolean {
   const searchable = normalize(`${milestone.name} ${milestone.description} ${milestone.requirements.join(" ")}`);
   return searchable.includes(normalize(categoryId)) || searchable.includes(normalize(categoryName));
+}
+
+function categoryGapItem(
+  category: CategoryReadiness,
+  idSuffix: string,
+  reason: string,
+  suggestedQuestIds: QuestId[]
+): GapReportItem {
+  return {
+    id: `${idSuffix}-gap-${category.categoryId}`,
+    categoryId: category.categoryId,
+    categoryName: category.categoryName,
+    title: category.categoryName,
+    reason,
+    severity: category.criticality,
+    suggestedQuestIds
+  };
+}
+
+function recommendedQuestIdsForCategory(
+  recommendations: QuestRecommendation[],
+  categoryId: CategoryId
+): QuestId[] {
+  return recommendations
+    .filter((recommendation) => recommendation.quest.categoryId === categoryId)
+    .map((recommendation) => recommendation.quest.id)
+    .slice(0, 3);
+}
+
+function uniqueFollowUps(followUps: FollowUpQuestSuggestion[]): FollowUpQuestSuggestion[] {
+  const seen = new Set<string>();
+  const unique: FollowUpQuestSuggestion[] = [];
+
+  for (const followUp of followUps) {
+    if (seen.has(followUp.id)) {
+      continue;
+    }
+
+    seen.add(followUp.id);
+    unique.push(followUp);
+  }
+
+  return unique;
+}
+
+function stateAtLeast(actual: SkillState, required: SkillState): boolean {
+  const order: SkillState[] = [
+    "untrained",
+    "familiar",
+    "practiced",
+    "competent",
+    "validated",
+    "advanced"
+  ];
+
+  return order.indexOf(actual) >= order.indexOf(required);
 }

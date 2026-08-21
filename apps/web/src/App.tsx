@@ -239,7 +239,7 @@ export function App({ summary = fallbackDashboardSummary }: AppProps) {
   return (
     <PageShell
       title="Basecamp Operations"
-      eyebrow="M3 milestone"
+      eyebrow="M5 milestone"
       actions={<StatusBadge tone="active">{statusMessage}</StatusBadge>}
     >
       <div className="bc-dashboard-grid">
@@ -547,6 +547,24 @@ export function App({ summary = fallbackDashboardSummary }: AppProps) {
       ) : null}
 
       <div className="bc-dashboard-grid">
+        <Panel title="Gap Report" description="Critical, validation, acquisition, maintenance, and deferred gaps.">
+          <div className="bc-metric-grid">
+            <Metric label="Critical" value={dashboard.gapReport.criticalCategoryGaps.length} />
+            <Metric label="Validation" value={dashboard.gapReport.validationGaps.length} />
+            <Metric label="Acquisition" value={dashboard.gapReport.acquisitionGaps.length} />
+            <Metric label="Deferred" value={dashboard.gapReport.intentionalDeferrals.length} />
+          </div>
+          <ul className="bc-list" aria-label="Suggested follow-up quests">
+            {dashboard.gapReport.followUpQuests.slice(0, 4).map((followUp) => (
+              <QuestListItem
+                key={followUp.id}
+                title={followUp.title}
+                meta={followUp.reason}
+              />
+            ))}
+          </ul>
+        </Panel>
+
         <Panel title="Critical Gaps">
           <ul className="bc-list" aria-label="Critical readiness gaps">
             {dashboard.criticalGaps.map((gap) => (

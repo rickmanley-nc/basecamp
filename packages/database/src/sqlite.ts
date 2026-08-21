@@ -9,13 +9,23 @@ import {
   calculateNextMaintenanceDue,
   completeMaintenancePolicy,
   createAssetTag,
+  createDrillTemplateFromQuest,
+  createEvidenceRecord,
   maintenanceDueStatus,
+  recordDrillRun as buildDrillRun,
+  recordSkillTraining as buildSkillTraining,
   slugify,
   type Asset,
   type AssetTag,
   type BasecampSeed,
   type CategoryId,
   type CategoryPursuitSnapshot,
+  type DrillRun,
+  type DrillRunInput,
+  type DrillTemplate,
+  type EvidenceLinkEntityType,
+  type EvidenceRecord,
+  type EvidenceRecordInput,
   type HouseholdProgressSnapshot,
   type InventoryEvent,
   type InventoryItem,
@@ -41,6 +51,9 @@ import {
   type QuestLifecycleEvent,
   type QuestLifecycleResult,
   type QuestStatus,
+  type SkillProgress,
+  type SkillTrainingInput,
+  type TrainingRecord,
   type XpEvent
 } from "@basecamp/domain";
 import {
@@ -64,6 +77,7 @@ export interface SeedImportResult {
   categories: number;
   levels: number;
   quests: number;
+  drillTemplates: number;
 }
 
 export interface QuestActionPersistenceResult extends QuestLifecycleResult {
@@ -257,6 +271,41 @@ export function importSeed(database: DatabaseSync, seed: BasecampSeed): SeedImpo
       );
     }
 
+    const insertDrillTemplate = database.prepare(`
+      INSERT OR REPLACE INTO drill_templates
+      (
+        id,
+        title,
+        category_id,
+        scenario,
+        estimated_minutes,
+        success_criteria_json,
+        evidence_json,
+        recommended_quest_ids_json,
+        created_at,
+        updated_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    for (const quest of seed.quests.filter((candidate) => candidate.taxonomy.includes("drill"))) {
+      const template = createDrillTemplateFromQuest(quest);
+      const now = seed.generatedOn;
+
+      insertDrillTemplate.run(
+        template.id,
+        template.title,
+        template.categoryId,
+        template.scenario,
+        template.estimatedMinutes,
+        JSON.stringify(template.successCriteria),
+        JSON.stringify(template.evidence ?? []),
+        JSON.stringify(template.recommendedQuestIds ?? []),
+        now,
+        now
+      );
+    }
+
     database.exec("COMMIT");
   } catch (error) {
     database.exec("ROLLBACK");
@@ -266,7 +315,8 @@ export function importSeed(database: DatabaseSync, seed: BasecampSeed): SeedImpo
   return {
     categories: countRows(database, "categories"),
     levels: countRows(database, "capability_levels"),
-    quests: countRows(database, "quest_templates")
+    quests: countRows(database, "quest_templates"),
+    drillTemplates: countRows(database, "drill_templates")
   };
 }
 
@@ -310,7 +360,10 @@ export function readHouseholdProgress(database: DatabaseSync): HouseholdProgress
     maintenanceRequiredQuestIds: [],
     maintenanceRequiredCategoryIds: [],
     interestCategoryIds: [],
-    xpEvents
+    xpEvents,
+    skillProgress: listSkillProgress(database),
+    drillRuns: listDrillRuns(database),
+    evidenceRecords: listEvidenceRecords(database)
   };
 }
 
@@ -389,6 +442,197 @@ export function recordXpEvent(database: DatabaseSync, event: XpEvent): Household
     .run(event.id, event.sourceType, event.sourceId, event.reason, event.xpAwarded, event.occurredAt);
 
   return readHouseholdProgress(database);
+}
+
+export function upsertEvidenceRecord(
+  database: DatabaseSync,
+  input: EvidenceRecordInput
+): EvidenceRecord {
+  const evidence = createEvidenceRecord(input);
+
+  database
+    .prepare(
+      `INSERT OR REPLACE INTO evidence_records
+       (
+         id, kind, title, links_json, metadata_json, status, version,
+         supersedes_evidence_id, deletion_reason, created_at, updated_at
+       )
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    )
+    .run(
+      evidence.id,
+      evidence.kind,
+      evidence.title,
+      JSON.stringify(evidence.links),
+      JSON.stringify(evidence.metadata),
+      evidence.status,
+      evidence.version,
+      evidence.supersedesEvidenceId ?? null,
+      evidence.deletionReason ?? null,
+      evidence.createdAt,
+      evidence.updatedAt
+    );
+
+  return evidence;
+}
+
+export function listEvidenceRecords(database: DatabaseSync): EvidenceRecord[] {
+  return database
+    .prepare(
+      `SELECT id, kind, title, links_json, metadata_json, status, version,
+        supersedes_evidence_id, deletion_reason, created_at, updated_at
+       FROM evidence_records
+       ORDER BY created_at, id`
+    )
+    .all()
+    .map(rowToEvidenceRecord);
+}
+
+export function listSkillProgress(database: DatabaseSync): SkillProgress[] {
+  return database
+    .prepare(
+      `SELECT skill_id, name, category_id, state, training_records_json, evidence_ids_json,
+        last_practiced_at, validated_at, expires_at
+       FROM skill_progress
+       ORDER BY category_id, skill_id`
+    )
+    .all()
+    .map(rowToSkillProgress);
+}
+
+export function recordSkillTraining(
+  database: DatabaseSync,
+  input: SkillTrainingInput
+): { skill: SkillProgress; trainingRecord: TrainingRecord; progress: HouseholdProgressSnapshot } {
+  const current = readSkillProgress(database, input.skillId);
+  const result = buildSkillTraining(current, input);
+
+  database.exec("BEGIN");
+
+  try {
+    saveSkillProgress(database, result.skill, input.completedAt);
+    database
+      .prepare(
+        `INSERT OR REPLACE INTO training_records
+         (id, skill_id, course_name, provider, completed_at, expires_at, evidence_ids_json, notes)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      )
+      .run(
+        result.trainingRecord.id,
+        result.trainingRecord.skillId,
+        result.trainingRecord.courseName,
+        result.trainingRecord.provider ?? null,
+        result.trainingRecord.completedAt,
+        result.trainingRecord.expiresAt ?? null,
+        JSON.stringify(result.trainingRecord.evidenceIds ?? []),
+        result.trainingRecord.notes ?? null
+      );
+    database.exec("COMMIT");
+  } catch (error) {
+    database.exec("ROLLBACK");
+    throw error;
+  }
+
+  return {
+    ...result,
+    progress: readHouseholdProgress(database)
+  };
+}
+
+export function listDrillTemplates(database: DatabaseSync): DrillTemplate[] {
+  return database
+    .prepare(
+      `SELECT id, title, category_id, scenario, estimated_minutes, success_criteria_json,
+        evidence_json, recommended_quest_ids_json
+       FROM drill_templates
+       ORDER BY category_id, estimated_minutes, title`
+    )
+    .all()
+    .map(rowToDrillTemplate);
+}
+
+export function upsertDrillTemplate(
+  database: DatabaseSync,
+  template: DrillTemplate,
+  now = new Date().toISOString()
+): DrillTemplate {
+  database
+    .prepare(
+      `INSERT OR REPLACE INTO drill_templates
+       (
+         id, title, category_id, scenario, estimated_minutes, success_criteria_json,
+         evidence_json, recommended_quest_ids_json, created_at, updated_at
+       )
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    )
+    .run(
+      template.id,
+      template.title,
+      template.categoryId,
+      template.scenario,
+      template.estimatedMinutes,
+      JSON.stringify(template.successCriteria),
+      JSON.stringify(template.evidence ?? []),
+      JSON.stringify(template.recommendedQuestIds ?? []),
+      now,
+      now
+    );
+
+  return template;
+}
+
+export function listDrillRuns(database: DatabaseSync): DrillRun[] {
+  return database
+    .prepare(
+      `SELECT id, template_id, category_id, result, started_at, completed_at,
+        criteria_results_json, failures_json, lessons, evidence_ids_json, follow_up_json
+       FROM drill_runs
+       ORDER BY completed_at, id`
+    )
+    .all()
+    .map(rowToDrillRun);
+}
+
+export function recordDrillRun(
+  database: DatabaseSync,
+  templateId: string,
+  input: DrillRunInput
+): { run: DrillRun; progress: HouseholdProgressSnapshot } {
+  const template = readDrillTemplate(database, templateId);
+
+  if (template === undefined) {
+    throw new Error(`Unknown drill template ${templateId}.`);
+  }
+
+  const run = buildDrillRun(template, input);
+
+  database
+    .prepare(
+      `INSERT OR REPLACE INTO drill_runs
+       (
+         id, template_id, category_id, result, started_at, completed_at,
+         criteria_results_json, failures_json, lessons, evidence_ids_json, follow_up_json
+       )
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    )
+    .run(
+      run.id,
+      run.templateId,
+      run.categoryId,
+      run.result,
+      run.startedAt ?? null,
+      run.completedAt,
+      JSON.stringify(run.criteriaResults),
+      JSON.stringify(run.failures),
+      run.lessons ?? null,
+      JSON.stringify(run.evidenceIds ?? []),
+      JSON.stringify(run.followUpQuestSuggestions)
+    );
+
+  return {
+    run,
+    progress: readHouseholdProgress(database)
+  };
 }
 
 export function readInventoryState(
@@ -1201,6 +1445,76 @@ function saveQuestEvent(
     );
 }
 
+function readSkillProgress(
+  database: DatabaseSync,
+  skillId: string
+): SkillProgress | undefined {
+  const row = database
+    .prepare(
+      `SELECT skill_id, name, category_id, state, training_records_json, evidence_ids_json,
+        last_practiced_at, validated_at, expires_at
+       FROM skill_progress
+       WHERE skill_id = ?`
+    )
+    .get(skillId);
+
+  return row === undefined ? undefined : rowToSkillProgress(row);
+}
+
+function saveSkillProgress(
+  database: DatabaseSync,
+  skill: SkillProgress,
+  updatedAt: string
+): void {
+  database
+    .prepare(
+      `INSERT INTO skill_progress
+       (
+         skill_id, name, category_id, state, training_records_json, evidence_ids_json,
+         last_practiced_at, validated_at, expires_at, updated_at
+       )
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(skill_id) DO UPDATE SET
+         name = COALESCE(excluded.name, skill_progress.name),
+         category_id = COALESCE(excluded.category_id, skill_progress.category_id),
+         state = excluded.state,
+         training_records_json = excluded.training_records_json,
+         evidence_ids_json = excluded.evidence_ids_json,
+         last_practiced_at = excluded.last_practiced_at,
+         validated_at = COALESCE(excluded.validated_at, skill_progress.validated_at),
+         expires_at = COALESCE(excluded.expires_at, skill_progress.expires_at),
+         updated_at = excluded.updated_at`
+    )
+    .run(
+      skill.skillId,
+      skill.name ?? null,
+      skill.categoryId ?? null,
+      skill.state,
+      JSON.stringify(skill.trainingRecords ?? []),
+      JSON.stringify(skill.evidenceIds ?? []),
+      skill.lastPracticedAt ?? null,
+      skill.validatedAt ?? null,
+      skill.expiresAt ?? null,
+      updatedAt
+    );
+}
+
+function readDrillTemplate(
+  database: DatabaseSync,
+  templateId: string
+): DrillTemplate | undefined {
+  const row = database
+    .prepare(
+      `SELECT id, title, category_id, scenario, estimated_minutes, success_criteria_json,
+        evidence_json, recommended_quest_ids_json
+       FROM drill_templates
+       WHERE id = ?`
+    )
+    .get(templateId);
+
+  return row === undefined ? undefined : rowToDrillTemplate(row);
+}
+
 function readCategoryPursuit(
   database: DatabaseSync,
   categoryId: CategoryId
@@ -1442,6 +1756,70 @@ function applyAcceptedOfflineCommand(
       ...(intent.notes === undefined ? {} : { notes: intent.notes }),
       occurredAt: now
     });
+    return;
+  }
+
+  if (intent.type === "evidence.attach") {
+    upsertEvidenceRecord(database, {
+      id: `evidence-${slugify(command.commandId)}`,
+      kind: intent.evidenceKind,
+      title: intent.notes ?? `Evidence for ${intent.entityId}`,
+      links: [
+        {
+          entityType: evidenceLinkEntityTypeFor(intent.entityType),
+          entityId: intent.entityId
+        }
+      ],
+      metadata: {
+        capturedAt: command.createdAt,
+        ...(intent.localUri === undefined ? {} : { localUri: intent.localUri }),
+        ...(intent.notes === undefined ? {} : { notes: intent.notes })
+      },
+      now
+    });
+    return;
+  }
+
+  if (intent.type === "skill.record") {
+    recordSkillTraining(database, {
+      skillId: `skill-${slugify(intent.skillName)}`,
+      name: intent.skillName,
+      categoryId: "skills-training",
+      courseName: intent.skillName,
+      completedAt: now,
+      stateAwarded: intent.outcome === "validated" ? "validated" : "practiced",
+      ...(intent.notes === undefined ? {} : { notes: intent.notes })
+    });
+    return;
+  }
+
+  if (intent.type === "drill.record") {
+    const criterion = {
+      id: `${slugify(intent.drillName)}-criterion`,
+      label: "Drill objective completed safely.",
+      required: true
+    };
+    const template: DrillTemplate = {
+      id: `drill-${slugify(intent.drillName)}`,
+      title: intent.drillName,
+      categoryId: "drills-validation",
+      scenario: intent.notes ?? "Field-captured drill.",
+      estimatedMinutes: 30,
+      successCriteria: [criterion]
+    };
+
+    upsertDrillTemplate(database, template, now);
+    recordDrillRun(database, template.id, {
+      completedAt: now,
+      criteriaResults: [
+        {
+          criterionId: criterion.id,
+          passed: intent.outcome === "completed",
+          ...(intent.notes === undefined ? {} : { notes: intent.notes })
+        }
+      ],
+      ...(intent.notes === undefined ? {} : { lessons: intent.notes })
+    });
   }
 }
 
@@ -1462,7 +1840,43 @@ function currentEntityVersionFor(database: DatabaseSync, command: OfflineCommand
     return countRows(database, "maintenance_events");
   }
 
+  if (command.entityType === "evidence") {
+    return countRows(database, "evidence_records");
+  }
+
+  if (command.entityType === "skill") {
+    return countRows(database, "training_records");
+  }
+
+  if (command.entityType === "drill") {
+    return countRows(database, "drill_runs");
+  }
+
   return undefined;
+}
+
+function evidenceLinkEntityTypeFor(entityType: OfflineCommand["entityType"]): EvidenceLinkEntityType {
+  if (entityType === "inventory" || entityType === "failure") {
+    return "inventory_event";
+  }
+
+  if (entityType === "quest") {
+    return "quest";
+  }
+
+  if (entityType === "maintenance") {
+    return "maintenance";
+  }
+
+  if (entityType === "asset") {
+    return "asset";
+  }
+
+  if (entityType === "skill") {
+    return "skill";
+  }
+
+  return "drill";
 }
 
 function latestSyncCursor(database: DatabaseSync): string {
@@ -1912,6 +2326,129 @@ function rowToMaintenanceEvent(row: unknown): MaintenanceEvent {
     ...(value.follow_up_quest_title === null
       ? {}
       : { followUpQuestTitle: value.follow_up_quest_title })
+  };
+}
+
+function rowToEvidenceRecord(row: unknown): EvidenceRecord {
+  const value = row as {
+    id: string;
+    kind: EvidenceRecord["kind"];
+    title: string;
+    links_json: string;
+    metadata_json: string;
+    status: EvidenceRecord["status"];
+    version: number;
+    supersedes_evidence_id: string | null;
+    deletion_reason: string | null;
+    created_at: string;
+    updated_at: string;
+  };
+
+  return {
+    id: value.id,
+    kind: value.kind,
+    title: value.title,
+    links: JSON.parse(value.links_json) as EvidenceRecord["links"],
+    metadata: JSON.parse(value.metadata_json) as EvidenceRecord["metadata"],
+    status: value.status,
+    version: value.version,
+    createdAt: value.created_at,
+    updatedAt: value.updated_at,
+    ...(value.supersedes_evidence_id === null
+      ? {}
+      : { supersedesEvidenceId: value.supersedes_evidence_id }),
+    ...(value.deletion_reason === null ? {} : { deletionReason: value.deletion_reason })
+  };
+}
+
+function rowToSkillProgress(row: unknown): SkillProgress {
+  const value = row as {
+    skill_id: string;
+    name: string | null;
+    category_id: CategoryId | null;
+    state: SkillProgress["state"];
+    training_records_json: string;
+    evidence_ids_json: string;
+    last_practiced_at: string | null;
+    validated_at: string | null;
+    expires_at: string | null;
+  };
+
+  return {
+    skillId: value.skill_id,
+    ...(value.name === null ? {} : { name: value.name }),
+    ...(value.category_id === null ? {} : { categoryId: value.category_id }),
+    state: value.state,
+    trainingRecords: JSON.parse(value.training_records_json) as TrainingRecord[],
+    evidenceIds: JSON.parse(value.evidence_ids_json) as string[],
+    ...(value.last_practiced_at === null ? {} : { lastPracticedAt: value.last_practiced_at }),
+    ...(value.validated_at === null ? {} : { validatedAt: value.validated_at }),
+    ...(value.expires_at === null ? {} : { expiresAt: value.expires_at })
+  };
+}
+
+function rowToDrillTemplate(row: unknown): DrillTemplate {
+  const value = row as {
+    id: string;
+    title: string;
+    category_id: CategoryId;
+    scenario: string;
+    estimated_minutes: number;
+    success_criteria_json: string;
+    evidence_json: string;
+    recommended_quest_ids_json: string;
+  };
+  const evidence = JSON.parse(value.evidence_json) as NonNullable<DrillTemplate["evidence"]>;
+  const recommendedQuestIds = JSON.parse(value.recommended_quest_ids_json) as NonNullable<
+    DrillTemplate["recommendedQuestIds"]
+  >;
+  const template: DrillTemplate = {
+    id: value.id,
+    title: value.title,
+    categoryId: value.category_id,
+    scenario: value.scenario,
+    estimatedMinutes: value.estimated_minutes,
+    successCriteria: JSON.parse(value.success_criteria_json) as DrillTemplate["successCriteria"]
+  };
+
+  if (evidence.length > 0) {
+    template.evidence = evidence;
+  }
+
+  if (recommendedQuestIds.length > 0) {
+    template.recommendedQuestIds = recommendedQuestIds;
+  }
+
+  return template;
+}
+
+function rowToDrillRun(row: unknown): DrillRun {
+  const value = row as {
+    id: string;
+    template_id: string;
+    category_id: CategoryId;
+    result: DrillRun["result"];
+    started_at: string | null;
+    completed_at: string;
+    criteria_results_json: string;
+    failures_json: string;
+    lessons: string | null;
+    evidence_ids_json: string;
+    follow_up_json: string;
+  };
+
+  return {
+    id: value.id,
+    templateId: value.template_id,
+    categoryId: value.category_id,
+    result: value.result,
+    ...(value.started_at === null ? {} : { startedAt: value.started_at }),
+    completedAt: value.completed_at,
+    criteriaResults: JSON.parse(value.criteria_results_json) as DrillRun["criteriaResults"],
+    failures: JSON.parse(value.failures_json) as string[],
+    ...(value.lessons === null ? {} : { lessons: value.lessons }),
+    evidenceIds: JSON.parse(value.evidence_ids_json) as string[],
+    followUpQuestSuggestions: JSON.parse(value.follow_up_json) as DrillRun["followUpQuestSuggestions"]
   };
 }
 

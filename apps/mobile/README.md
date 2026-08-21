@@ -51,6 +51,10 @@ M4 defines six primary routes:
 The route model is exported from `@basecamp/mobile` and consumes shared
 `@basecamp/api`, `@basecamp/content`, and `@basecamp/sync` packages.
 
+M5 server persistence accepts mobile-captured drill records, skill records, and
+evidence attachments through the sync command vocabulary. Native camera and file
+upload UX remains part of the signed mobile build path.
+
 ## Design Boundary
 
 Mobile UI work should keep a Basecamp mobile boundary instead of importing web UI
