@@ -1,0 +1,21 @@
+:8080 {
+  encode gzip zstd
+
+  header {
+    X-Content-Type-Options nosniff
+    X-Frame-Options DENY
+    Referrer-Policy no-referrer
+  }
+
+  handle /api/* {
+    reverse_proxy server:4317
+  }
+
+  handle /health* {
+    reverse_proxy server:4317
+  }
+
+  handle {
+    reverse_proxy web:80
+  }
+}

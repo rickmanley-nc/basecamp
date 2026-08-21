@@ -23,4 +23,7 @@ outbox, conflict policy, sync persistence/API, and mobile shell tests. M5 adds
 drill run success/failure tests, skill progression and expiration tests,
 evidence link/version/deletion tests, validation ceiling recovery tests, gap
 report section tests, persistence tests, server route tests, and web dashboard
-render coverage for the gap report.
+render coverage for the gap report. M6 adds portable export/import tests,
+backup/restore integrity tests, admin-token route tests, audit event tests, and
+self-hosting artifact checks for Compose, proxy, persistent volumes, and safe
+environment defaults.

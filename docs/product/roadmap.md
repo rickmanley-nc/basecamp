@@ -162,6 +162,8 @@ maintenance gaps, then suggests follow-up quests.
 
 ### M6 - Self-Hosting Beta
 
+Status: complete once `v0.7.0` is released.
+
 Outcome:
 
 - A capable user can run Basecamp on a Linux host and trust backups.
@@ -176,6 +178,14 @@ Primary work:
 - Security hardening.
 - Health checks and observability.
 - Data export/import.
+
+M6 adds Docker Compose beta artifacts, a safe environment template, web/server
+container definitions, reverse proxy config, backup and restore scripts,
+portable JSON/CSV export and import, admin status/export/import/audit endpoints,
+release/security artifact checks, and a deployment guide with install, backup,
+restore, upgrade, rollback, remote access, and troubleshooting steps. The beta
+uses SQLite in a persistent volume; PostgreSQL remains a later production
+hardening target.
 
 ### v1.0 - MVP Readiness
 

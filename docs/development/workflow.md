@@ -90,6 +90,28 @@ The M5 gap report separates critical category gaps, intentional deferrals,
 validation gaps, acquisition gaps, and maintenance gaps. Drill failure follow-up
 suggestions and skill expiration impacts are covered by local tests.
 
+M6 adds self-hosting beta operations:
+
+- `pnpm ops:release-check`
+- `pnpm ops:security-check`
+- `pnpm ops:backup`
+- `pnpm ops:restore`
+- `pnpm ops:export`
+- `pnpm ops:import`
+
+M6 server health/admin routes:
+
+- `GET /health/live`
+- `GET /health/ready`
+- `GET /api/admin/status`
+- `GET /api/admin/export`
+- `POST /api/admin/import`
+- `GET /api/admin/audit`
+
+Admin routes require `BASECAMP_ADMIN_TOKEN`. Self-hosting validation should use
+the Deployment Guide and report whether it ran locally, in a clean container
+environment, or on a separate server.
+
 ## Branches
 
 - `main` should remain releasable.

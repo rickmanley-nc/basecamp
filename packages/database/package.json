@@ -10,7 +10,11 @@
   },
   "types": "./src/index.ts",
   "scripts": {
+    "backup": "tsx scripts/backup.ts",
     "db:reset": "tsx scripts/reset-dev-db.ts",
+    "export": "tsx scripts/export-data.ts",
+    "import": "tsx scripts/import-data.ts",
+    "restore": "tsx scripts/restore.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

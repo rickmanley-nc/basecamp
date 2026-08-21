@@ -9,10 +9,11 @@ skills, drills, maintenance, scoring, badges, and offline field use.
 
 ## Status
 
-This repository has a running web/server vertical slice and the first readiness
-and quest-core implementation. Current work is still early, but Basecamp can now
-load seed content, score initial readiness, recommend quests, persist quest
-lifecycle changes, and show category progression paths.
+This repository has a running web/server slice, mobile/offline contracts,
+readiness and quest logic, inventory, maintenance, drills, skills, validation
+reports, and the first self-hosting beta artifacts. Current work is still early,
+but Basecamp can now be run locally, packaged through Docker Compose, backed up,
+restored, exported, and imported for beta review.
 
 ## Repository Map
 
@@ -83,11 +84,16 @@ pnpm --filter @basecamp/web dev
 Server: `http://127.0.0.1:4317`  
 Web: `http://127.0.0.1:4318`
 
-The M2 API surface includes:
+The self-hosting beta starts from `infra/compose.yml`. See
+[Deployment Guide](docs/ops/deployment.md).
+
+Useful API surfaces include:
 
 - `GET /api/dashboard`
 - `PATCH /api/categories/:categoryId/pursuit`
 - `POST /api/quests/:questId/actions`
+- `GET /api/reports/gaps`
+- `GET /api/admin/status`
 
 Roadmap labels, milestones, and issues can be synced to GitHub with:
 

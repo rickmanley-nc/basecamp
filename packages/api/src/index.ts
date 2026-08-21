@@ -61,6 +61,10 @@ export const apiRoutes = {
   drillTemplates: "/api/drills/templates",
   drillRun: "/api/drills/:templateId/runs",
   gapReport: "/api/reports/gaps",
+  adminStatus: "/api/admin/status",
+  adminExport: "/api/admin/export",
+  adminImport: "/api/admin/import",
+  adminAudit: "/api/admin/audit",
   sync: "/api/sync",
   categoryPursuit: "/api/categories/:categoryId/pursuit",
   questAction: "/api/quests/:questId/actions"
@@ -71,6 +75,46 @@ export interface HealthResponse {
   service: "basecamp-server";
   version: string;
   checkedAt: string;
+}
+
+export interface OperationalStatusResponse {
+  ok: boolean;
+  checkedAt: string;
+  version: string;
+  web: {
+    ok: boolean;
+    configuredUrl?: string;
+  };
+  server: {
+    ok: boolean;
+    nodeEnv: string;
+  };
+  database: {
+    ok: boolean;
+    kind: "sqlite";
+    writable: boolean;
+    migrated: boolean;
+    migrationCount: number;
+    pathConfigured: boolean;
+  };
+  storage: {
+    ok: boolean;
+    writable: boolean;
+    pathConfigured: boolean;
+  };
+  backup: {
+    configured: boolean;
+    ok: boolean;
+    status: "missing" | "fresh" | "stale" | "failed";
+    lastBackupAt?: string;
+    backupPath?: string;
+    ageHours?: number;
+    message: string;
+  };
+  security: {
+    adminTokenConfigured: boolean;
+    remoteAccessMode: "lan" | "vpn" | "reverse_proxy" | "unknown";
+  };
 }
 
 export interface SeedContentResponse {
@@ -308,6 +352,14 @@ export interface DrillTemplatesResponse {
 export interface DrillRunResponse {
   run: DrillRun;
   dashboard: DashboardSummary;
+}
+
+export interface AdminAuditEventSummary {
+  id: string;
+  action: string;
+  actor: string;
+  result: "success" | "failure";
+  occurredAt: string;
 }
 
 export function createSeedContentResponse(seed: BasecampSeed): SeedContentResponse {
