@@ -17,17 +17,20 @@ Design principle:
 
 Install requirement:
 
-- v1 must include an iPhone install guide for non-developer users. See
-  [iPhone Installation Guide](../../docs/ops/iphone-installation.md).
+- v1 must include local/admin-controlled build and install paths for iPhone and
+  Android. See
+  [Mobile Build And Installation Guide](../../docs/ops/mobile-build-and-installation.md).
 
 ## M4 Stack
 
 Basecamp Mobile uses the Expo React Native stack selected in
-[ADR 0008](../../docs/adr/0008-mobile-expo-offline-sync.md). The repository
+[ADR 0008](../../docs/adr/0008-mobile-expo-offline-sync.md), with the local
+build path defined in
+[ADR 0011](../../docs/adr/0011-local-mobile-build-path.md). The repository
 includes the typed app shell, route model, offline read model preview, Quick
 Capture parser, scan workflows, command outbox contracts, Expo app entrypoint,
-EAS profiles for simulator and TestFlight builds, and native field screens for
-Home, Capture, Scan, Quests, Inventory, and Offline.
+local native build scripts, and native field screens for Home, Capture, Scan,
+Quests, Inventory, and Offline.
 
 Run the local shell preview:
 
@@ -47,19 +50,24 @@ Confirm the public Expo configuration:
 pnpm --filter @basecamp/mobile expo:config
 ```
 
-Build and submit the iOS TestFlight beta when Expo and Apple credentials are
-available:
+Generate native iOS and Android projects locally:
 
 ```bash
-pnpm --filter @basecamp/mobile build:ios:testflight
-pnpm --filter @basecamp/mobile submit:ios:testflight
+pnpm --filter @basecamp/mobile native:prebuild
+```
+
+Run local platform builds on hosts with the required native toolchains:
+
+```bash
+pnpm --filter @basecamp/mobile ios
+pnpm --filter @basecamp/mobile android
 ```
 
 The preview prints the current mobile stack, tab labels, sample Quick Capture
-confirmation, and sample QR scan target. The native Expo entrypoint covers server
-URL entry, local username/password sign-in, tabbed field screens, Quick Capture
-queueing, CameraView scan handling, photo/document evidence selection, evidence
-upload, persistent outbox storage, and reconnect sync attempts.
+confirmation, and sample QR scan target. The native Expo entrypoint covers
+server URL entry, local username/password sign-in, tabbed field screens, Quick
+Capture queueing, CameraView scan handling, photo/document evidence selection,
+evidence upload, persistent outbox storage, and reconnect sync attempts.
 
 Mobile storage boundary:
 
@@ -86,9 +94,9 @@ The route model is exported from `@basecamp/mobile` and consumes shared
 
 M5 server persistence accepts mobile-captured drill records, skill records, and
 evidence attachments through the sync command vocabulary. The v1 mobile field
-slice adds native capture and upload plumbing, but physical iPhone validation is
-still required for Camera permission, Photos/Documents behavior, persistent
-device storage, and reconnect behavior.
+slice adds native capture and upload plumbing, but physical iPhone and Android
+validation is still required for Camera permission, Photos/Documents behavior
+where applicable, persistent device storage, and reconnect behavior.
 
 ## Design Boundary
 
@@ -104,12 +112,16 @@ Local validation:
 
 - `pnpm --filter @basecamp/mobile dev`
 - `pnpm --filter @basecamp/mobile expo:config`
+- `pnpm --filter @basecamp/mobile native:prebuild`
+- `pnpm --filter @basecamp/mobile ios` on a Mac with full Xcode.
+- `pnpm --filter @basecamp/mobile android` on a host with Android SDK/JDK.
 - `pnpm check`
 
-Physical iPhone validation is pending until a TestFlight build is uploaded and
-installed. Camera permission, QR/barcode scanning, Photos/Documents access,
-Local Network permission, offline storage across app restart, evidence upload,
-and reconnect sync must be verified on a physical iPhone when native field
-screens and distribution are available. The exact v1 requirements are tracked in
+Physical iPhone and Android validation is pending until locally produced builds
+are installed. Camera permission, QR/barcode scanning, Photos/Documents access
+where applicable, Local Network permission where applicable, offline storage
+across app restart, evidence upload, and reconnect sync must be verified on
+physical devices when native field screens and distribution are available. The
+exact v1 requirements are tracked in
 [Basecamp v1.0 MVP Readiness](../../docs/product/v1-mvp-readiness.md) and the
 v1.0 GitHub milestone blocker issues.

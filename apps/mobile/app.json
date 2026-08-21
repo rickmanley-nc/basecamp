@@ -19,10 +19,20 @@
         "NSPhotoLibraryAddUsageDescription": "Save Basecamp evidence images when you choose to export them."
       }
     },
+    "android": {
+      "package": "com.basecamppreparedness.mobile",
+      "versionCode": 1,
+      "permissions": [
+        "CAMERA"
+      ]
+    },
     "extra": {
       "basecamp": {
         "minimumIosVersion": "17.0",
-        "installChannel": "TestFlight",
+        "iosBundleIdentifier": "com.basecamppreparedness.mobile",
+        "androidPackageIdentifier": "com.basecamppreparedness.mobile",
+        "androidVersionCode": 1,
+        "buildPath": "local_admin_controlled_ios_android",
         "serverUrlSetup": "manual_url_or_pairing_qr",
         "authModel": "local_username_password"
       }

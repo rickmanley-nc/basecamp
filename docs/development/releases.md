@@ -22,8 +22,8 @@ project clearer.
 8. Confirm deployment and mobile installation guides are updated when a release
    changes install, upgrade, pairing, or distribution behavior.
 9. Confirm required validation environments are satisfied or explicitly recorded:
-   CI, local machine, clean local environment, separate server, simulator, or
-   physical iPhone.
+   CI, local machine, clean local environment, separate server, simulator,
+   physical iPhone, or physical Android device.
 10. For installable releases, record the deployment profile validated:
    `local-dev`, `cloud-pilot`, post-MVP `homelab`, or intentionally deferred.
 11. Confirm release notes and linked PR text contain no personal workstation
@@ -51,20 +51,16 @@ For mobile distribution releases, also run:
 ```bash
 pnpm --filter @basecamp/mobile dev
 pnpm --filter @basecamp/mobile expo:config
+pnpm --filter @basecamp/mobile native:prebuild
 ```
 
-When Expo and Apple credentials are available for a beta release, also run:
-
-```bash
-pnpm --filter @basecamp/mobile build:ios:testflight
-pnpm --filter @basecamp/mobile submit:ios:testflight
-```
-
-Record the install channel, iOS version, marketing version, iOS build number,
-TestFlight expiration posture, server URL mode, validation environment, and
-whether a physical iPhone install was completed. Do not close a v1 mobile
-blocker that requires physical iPhone proof unless that device validation has
-actually been recorded.
+On a Mac with full Xcode, validate the local iOS build path. On a host with
+Android SDK/JDK tooling, validate the local Android build path. Record the build
+host class, platform tool versions, install path, iOS version, Android version,
+marketing version, iOS build number, Android version code, server URL mode,
+validation environment, and whether physical iPhone and Android installs were
+completed. Do not close a v1 mobile blocker that requires physical-device proof
+unless that device validation has actually been recorded.
 
 For PostgreSQL persistence releases, also validate against a disposable
 PostgreSQL database:
@@ -95,8 +91,10 @@ Installable release notes should link to:
 
 - [Deployment Guide](../ops/deployment.md)
 - [Self-Hosting And Backups](../ops/self-hosting-and-backups.md)
-- [iPhone Installation Guide](../ops/iphone-installation.md) when mobile
-  distribution is affected
+- [Mobile Build And Installation Guide](../ops/mobile-build-and-installation.md)
+  when mobile distribution is affected
+- [iPhone Installation Guide](../ops/iphone-installation.md) when iOS
+  installation is affected
 
 Every upgrade note should say:
 

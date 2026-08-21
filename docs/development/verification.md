@@ -4,7 +4,7 @@ Last updated: 2026-08-21
 
 This policy defines acceptable verification environments for Basecamp work. It
 keeps milestone progress moving without pretending a local smoke test proves a
-production install or an iPhone field workflow.
+production install or a physical mobile field workflow.
 
 The v1.0 release gate is defined in
 [Basecamp v1.0 MVP Readiness](../product/v1-mvp-readiness.md). Use that
@@ -34,7 +34,7 @@ Homelab:
 - Post-MVP target for real household data on an admin-controlled home network.
 - Expected to use UniFi-managed IP assignment, hostname, DNS, and routing.
 - Validation should eventually prove install, upgrade, backup, restore, LAN/VPN
-  or secure reverse proxy access, TLS, SAN/NAS backup destination, and iPhone
+  or secure reverse proxy access, TLS, SAN/NAS backup destination, and mobile
   pairing when those workflows are in scope.
 
 Cloud pilot:
@@ -70,14 +70,24 @@ Separate server:
 
 Physical iPhone:
 
-- Required for mobile validation involving camera, QR/barcode scanning, iOS
-  permissions, TestFlight or stable installation, local network access, offline
-  behavior, notifications, and real device pairing.
-- Required for v1 field data capture because the mobile experience is the
-  primary way data will be added away from a desk.
+- Required for iOS validation involving camera, QR/barcode scanning, iOS
+  permissions, local build installation, local network access, offline behavior,
+  notifications, and real device pairing.
 - Simulator testing is acceptable for layout, navigation, pure domain logic, and
   early app-shell checks, but it does not replace physical device validation for
   field workflows.
+
+Physical Android:
+
+- Required for Android validation involving camera, QR/barcode scanning, APK or
+  AAB installation, offline behavior, notifications, and real device pairing.
+- Emulator testing is acceptable for layout, navigation, pure domain logic, and
+  early app-shell checks, but it does not replace physical device validation for
+  field workflows.
+
+Physical iPhone and Android validation are both required for v1 field data
+capture because the mobile experience is the primary way data will be added away
+from a desk.
 
 ## Separate Server Access Checklist
 
@@ -111,14 +121,16 @@ published in GitHub text.
 ## Mobile Device Test Checklist
 
 When mobile testing is in scope, provide user-followable steps for the admin to
-run on an iPhone:
+run on the required device platform:
 
-- Required iOS version.
-- Install channel: TestFlight, stable release, or contributor development build.
+- Required iOS or Android version.
+- Install path: local Xcode development install, ad hoc, TestFlight after local
+  archive upload, Android debug APK, Android release APK/AAB, stable release, or
+  contributor development build.
 - How to install or update the app.
 - How to connect to the Basecamp server.
 - How to pair or sign in.
-- Which iOS permissions are expected and why.
+- Which platform permissions are expected and why.
 - What sample data or server state is needed.
 - Exact test actions to perform.
 - Expected result after each action.
@@ -136,6 +148,7 @@ Every issue resolution comment should state where validation happened:
 - Cloud pilot.
 - Separate server.
 - Physical iPhone.
+- Physical Android.
 - Simulator.
 - CI.
 

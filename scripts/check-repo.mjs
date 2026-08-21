@@ -23,6 +23,7 @@ const requiredFiles = [
   "docs/development/verification.md",
   "docs/development/releases.md",
   "docs/ops/deployment.md",
+  "docs/ops/mobile-build-and-installation.md",
   "docs/ops/iphone-installation.md",
   "docs/ops/self-hosting-and-backups.md",
   "docs/adr/0001-monorepo-typescript-react.md",
@@ -35,6 +36,7 @@ const requiredFiles = [
   "docs/adr/0008-mobile-expo-offline-sync.md",
   "docs/adr/0009-self-hosting-beta-sqlite-ops.md",
   "docs/adr/0010-production-deployment-targets.md",
+  "docs/adr/0011-local-mobile-build-path.md",
   "infra/compose.yml",
   "infra/basecamp.env.example",
   "infra/server.Dockerfile",
@@ -46,7 +48,6 @@ const requiredFiles = [
   ".github/roadmap/issues.json",
   "apps/mobile/App.tsx",
   "apps/mobile/app.json",
-  "apps/mobile/eas.json",
   "apps/mobile/index.js",
   "apps/web/package.json",
   "apps/mobile/package.json",
@@ -146,7 +147,17 @@ async function checkTrackedFilesForHostPaths() {
   }
 
   for (const file of files) {
-    const buffer = await readFile(path.join(root, file));
+    let buffer;
+
+    try {
+      buffer = await readFile(path.join(root, file));
+    } catch (error) {
+      if (error.code === "ENOENT") {
+        continue;
+      }
+
+      throw error;
+    }
 
     if (buffer.includes(0)) {
       continue;

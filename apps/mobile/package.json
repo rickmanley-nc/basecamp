@@ -13,11 +13,10 @@
   "scripts": {
     "dev": "tsx src/preview.ts",
     "start": "expo start",
-    "ios": "expo start --ios",
+    "native:prebuild": "expo prebuild",
+    "ios": "expo run:ios",
+    "android": "expo run:android",
     "expo:config": "expo config --type public",
-    "build:ios:simulator": "pnpm dlx eas-cli@22.2.0 eas build --platform ios --profile simulator",
-    "build:ios:testflight": "pnpm dlx eas-cli@22.2.0 eas build --platform ios --profile testflight",
-    "submit:ios:testflight": "pnpm dlx eas-cli@22.2.0 eas submit --platform ios --profile testflight",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

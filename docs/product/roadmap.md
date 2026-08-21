@@ -128,17 +128,18 @@ Outcome:
 Primary work:
 
 - Mobile app foundation.
-- iPhone install documentation for non-developer users.
-- Physical iPhone testing instructions for camera, offline, and sync behavior.
+- Mobile build/install documentation for iPhone and Android.
+- Physical iPhone and Android testing instructions for camera, offline, and sync
+  behavior.
 - Quick Capture command parser v1.
 - Barcode and QR scanning.
 - Offline read model.
 - Durable command outbox.
 - Sync API v1.
 - Conflict policy tests.
-- Physical iPhone camera, installation, Local Network, offline storage, and
-  reconnect validation are documented and pending until signed TestFlight or
-  stable distribution exists.
+- Physical iPhone and Android camera, installation, Local Network where
+  applicable, offline storage, and reconnect validation are documented and
+  pending until local/admin-controlled builds exist.
 
 ### M5 - Drills, Skills And Validation
 
@@ -248,17 +249,16 @@ M7 impact audit:
 - M3 is affected only by access control. Location, inventory, and multiple home
   base progression remain the same, but real pilot entry now requires login.
 - M4 is affected operationally. Mobile field-data capture must sign in to the
-  same local account model for v1, and physical iPhone validation remains
-  required before v1.
+  same local account model for v1, and physical iPhone plus Android validation
+  remain required before v1.
 - M5 is affected by evidence portability. Evidence records now support
   deployment-owned storage keys, and portable exports suppress host filesystem
   paths.
 - M6 is affected operationally. Deployment docs now require first-admin account
   creation, optional fallback admin-token setup, and user disable instructions.
-- PostgreSQL API runtime promotion is now complete in M11. v1.0 still needs
-  cloud-pilot backup/restore proof, mobile distribution and field workflow
-  validation, cloud pilot reset/observability controls, and final MVP release
-  criteria.
+- PostgreSQL API runtime promotion and cloud-pilot backup/restore proof are now
+  complete. v1.0 still needs local iOS/Android mobile build and field workflow
+  validation plus final MVP release criteria.
 
 ### M8 - Recovery And Homelab Boundary
 
@@ -294,8 +294,9 @@ M8 impact audit:
   architecture, seed content, quests, scoring, or recommendations.
 - M3 is affected positively. Inventory and location data are now part of the
   restore proof, including user-named home-base data.
-- M4 is affected operationally. Physical iPhone validation still remains for
-  v1, but mobile field data now has a clearer server recovery contract.
+- M4 is affected operationally. Physical iPhone and Android validation still
+  remain for v1, but mobile field data now has a clearer server recovery
+  contract.
 - M5 is affected positively. Evidence metadata and evidence storage bytes are
   both included in the cloud pilot restore proof.
 - M6 is affected operationally. Deployment docs now require
@@ -303,10 +304,9 @@ M8 impact audit:
   inclusion status, and restore drills must verify admin status after restore.
 - M7 is affected operationally. Cloud pilot auth is now explicitly backed up and
   restored through the database backup path.
-- PostgreSQL API runtime promotion is now complete in M11. v1.0 still needs
-  cloud-pilot backup/restore proof, physical iPhone field validation, cloud
-  pilot reset/observability controls, and final MVP release-candidate
-  validation.
+- PostgreSQL API runtime promotion and cloud-pilot backup/restore proof are now
+  complete. v1.0 still needs local iOS/Android build validation, physical mobile
+  field validation, and final MVP release-candidate validation.
 
 ### M9 - MVP Readiness Gate
 
@@ -327,10 +327,11 @@ Primary work:
   requirements, deployment operations, backup/restore, privacy, content, and
   readiness-scoring criteria.
 - Define required validation environments: local machine, clean local
-  environment, cloud pilot, separate server, simulator, physical iPhone, and CI.
-- Seed remaining v1 blocker issues for PostgreSQL, iPhone distribution, mobile
-  field workflows, physical iPhone validation, cloud pilot operations, and final
-  release-candidate validation.
+  environment, cloud pilot, separate server, simulator, physical iPhone,
+  physical Android, and CI.
+- Seed remaining v1 blocker issues for PostgreSQL, local iOS/Android build
+  distribution, mobile field workflows, physical mobile validation, cloud pilot
+  operations, and final release-candidate validation.
 - Link the v1 readiness gate from roadmap, release, verification, and deployment
   documentation.
 
@@ -340,8 +341,8 @@ M9 impact audit:
   inventory, location, and maintenance features remain accepted; v1 criteria now
   define which of those workflows must be smoke-tested before release.
 - M4 is affected operationally. The prior mobile shell remains useful, but v1
-  now requires an installable iPhone build, native field workflows, and physical
-  iPhone validation.
+  now requires locally built iOS and Android artifacts, native field workflows,
+  and physical iPhone plus Android validation.
 - M5 is affected operationally. Drill, skill, evidence, and report workflows
   are now part of the v1 web/mobile validation gate.
 - M6 through M8 are affected operationally. Deployment, auth, backup, restore,
@@ -360,8 +361,8 @@ Outcome:
 - PostgreSQL production-persistence data path exists for the v1 cloud pilot.
 - PostgreSQL migrations, seed import, status checks, and portable SQLite-beta
   import are runnable by an operator.
-- The remaining v1 blocker is narrowed to proving cloud-pilot backup/restore,
-  operations, and release-candidate validation against the PostgreSQL runtime.
+- The remaining PostgreSQL work is narrowed to release-candidate validation
+  evidence against the promoted runtime.
 
 Primary work:
 
@@ -435,10 +436,11 @@ M11 impact audit:
 - M6 through M8 are affected operationally. Deployment docs now show how to run
   the cloud-pilot API against PostgreSQL, and backup status is tied to the
   active database kind instead of assuming SQLite.
-- M9 is affected positively. PostgreSQL API runtime promotion is no longer an
-  open v1 blocker, but cloud-pilot backup/restore proof, iPhone validation,
-  reset/seed controls, observability, and final release-candidate validation
-  remain.
+- M9 is affected by the mobile build correction. PostgreSQL API runtime
+  promotion, cloud-pilot backup/restore proof, and reset/seed/observability
+  controls are closed. The remaining v1 blockers are local iOS/Android build
+  validation, physical mobile validation, and final release-candidate
+  validation.
 
 ### v1.0 - MVP Readiness
 
@@ -448,8 +450,8 @@ Outcome:
 - The web app is the source of truth.
 - Mobile supports practical field workflows.
 - Self-hosting and backups are documented and tested.
-- Server/web deployment and iPhone installation instructions are tested or
-  explicitly validated for the release path.
+- Server/web deployment and iOS/Android mobile installation instructions are
+  tested or explicitly validated for the release path.
 - Validation environments are documented for release-critical workflows.
 
 Primary work:
@@ -457,8 +459,7 @@ Primary work:
 - The v1 gate in [Basecamp v1.0 MVP Readiness](./v1-mvp-readiness.md).
 - Production deployment profiles from ADR 0010: `local-dev`, `cloud-pilot` for
   v1 MVP, and post-MVP `homelab`.
-- PostgreSQL cloud-pilot validation, including backup/restore proof and release
-  candidate evidence against the promoted runtime.
+- PostgreSQL cloud-pilot validation evidence against the promoted runtime.
 - Evidence/document storage hardening beyond the v0.8 portability boundary,
   including filesystem bytes for the v1 cloud pilot and later SAN/NAS or object
   storage options.
@@ -472,23 +473,18 @@ Primary work:
   local username/password baseline, not SSO.
 - Backup/restore proof for database, storage, and admin configuration across
   accepted deployment profiles.
-- Physical iPhone testing for field data capture before v1.
+- Local iOS and Android build proof before v1.
+- Physical iPhone and Android testing for field data capture before v1.
 
 Current blocker map:
 
-- PostgreSQL cloud-pilot validation, including backup/restore proof against the
-  promoted PostgreSQL runtime.
-- Installable iPhone beta distribution path. Expo/EAS/TestFlight configuration
-  exists, but physical iPhone TestFlight install validation is still required.
+- Local iOS and Android app build path. Local artifacts must be produced,
+  installed, and validated on physical devices.
 - Mobile field data capture, offline sync, and evidence upload. Native field
   tabs, storage boundaries, scan/quick-capture queueing, evidence upload, and
-  reconnect sync plumbing exist, but simulator and physical iPhone validation
-  remain required.
-- Physical iPhone field validation.
-- Cloud pilot reset, seed, and observability controls. Guarded API routes,
-  runtime-aware ops commands, explicit confirmation gates, homelab refusal, and
-  local clean-environment coverage exist; cloud-pilot server validation remains
-  required before the blocker can close.
+  reconnect sync plumbing exist, but simulator/emulator and physical iPhone plus
+  Android validation remain required.
+- Physical mobile field validation for iPhone and Android.
 - Final v1 release-candidate validation and release notes.
 
 v1 reset/seed impact audit:
@@ -499,9 +495,9 @@ v1 reset/seed impact audit:
 - M6 through M8 are affected operationally. Deployment and backup docs now
   include guarded reset/seed commands, observability output, backup-before-reset
   guidance, and rollback via restore.
-- M9 through M11 are affected positively. The v1 readiness gate now has local
-  proof for reset/seed/observability controls, while actual cloud-pilot server
-  execution remains an open validation item.
+- M9 through M11 are affected positively. The v1 readiness gate now has proof
+  for reset/seed/observability controls, so that item rolls into final
+  release-candidate evidence instead of remaining a standalone open blocker.
 
 ## Issue Policy
 

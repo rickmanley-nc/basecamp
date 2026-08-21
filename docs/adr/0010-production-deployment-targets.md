@@ -80,8 +80,8 @@ proxy responsibilities are separable from Compose.
   [Basecamp v1.0 MVP Readiness](../product/v1-mvp-readiness.md), which turns
   these deployment profiles into explicit validation gates.
 - v1.0 needs explicit work for PostgreSQL, storage hardening beyond the M7
-  portability boundary, cloud pilot operations, physical iPhone testing, and
-  production-grade validation.
+  portability boundary, cloud pilot operations, local iOS and Android build
+  validation, physical mobile-device testing, and production-grade validation.
 - M7 provides the first cloud pilot local-auth baseline with admin-created
   username/password accounts and no SSO dependency.
 - M8 records deployment profile metadata in backup manifests, restore results,
@@ -92,8 +92,8 @@ proxy responsibilities are separable from Compose.
 - v0.9.2 promotes PostgreSQL API runtime selection through
   `BASECAMP_DATABASE_KIND=postgresql` and `BASECAMP_DATABASE_URL`, while keeping
   SQLite as the default local-dev and beta fallback.
-- PostgreSQL backup status is now database-kind aware, but final PostgreSQL
-  restore drill proof remains part of the v1 backup/restore gate.
+- PostgreSQL backup status is database-kind aware, and v1 release-candidate
+  evidence must link the recorded PostgreSQL backup/restore proof.
 - Cloud-pilot QA reset and seed controls require an explicit enable flag and
   confirmation phrase, preserve local users and audit history, and refuse the
   `homelab` profile so pilot cleanup does not become a future homelab data

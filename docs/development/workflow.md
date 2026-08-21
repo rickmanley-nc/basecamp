@@ -75,21 +75,27 @@ M4 adds mobile/offline sync commands:
 - `pnpm --filter @basecamp/mobile dev`
 - `pnpm --filter @basecamp/mobile start`
 - `pnpm --filter @basecamp/mobile expo:config`
+- `pnpm --filter @basecamp/mobile native:prebuild`
+- `pnpm --filter @basecamp/mobile ios`
+- `pnpm --filter @basecamp/mobile android`
 
 The mobile preview is a local TypeScript app-shell check. The Expo entrypoint
 supports server URL entry, local username/password sign-in, native field tabs,
 Quick Capture queueing, CameraView scan handling, photo/document evidence
 selection, SecureStore token storage, AsyncStorage outbox persistence, evidence
-upload, and reconnect sync attempts. The TestFlight path is configured through
-EAS:
+upload, and reconnect sync attempts.
 
-- `pnpm --filter @basecamp/mobile build:ios:testflight`
-- `pnpm --filter @basecamp/mobile submit:ios:testflight`
+The v1 mobile build path is local/admin-controlled for both iOS and Android:
 
-Physical iPhone checks for TestFlight installation, Camera permission,
-Photos/Documents access, Local Network permission, offline device storage across
-app restart, evidence upload, and reconnect sync remain pending until Apple
-credentials are available and a signed TestFlight build is installed.
+- iOS builds require macOS with the full Xcode app. Xcode command-line tools are
+  not enough.
+- Android builds require Android SDK/JDK tooling and can run on Linux or macOS.
+- Cloud build services are not part of the required v1 path.
+
+Physical iPhone and Android checks for install, Camera permission,
+Photos/Documents access where applicable, Local Network permission where
+applicable, offline device storage across app restart, evidence upload, and
+reconnect sync remain pending until locally produced builds are installed.
 
 M5 adds drills, skills, evidence, and reports:
 
@@ -228,9 +234,9 @@ For product code:
 - Docs or ADRs are updated for architecture changes.
 - Closed roadmap issues have `## Resolution` comments with the specific change,
   validation, and follow-up status.
-- Validation environment is documented, and physical iPhone or separate-server
-  testing is not replaced with local-only testing when the issue requires real
-  device or deployment proof.
+- Validation environment is documented, and physical mobile-device or
+  separate-server testing is not replaced with local-only testing when the issue
+  requires real device or deployment proof.
 
 For content:
 

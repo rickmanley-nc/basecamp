@@ -21,9 +21,9 @@ import {
 export {
   createMobileLoginRequest,
   localLoginEndpoint,
-  mobileBetaDistribution,
+  mobileDistribution,
   normalizeBasecampServerUrl,
-  type MobileInstallChannel,
+  type MobileBuildPath,
   type MobileLoginRequest
 } from "./connection";
 export {
@@ -67,7 +67,7 @@ export interface MobileAppShell {
   appName: "Basecamp Mobile";
   stack: "Expo React Native";
   minimumIosVersion: string;
-  installChannel: "TestFlight configured";
+  buildPath: "local_admin_controlled_ios_android";
   serverUrlSetup: "manual_url_or_pairing_qr";
   screens: MobileScreen[];
   permissions: MobilePermissionPlan[];
@@ -99,7 +99,7 @@ export function createMobileAppShell(
     appName: "Basecamp Mobile",
     stack: "Expo React Native",
     minimumIosVersion: "17.0",
-    installChannel: "TestFlight configured",
+    buildPath: "local_admin_controlled_ios_android",
     serverUrlSetup: "manual_url_or_pairing_qr",
     screens: mobileRoutes.map((route) => screenForRoute(route, summary.inventory, summary.activeQuests)),
     permissions: [

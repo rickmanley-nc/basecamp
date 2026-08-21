@@ -54,9 +54,11 @@ tests/       Cross-package test fixtures and integration tests
 - [Verification Policy](docs/development/verification.md)
 - [Release Process](docs/development/releases.md)
 - [Deployment Guide](docs/ops/deployment.md)
+- [Mobile Build And Installation Guide](docs/ops/mobile-build-and-installation.md)
 - [iPhone Installation Guide](docs/ops/iphone-installation.md)
 - [Self-Hosting And Backups](docs/ops/self-hosting-and-backups.md)
 - [Production Deployment ADR](docs/adr/0010-production-deployment-targets.md)
+- [Local Mobile Build ADR](docs/adr/0011-local-mobile-build-path.md)
 - [Seed Dataset](packages/content/seed/basecamp-seed-v0.json)
 
 ## Current Verified Inputs

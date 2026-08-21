@@ -35,7 +35,7 @@ import {
   createSyncBatchRequest,
   defaultEvidenceLink,
   markMobileSyncFailure,
-  mobileBetaDistribution,
+  mobileDistribution,
   normalizeBasecampServerUrl,
   previewScanWorkflow,
   queueAssetActionCommand,
@@ -56,7 +56,7 @@ import {
 } from "./src/native-storage";
 import { createCommandOutbox, mobileRoutes, type CommandOutbox, type MobileRoute, type ScanWorkflow } from "@basecamp/sync";
 
-const clientId = "iphone-field-client";
+const clientId = "mobile-field-client";
 const generatedAt = "2026-08-21T00:00:00.000Z";
 
 export default function App() {
@@ -493,7 +493,7 @@ export default function App() {
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
             <View>
-              <Text style={styles.eyebrow}>{mobileBetaDistribution.installChannel}</Text>
+              <Text style={styles.eyebrow}>{mobileDistribution.buildPath}</Text>
               <Text style={styles.title}>Basecamp Mobile</Text>
             </View>
             <Text style={styles.statusText}>{status}</Text>

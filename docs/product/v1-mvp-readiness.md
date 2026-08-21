@@ -4,8 +4,8 @@ Last updated: 2026-08-21
 
 This checklist defines when Basecamp is ready to be called a v1 MVP for real
 household preparedness use. It is intentionally stricter than "the app runs":
-v1 must be installable, recoverable, usable from an iPhone in the field, and
-clear about what is still post-MVP.
+v1 must be installable, recoverable, usable from iPhone and Android devices in
+the field, and clear about what is still post-MVP.
 
 ## Release Decision
 
@@ -37,20 +37,24 @@ v1 blockers in known limitations.
 - Admin status, export, import, audit, local user creation, local user disable,
   backup, and restore remain documented and tested.
 
-### Mobile And iPhone Field Use
+### Mobile And Field Use
 
-- A normal pilot user can install Basecamp Mobile through TestFlight or another
-  documented Apple-supported path without Xcode.
-- The iPhone app can connect to the cloud pilot server by manual URL entry or a
+- Basecamp Mobile produces locally built iOS and Android artifacts from
+  admin-controlled build hosts.
+- The iOS app can install on a physical iPhone through an Apple-supported path
+  after a local Xcode build.
+- The Android app can install on a physical Android device from a locally built
+  APK/AAB without depending on Google Play.
+- The mobile app can connect to the cloud pilot server by manual URL entry or a
   documented pairing flow.
-- The iPhone app signs in with the v1 local username/password model; required
+- The mobile app signs in with the v1 local username/password model; required
   SSO is not allowed.
 - Home, Capture, Scan, Quests, Inventory, and Offline screens exist as native
   mobile screens, not only a TypeScript shell preview.
 - Quick Capture can create confirmable field commands for inventory,
   maintenance, drills, skills, failures, and quest progress.
-- Barcode and Basecamp QR scans work with Camera permission on a physical
-  iPhone.
+- Barcode and Basecamp QR scans work with Camera permission on physical iPhone
+  and Android devices.
 - Evidence photo/document capture stores deployment-owned evidence bytes and
   syncs metadata without exposing private device or workstation paths.
 - Offline read data includes active quests, inventory, critical BOMs,
@@ -66,10 +70,9 @@ v1 blockers in known limitations.
   standard security maintenance through May 2027.
 - Ubuntu 24.04 LTS migration remains deferred until the admin explicitly
   requests it.
-- PostgreSQL production persistence and API runtime selection are implemented
-  for the cloud pilot. v1 still requires cloud-pilot validation, including
-  backup/restore proof and release-candidate evidence against the PostgreSQL
-  runtime.
+- PostgreSQL production persistence, API runtime selection, and backup/restore
+  proof are implemented for the cloud pilot. The release candidate must link the
+  recorded cloud-pilot validation evidence for the PostgreSQL runtime.
 - SQLite beta data has a tested or documented migration bridge using portable
   export/import when direct migration is not available.
 - Filesystem evidence/document storage is acceptable for the v1 cloud pilot if
@@ -106,7 +109,8 @@ v1 blockers in known limitations.
   kind, storage kind, table counts, active local user count, storage file count,
   and checksums.
 - PostgreSQL runtime backups include a Basecamp logical database snapshot and a
-  database-native dump until PostgreSQL restore drill proof is complete.
+  database-native dump, and release-candidate notes link the recorded restore
+  proof.
 - Restore drill on the cloud pilot profile proves local users, inventory,
   evidence metadata, evidence file bytes, reports, readiness data, and admin
   status.
@@ -142,25 +146,22 @@ v1 blockers in known limitations.
 | Cloud pilot | Server/web deployment, PostgreSQL path, real-user auth, backup/restore, upgrade/rollback, reset controls. | Deployment profile, release version, OS target, validation commands, and cleanup. |
 | Separate server | Accepted substitute for cloud pilot only when the admin explicitly points it at v1 validation. | Same as cloud pilot, plus why it is accepted. |
 | Simulator | Mobile layout, navigation, pure TypeScript logic, and non-camera smoke checks. | Simulator/device target and scope limits. |
-| Physical iPhone | TestFlight or stable install, Local Network, Camera, Photos, offline storage, scan, field capture, reconnect sync. | iOS version, app build, server URL mode, pass/fail notes, and screenshots when useful. |
+| Physical iPhone | Local Xcode-built install path, Local Network, Camera, Photos, offline storage, scan, field capture, reconnect sync. | iOS version, app build, install path, server URL mode, pass/fail notes, and screenshots when useful. |
+| Physical Android | Locally built APK/AAB install path, Camera, storage behavior, scan, field capture, offline queue, reconnect sync. | Android version, app version code, artifact type, install path, server URL mode, pass/fail notes, and screenshots when useful. |
 | CI | Repository checks on every PR and release candidate. | GitHub Actions run link. |
 
 ## Open v1 Blockers
 
 The v1.0 milestone should remain open until these blockers are complete:
 
-- Installable iPhone beta distribution path. The Expo/EAS/TestFlight path is
-  configured, but the blocker remains open until a TestFlight build is installed
-  and validated on a physical iPhone.
+- Local iOS and Android app build path. The blocker remains open until local
+  iOS and Android artifacts are produced, installed, and validated on physical
+  devices.
 - Mobile field data capture, offline sync, and evidence upload. Native screens,
   local queues, and server upload plumbing exist, but the blocker remains open
-  until simulator and physical iPhone validation prove the implemented behavior.
-- Physical iPhone field validation.
-- PostgreSQL cloud-pilot backup/restore proof and operational validation.
-- Cloud pilot reset, seed, and observability controls. The guarded routes and
-  ops commands exist and are covered by local clean-environment tests, but the
-  blocker remains open until the controls are exercised on the cloud-pilot
-  server when safe.
+  until simulator/emulator plus physical iPhone and Android validation prove the
+  implemented behavior.
+- Physical mobile-device field validation for iPhone and Android.
 - Final v1 release-candidate validation and release notes.
 
 ## Non-Goals For v1.0
@@ -173,4 +174,5 @@ The v1.0 milestone should remain open until these blockers are complete:
 - Mandatory managed cloud services.
 - Mandatory S3-compatible object storage unless the cloud pilot requires it.
 - Ubuntu 24.04 migration before the admin requests it.
-- App Store public release if TestFlight is sufficient for the v1 pilot.
+- App Store or Google Play public release if local/ad hoc/beta installation is
+  sufficient for the v1 pilot.
