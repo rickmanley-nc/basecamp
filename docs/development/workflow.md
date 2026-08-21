@@ -124,6 +124,11 @@ Compose is the M6 single-node reference adapter. Production-readiness work must
 preserve the deployment profiles from ADR 0010: `local-dev`, `cloud-pilot` for
 v1 MVP, and post-MVP `homelab`.
 
+M8 backup/restore work must keep `BASECAMP_DEPLOYMENT_PROFILE` in Compose,
+backup manifests, restore results, and `/api/admin/status`. Restore validation
+should prove local users, inventory, evidence files, reports, and admin status
+after restore.
+
 ## Branches
 
 - `main` should remain releasable.

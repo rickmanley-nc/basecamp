@@ -56,6 +56,13 @@
     "description": "Cloud pilot deployment profile, local username/password auth, evidence storage portability, and first real-user controls."
   },
   {
+    "title": "M8 - Recovery And Homelab Boundary",
+    "state": "closed",
+    "dueOn": "2026-12-24T23:59:59Z",
+    "release": "v0.8.1",
+    "description": "Backup/restore proof, deployment-profile metadata, actionable recovery failure modes, and explicit post-MVP homelab boundary."
+  },
+  {
     "title": "v1.0 - MVP Readiness",
     "state": "open",
     "dueOn": "2027-01-15T23:59:59Z",

@@ -80,6 +80,8 @@ proxy responsibilities are separable from Compose.
   production-grade validation.
 - M7 provides the first cloud pilot local-auth baseline with admin-created
   username/password accounts and no SSO dependency.
+- M8 records deployment profile metadata in backup manifests, restore results,
+  and admin status so recovery evidence follows the same profile boundary.
 - Release notes and issue comments should identify which deployment profile was
   validated.
 - Cloud pilot data must be treated as separate from future homelab data unless an

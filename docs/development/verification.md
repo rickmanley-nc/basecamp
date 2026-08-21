@@ -129,6 +129,11 @@ Every issue resolution comment should state where validation happened:
 - Simulator.
 - CI.
 
+For backup/restore work, the resolution comment should also state the
+deployment profile, release version, whether the manifest included admin config,
+and whether the restore drill verified local users, inventory, evidence files,
+reports, and admin status.
+
 If the ideal environment is not available yet, say so directly and record the
 follow-up milestone or issue that must complete real-device or real-server
 validation.

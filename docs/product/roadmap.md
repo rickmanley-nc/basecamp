@@ -33,6 +33,7 @@ The sync script lives in:
 | `v0.6.0` | M5 - Drills, Skills And Validation | Drills, skill progression, evidence, validation ceilings, reports. | Validated capability outweighs owned gear in scoring. |
 | `v0.7.0+` | M6 - Self-Hosting Beta | Container deployment, backups, restore, release process, security. | Linux self-hosted beta can be installed, backed up, restored, and upgraded. |
 | `v0.8.0` | M7 - Cloud Pilot Foundation | Cloud pilot profile, local auth, evidence storage portability, first real-user controls. | The accepted cloud pilot target can run with local accounts, portable evidence metadata, and documented operator controls. |
+| `v0.8.1` | M8 - Recovery And Homelab Boundary | Backup/restore proof, deployment-profile metadata, and homelab deferral clarity. | Cloud pilot restore can prove real data, users, evidence, reports, admin status, and recoverable failure modes. |
 | `v1.0.0` | v1.0 - MVP Readiness | Complete MVP for real household preparedness use. | Core workflows are usable, tested, documented, and releasable. |
 
 ## Milestone Detail
@@ -251,8 +252,53 @@ M7 impact audit:
   paths.
 - M6 is affected operationally. Deployment docs now require first-admin account
   creation, optional fallback admin-token setup, and user disable instructions.
-- v1.0 still needs PostgreSQL hardening, full physical iPhone validation,
-  restore proof on the claimed release profile, and final MVP release criteria.
+- v1.0 still needs PostgreSQL hardening, full physical iPhone validation, and
+  final MVP release criteria.
+
+### M8 - Recovery And Homelab Boundary
+
+Status: complete once `v0.8.1` is released.
+
+Outcome:
+
+- Cloud pilot backup and restore is proven as an operator-facing recovery
+  workflow, not only a file-copy script.
+- Backup manifests record release version, seed/content version, deployment
+  profile, storage mode, database mode, config inclusion, table counts, local
+  user count, and storage file count.
+- Homelab requirements remain visible as post-MVP work without blocking the
+  cloud pilot MVP path.
+
+Primary work:
+
+- Deployment profile metadata in Compose, backup scripts, manifests, restore
+  results, and admin status.
+- Restore proof test covering local accounts, inventory, evidence files,
+  reports, and admin readiness after restore.
+- Actionable restore failure modes for missing files, checksum mismatch, and
+  non-empty targets.
+- Deployment and backup docs updated for cloud pilot local-disk backups and
+  later homelab SAN/NAS expectations.
+- Issue-resolution discipline maintained with explicit issue comments before
+  closing work.
+
+M8 impact audit:
+
+- M0 through M2 are unaffected functionally. Recovery metadata does not alter
+  architecture, seed content, quests, scoring, or recommendations.
+- M3 is affected positively. Inventory and location data are now part of the
+  restore proof, including user-named home-base data.
+- M4 is affected operationally. Physical iPhone validation still remains for
+  v1, but mobile field data now has a clearer server recovery contract.
+- M5 is affected positively. Evidence metadata and evidence storage bytes are
+  both included in the cloud pilot restore proof.
+- M6 is affected operationally. Deployment docs now require
+  `BASECAMP_DEPLOYMENT_PROFILE`, backup manifests include admin configuration
+  inclusion status, and restore drills must verify admin status after restore.
+- M7 is affected operationally. Cloud pilot auth is now explicitly backed up and
+  restored through the database backup path.
+- v1.0 still needs PostgreSQL production persistence, physical iPhone field
+  validation, and the final MVP readiness checklist.
 
 ### v1.0 - MVP Readiness
 

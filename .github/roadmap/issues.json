@@ -255,7 +255,8 @@
   },
   {
     "title": "Capture post-MVP homelab migration requirements",
-    "milestone": "v1.0 - MVP Readiness",
+    "state": "closed",
+    "milestone": "M8 - Recovery And Homelab Boundary",
     "labels": ["roadmap", "type:docs", "priority:high", "area:infra", "security"],
     "body": "## Outcome\n\nBasecamp keeps homelab requirements visible without making homelab deployment a v1 blocker.\n\n## Acceptance Criteria\n\n- Homelab deployment is explicitly deferred until after the cloud pilot MVP path is proven.\n- Notes capture expected UniFi-managed IP assignment, hostname, DNS, routing, LAN-only stance, future TLS, future SAN/NAS backups, and Ubuntu 24.04 LTS migration when the admin explicitly requests it.\n- Compose is identified as a possible single-node reference adapter, not the architecture boundary.\n- The notes avoid private hostnames, IPs, tokens, or local workstation paths in public text.\n\n## Validation\n\n- Roadmap and deployment docs identify homelab as post-MVP.\n- Resolution comment records that no homelab deployment was performed for v1."
   },
@@ -273,7 +274,8 @@
   },
   {
     "title": "Prove backup and restore across deployment profiles",
-    "milestone": "v1.0 - MVP Readiness",
+    "state": "closed",
+    "milestone": "M8 - Recovery And Homelab Boundary",
     "labels": ["roadmap", "type:testing", "priority:high", "area:infra", "area:database", "security"],
     "body": "## Outcome\n\nBasecamp backup and restore is proven for the v1 cloud pilot profile, with homelab backup destinations captured for later.\n\n## Acceptance Criteria\n\n- Cloud pilot backup covers database, evidence/document storage, admin configuration, release version, seed/content version, and deployment profile metadata.\n- Cloud pilot backups use local disk for v1.\n- Restore drill confirms readiness data, inventory, evidence, reports, users, and admin status after restore.\n- Later homelab SAN/NAS backup expectations are documented but do not block v1.\n- Restore failure modes produce actionable errors.\n\n## Validation\n\n- Restore drill is run on the claimed v1 cloud pilot profile, or the unsupported profile is explicitly excluded from v1 release notes.\n- Resolution comment records exact validation environment and profile."
   },

@@ -95,4 +95,5 @@ Every upgrade note should say:
 - `v0.7.0` - Self-Hosting Beta
 - `v0.7.x` - Self-Hosting Beta patch releases
 - `v0.8.0` - Cloud Pilot Foundation
+- `v0.8.1` - Recovery And Homelab Boundary
 - `v1.0.0` - MVP Readiness

@@ -1,6 +1,7 @@
 import { basecampSeed } from "@basecamp/content";
 import {
   applyMigrations,
+  countActiveLocalUsers,
   createBackup,
   createDatabase,
   disableLocalUser,
@@ -10,6 +11,7 @@ import {
   importSeed,
   listAuditEvents,
   listEvidenceRecords,
+  readBackupManifest,
   readBackupStatus,
   readInventoryState,
   recordAuditEvent,
@@ -20,7 +22,7 @@ import {
   verifyBackup
 } from "@basecamp/database";
 import { buildServer } from "@basecamp/server";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -132,27 +134,73 @@ describe("M6 self-hosting operations", () => {
     database.close();
   });
 
-  it("creates, verifies, reports, and restores a backup bundle", async () => {
+  it("proves a cloud-pilot backup restore with users, inventory, evidence, reports, and admin status", async () => {
     const root = await mkdtemp(path.join(os.tmpdir(), "basecamp-ops-"));
     const databasePath = path.join(root, "data", "basecamp.sqlite");
     const storageDir = path.join(root, "storage");
     const backupDir = path.join(root, "backups");
+    const configPath = path.join(root, "basecamp.env");
     const restoreDatabasePath = path.join(root, "restore", "basecamp.sqlite");
     const restoreStorageDir = path.join(root, "restore-storage");
+    const evidenceStorageKey = "evidence/restore-proof/water-shelf.txt";
 
     mkdirSync(path.dirname(databasePath), { recursive: true });
-    mkdirSync(storageDir, { recursive: true });
-    writeFileSync(path.join(storageDir, "evidence-note.txt"), "field note");
+    mkdirSync(path.dirname(path.join(storageDir, evidenceStorageKey)), { recursive: true });
+    writeFileSync(path.join(storageDir, evidenceStorageKey), "field evidence bytes");
+    writeFileSync(
+      configPath,
+      [
+        "BASECAMP_APP_VERSION=0.8.1",
+        "BASECAMP_AUTH_MODE=local",
+        "BASECAMP_DEPLOYMENT_PROFILE=cloud-pilot",
+        "BASECAMP_REMOTE_ACCESS=lan"
+      ].join("\n")
+    );
 
     const database = createDatabase(databasePath);
 
     applyMigrations(database);
     importSeed(database, basecampSeed);
+    createLocalUser(database, {
+      username: "Admin",
+      password: "correct horse battery staple",
+      displayName: "Basecamp Admin",
+      role: "admin",
+      now: "2026-08-21T00:00:00.000Z"
+    });
+    createLocalUser(database, {
+      username: "former-pilot",
+      password: "correct horse battery staple",
+      displayName: "Former Pilot",
+      role: "member",
+      now: "2026-08-21T00:00:10.000Z"
+    });
+    disableLocalUser(database, "former-pilot", "2026-08-21T00:00:20.000Z");
+    const inventoryEntry = recordQuickInventoryEntry(database, {
+      itemName: "Restore proof water",
+      quantity: 4,
+      unit: "gallon",
+      locationName: "Primary Home Base",
+      categoryId: "water",
+      type: "water_storage"
+    });
+    upsertEvidenceRecord(database, {
+      kind: "photo",
+      title: "Restore proof shelf photo",
+      links: [{ entityType: "inventory_event", entityId: inventoryEntry.event.id }],
+      metadata: {
+        capturedAt: "2026-08-21T00:00:30.000Z",
+        fileName: "water-shelf.txt",
+        mimeType: "text/plain",
+        byteSize: 20,
+        storageKey: evidenceStorageKey
+      }
+    });
     recordAuditEvent(database, {
       action: "backup.test",
       actor: "test",
       result: "success",
-      occurredAt: "2026-08-21T00:00:00.000Z"
+      occurredAt: "2026-08-21T00:00:45.000Z"
     });
     database.close();
 
@@ -160,10 +208,13 @@ describe("M6 self-hosting operations", () => {
       databasePath,
       storageDir,
       backupDir,
-      appVersion: "0.7.2",
+      appVersion: "0.8.1",
       contentSchemaVersion: basecampSeed.schemaVersion,
+      deploymentProfile: "cloud-pilot",
+      configPath,
       now: "2026-08-21T00:01:00.000Z"
     });
+    const manifest = readBackupManifest(backup.backupPath);
     const integrity = verifyBackup(backup.backupPath, "2026-08-21T00:02:00.000Z");
     const status = readBackupStatus(backupDir, {
       now: "2026-08-21T01:01:00.000Z"
@@ -173,16 +224,155 @@ describe("M6 self-hosting operations", () => {
       databasePath: restoreDatabasePath,
       storageDir: restoreStorageDir
     });
+    const restoredDatabase = createDatabase(restoreDatabasePath);
+    const restoredInventory = readInventoryState(restoredDatabase);
+    const restoredEvidence = listEvidenceRecords(restoredDatabase);
+    const server = buildServer({
+      database: restoredDatabase,
+      closeDatabaseOnClose: true,
+      databasePath: restoreDatabasePath,
+      storageDir: restoreStorageDir,
+      backupDir,
+      authMode: "local",
+      appVersion: "0.8.1",
+      deploymentProfile: "cloud-pilot",
+      remoteAccessMode: "lan",
+      webUrl: "http://basecamp.local:8080"
+    });
+    const login = await server.inject({
+      method: "POST",
+      url: "/api/auth/login",
+      payload: { username: "admin", password: "correct horse battery staple" }
+    });
+    const token = login.json().token as string;
+    const dashboard = await server.inject({
+      method: "GET",
+      url: "/api/dashboard",
+      headers: { authorization: `Bearer ${token}` }
+    });
+    const gaps = await server.inject({
+      method: "GET",
+      url: "/api/reports/gaps",
+      headers: { authorization: `Bearer ${token}` }
+    });
+    const adminStatus = await server.inject({
+      method: "GET",
+      url: "/api/admin/status",
+      headers: { authorization: `Bearer ${token}` }
+    });
 
+    expect(manifest).toMatchObject({
+      appVersion: "0.8.1",
+      contentSchemaVersion: basecampSeed.schemaVersion,
+      deployment: {
+        profile: "cloud-pilot",
+        databaseKind: "sqlite",
+        storageKind: "filesystem",
+        backupDestination: "local-disk",
+        configIncluded: true,
+        localUserCount: 1,
+        storageFileCount: 1
+      }
+    });
+    expect(manifest.deployment.tableCounts.local_users).toBe(2);
+    expect(manifest.deployment.tableCounts.inventory_items).toBe(1);
+    expect(manifest.config?.path).toBe("config/basecamp.env");
     expect(integrity.ok).toBe(true);
     expect(status).toMatchObject({
       configured: true,
       ok: true,
       status: "fresh"
     });
-    expect(restored.restoredFiles).toBeGreaterThanOrEqual(2);
+    expect(restored).toMatchObject({
+      manifest: {
+        appVersion: "0.8.1",
+        contentSchemaVersion: basecampSeed.schemaVersion,
+        deployment: {
+          profile: "cloud-pilot",
+          localUserCount: 1,
+          storageFileCount: 1
+        }
+      }
+    });
+    expect(restored.restoredFiles).toBe(2);
     expect(existsSync(restoreDatabasePath)).toBe(true);
-    expect(readFileSync(path.join(restoreStorageDir, "evidence-note.txt"), "utf8")).toBe("field note");
+    expect(countActiveLocalUsers(restoredDatabase)).toBe(1);
+    expect(restoredInventory.items[0]).toMatchObject({ name: "Restore proof water" });
+    expect(restoredEvidence[0]).toMatchObject({ title: "Restore proof shelf photo" });
+    expect(readFileSync(path.join(restoreStorageDir, evidenceStorageKey), "utf8")).toBe("field evidence bytes");
+    expect(login.statusCode).toBe(200);
+    expect(dashboard.statusCode).toBe(200);
+    expect(JSON.stringify(dashboard.json())).toContain("Restore proof water");
+    expect(gaps.statusCode).toBe(200);
+    expect(adminStatus.statusCode).toBe(200);
+    expect(adminStatus.json()).toMatchObject({
+      version: "0.8.1",
+      deployment: { profile: "cloud-pilot" },
+      security: {
+        localAuthMode: "local",
+        localUsersConfigured: true,
+        remoteAccessMode: "lan"
+      }
+    });
+
+    await server.close();
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it("reports actionable backup restore failure modes", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "basecamp-backup-failure-"));
+    const databasePath = path.join(root, "data", "basecamp.sqlite");
+    const storageDir = path.join(root, "storage");
+    const backupDir = path.join(root, "backups");
+    const restoreDatabasePath = path.join(root, "restore", "basecamp.sqlite");
+    const restoreStorageDir = path.join(root, "restore-storage");
+
+    mkdirSync(path.dirname(databasePath), { recursive: true });
+    mkdirSync(storageDir, { recursive: true });
+
+    const database = createDatabase(databasePath);
+
+    applyMigrations(database);
+    importSeed(database, basecampSeed);
+    database.close();
+
+    const backup = createBackup({
+      databasePath,
+      storageDir,
+      backupDir,
+      appVersion: "0.8.1",
+      contentSchemaVersion: basecampSeed.schemaVersion,
+      deploymentProfile: "cloud-pilot",
+      now: "2026-08-21T00:01:00.000Z"
+    });
+
+    restoreBackup({
+      backupPath: backup.backupPath,
+      databasePath: restoreDatabasePath,
+      storageDir: restoreStorageDir
+    });
+
+    expect(() =>
+      restoreBackup({
+        backupPath: backup.backupPath,
+        databasePath: restoreDatabasePath,
+        storageDir: restoreStorageDir
+      })
+    ).toThrow(/Restore target already exists/);
+
+    rmSync(path.join(backup.backupPath, "database", "basecamp.sqlite"), { force: true });
+
+    const integrity = verifyBackup(backup.backupPath, "2026-08-21T00:02:00.000Z");
+
+    expect(integrity.ok).toBe(false);
+    expect(integrity.failures).toContain("Missing backup file: database/basecamp.sqlite");
+    expect(() =>
+      restoreBackup({
+        backupPath: backup.backupPath,
+        databasePath: path.join(root, "broken-restore", "basecamp.sqlite"),
+        storageDir: path.join(root, "broken-storage")
+      })
+    ).toThrow(/Missing backup file: database\/basecamp.sqlite/);
 
     await rm(root, { recursive: true, force: true });
   });
@@ -259,7 +449,8 @@ describe("M6 self-hosting operations", () => {
       storageDir,
       backupDir,
       authMode: "local",
-      appVersion: "0.8.0",
+      appVersion: "0.8.1",
+      deploymentProfile: "cloud-pilot",
       remoteAccessMode: "lan",
       webUrl: "http://basecamp.local:8080"
     });
@@ -348,7 +539,8 @@ describe("M6 self-hosting operations", () => {
     expect(session.statusCode).toBe(200);
     expect(adminStatus.statusCode).toBe(200);
     expect(adminStatus.json()).toMatchObject({
-      version: "0.8.0",
+      version: "0.8.1",
+      deployment: { profile: "cloud-pilot" },
       security: {
         adminTokenConfigured: false,
         localAuthMode: "local",
@@ -382,6 +574,7 @@ describe("M6 self-hosting operations", () => {
     expect(compose).toContain("basecamp_backups");
     expect(compose).not.toContain("env_file:");
     expect(compose).toContain("BASECAMP_APP_VERSION:");
+    expect(compose).toContain("BASECAMP_DEPLOYMENT_PROFILE:");
     expect(compose).toContain("BASECAMP_ADMIN_TOKEN:");
     expect(compose).toContain("BASECAMP_AUTH_MODE:");
     expect(compose).toContain("BASECAMP_REMOTE_ACCESS:");
@@ -389,7 +582,8 @@ describe("M6 self-hosting operations", () => {
     expect(compose).toContain("${BASECAMP_CONFIG_SOURCE");
     expect(envExample).toContain("BASECAMP_ADMIN_TOKEN=change-me");
     expect(envExample).toContain("BASECAMP_AUTH_MODE=local");
-    expect(envExample).toContain("BASECAMP_APP_VERSION=0.8.0");
+    expect(envExample).toContain("BASECAMP_APP_VERSION=0.8.1");
+    expect(envExample).toContain("BASECAMP_DEPLOYMENT_PROFILE=cloud-pilot");
     expect(envExample).toContain("BASECAMP_CONFIG_SOURCE=./basecamp.env");
     expect(envExample).toContain("BASECAMP_REMOTE_ACCESS=lan");
     expect(caddy).toContain("reverse_proxy server:4317");
