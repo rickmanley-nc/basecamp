@@ -118,6 +118,10 @@ Operators must pass the env file explicitly with `--env-file` on every Compose
 command. The backup service mounts `BASECAMP_CONFIG_SOURCE` read-only so the
 admin config can be included in backup manifests without committing secrets.
 
+Compose is the M6 single-node reference adapter. Production-readiness work must
+preserve the deployment profiles from ADR 0010: `local-dev`, `homelab`, and
+`cloud-pilot`.
+
 ## Branches
 
 - `main` should remain releasable.
@@ -140,7 +144,10 @@ Every PR should describe:
 - Accessibility impact.
 - Kaizen/UI boundary impact for web changes.
 - Verification environment used, such as CI, local machine, clean local
-  environment, separate server, simulator, or physical iPhone.
+  environment, homelab, cloud pilot, separate server, simulator, or physical
+  iPhone.
+- Deployment profile affected or validated: `local-dev`, `homelab`,
+  `cloud-pilot`, or not applicable.
 
 Passing roadmap PRs should be squash-merged by the agent by default. The user
 reviews milestone outcomes and releases rather than merging every PR manually.

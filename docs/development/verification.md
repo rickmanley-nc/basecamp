@@ -25,6 +25,20 @@ Clean local environment:
 - Required when the acceptance criteria say a workflow must be followed from a
   fresh environment.
 
+Homelab:
+
+- Intended production-like target for real household data on an
+  admin-controlled home network.
+- Validation should prove install, upgrade, backup, restore, LAN/VPN or secure
+  reverse proxy access, and iPhone pairing when those workflows are in scope.
+
+Cloud pilot:
+
+- Acceptable for testing with real users outside a local developer machine.
+- Must use isolated pilot data, stronger authentication expectations, and a
+  documented reset/seed path.
+- Must not depend on or expose private homelab data.
+
 Separate server:
 
 - Acceptable when the admin provides access to a test server.
@@ -60,6 +74,8 @@ comments:
 - Desired backup path.
 - Remote access stance: LAN-only, VPN, or reverse proxy.
 - TLS/DNS constraints if remote access is in scope.
+- Deployment profile: `homelab` or `cloud-pilot`.
+- Whether test data is isolated from real homelab data.
 - Whether test data can be destroyed after validation.
 
 Secrets, private keys, passwords, tokens, and one-time codes must be exchanged
@@ -90,6 +106,8 @@ Every issue resolution comment should state where validation happened:
 
 - Local machine.
 - Clean local environment.
+- Homelab.
+- Cloud pilot.
 - Separate server.
 - Physical iPhone.
 - Simulator.

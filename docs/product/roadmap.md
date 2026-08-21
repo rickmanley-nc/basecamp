@@ -221,6 +221,21 @@ Outcome:
   explicitly validated for the release path.
 - Validation environments are documented for release-critical workflows.
 
+Primary work:
+
+- MVP readiness criteria and non-goals.
+- Production deployment profiles from ADR 0010: `local-dev`, `homelab`, and
+  `cloud-pilot`.
+- PostgreSQL production persistence path.
+- Evidence/document storage abstraction with a filesystem path for homelab and
+  an S3-compatible path for cloud pilot when needed.
+- Homelab deployment profile and validation runbook.
+- Cloud pilot deployment profile for real-user testing with isolated pilot data,
+  reset/seed controls, logs/metrics, and no dependence on private homelab data.
+- Production authentication and secret-management baseline.
+- Backup/restore proof for database, storage, and admin configuration across
+  accepted deployment profiles.
+
 ## Issue Policy
 
 Issues should be small enough to review but large enough to produce a meaningful

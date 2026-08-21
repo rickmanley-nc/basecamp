@@ -3,15 +3,27 @@
 Last updated: 2026-08-21
 
 Basecamp must run on a self-hosted Linux server and remain useful over a local
-network without internet access.
+network without internet access. The primary real deployment target is an
+admin-controlled homelab on a home network. A separate cloud pilot target can be
+used for testing with real users.
 
 The operator install path lives in [Deployment Guide](./deployment.md). Backup
 and restore steps must be included there before the self-hosting beta milestone
 can close.
 
-## Deployment Targets
+## Deployment Profiles
 
-M6 beta target:
+Basecamp separates deployment profiles from the application architecture:
+
+- `local-dev`: contributor machine, local SQLite, fast iteration, and no
+  production claims.
+- `homelab`: admin-controlled home network deployment for real household data.
+  This is the primary product target.
+- `cloud-pilot`: cloud server for real-user testing with isolated pilot data,
+  stronger authentication expectations, logs/metrics, and an explicit reset
+  path.
+
+M6 reference adapter:
 
 - Linux host.
 - Containerized `apps/web`, `apps/server`, persistent SQLite database volume,
@@ -20,14 +32,16 @@ M6 beta target:
 - Local DNS name or stable LAN IP.
 - Optional VPN for remote access.
 
-Avoid mandatory SaaS dependencies for normal operation.
+Avoid mandatory SaaS dependencies for normal homelab operation.
 
 PostgreSQL remains the later production target. The M6 beta uses SQLite because
-that is the implemented application persistence layer.
+that is the implemented application persistence layer. The cloud pilot profile
+should move PostgreSQL, stronger authentication, and clearer reset/seed controls
+from later ideas into v1.0 readiness work.
 
 ## Runtime Services
 
-Initial services:
+Current M6 services:
 
 - Web application.
 - API/sync server.
@@ -38,6 +52,8 @@ Initial services:
 
 Future services:
 
+- PostgreSQL database for production/pilot.
+- Object storage adapter for cloud pilot evidence/documents.
 - Background worker.
 - Search index.
 - Notification/reminder worker.
@@ -61,11 +77,13 @@ After deployment, Basecamp must not depend on external network access for:
 Back up:
 
 - SQLite database.
+- PostgreSQL database when the production adapter exists.
 - Evidence/photo/document files.
 - Configuration.
 - Encryption keys or documented key recovery material if added.
 - Release version.
 - Seed/content version.
+- Deployment profile and restore target notes.
 
 ## Backup Policy
 
@@ -115,7 +133,10 @@ pnpm ops:import
 ## Open Decisions
 
 - Backup encryption mechanism.
-- PostgreSQL adapter timing.
-- Whether embedded object storage is needed after filesystem storage.
+- PostgreSQL adapter timing for homelab and cloud pilot readiness.
+- Whether embedded object storage is needed after filesystem storage, and what
+  S3-compatible contract is required for cloud pilot.
+- Cloud pilot reset/seed data controls.
+- Production authentication boundary for homelab and cloud pilot.
 - Restore UX for non-technical users.
 - Remote access guidance: VPN-first, reverse proxy, or both.

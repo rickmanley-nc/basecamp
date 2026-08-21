@@ -4,7 +4,8 @@ Date: 2026-08-21
 
 ## Status
 
-Accepted for M6.
+Accepted for M6. Qualified by
+[ADR 0010: Production Deployment Targets And Profiles](./0010-production-deployment-targets.md).
 
 ## Context
 
@@ -17,7 +18,8 @@ upgrade, and validate without pretending the PostgreSQL adapter already exists.
 
 The M6 self-hosting beta runs the web app, API server, reverse proxy, persistent
 SQLite database volume, persistent evidence/storage volume, and backup service
-through Docker Compose.
+through Docker Compose. Compose is the M6 reference single-node deployment
+adapter, not the long-term production architecture.
 
 The server keeps using SQLite for M6. The Compose stack treats the SQLite file
 and storage directory as persistent operational data, and the backup/export
@@ -45,4 +47,5 @@ multi-user authorization are still future work.
 Introduce a PostgreSQL adapter after the domain model and operational backup
 contract settle. The portable JSON/CSV export and import baseline created in M6
 is the migration bridge from SQLite beta deployments to future PostgreSQL
-deployments.
+deployments. v1.0 planning separates the homelab profile from the cloud pilot
+profile so real home data is not mixed with test-user data.

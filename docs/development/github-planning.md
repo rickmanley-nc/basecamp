@@ -211,6 +211,7 @@ Release tags use semver:
 - `v0.5.0`: mobile and offline sync.
 - `v0.6.0`: drills, skills, validation.
 - `v0.7.0`: self-hosting beta.
+- `v0.7.x`: self-hosting beta patch releases.
 - `v1.0.0`: MVP readiness.
 
 Patch releases are for corrections inside a milestone, such as `v0.2.1`.

@@ -15,6 +15,10 @@ reports, and the first self-hosting beta artifacts. Current work is still early,
 but Basecamp can now be run locally, packaged through Docker Compose, backed up,
 restored, exported, and imported for beta review.
 
+Docker Compose is the current single-node reference adapter. The production
+deployment architecture targets homelab and cloud-pilot profiles with separable
+web, API, database, storage, secrets, backup, restore, and proxy responsibilities.
+
 ## Repository Map
 
 ```text
@@ -49,6 +53,7 @@ tests/       Cross-package test fixtures and integration tests
 - [Deployment Guide](docs/ops/deployment.md)
 - [iPhone Installation Guide](docs/ops/iphone-installation.md)
 - [Self-Hosting And Backups](docs/ops/self-hosting-and-backups.md)
+- [Production Deployment ADR](docs/adr/0010-production-deployment-targets.md)
 - [Seed Dataset](packages/content/seed/basecamp-seed-v0.json)
 
 ## Current Verified Inputs
