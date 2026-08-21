@@ -1,7 +1,7 @@
 # @basecamp/gamification
 
-Progression, XP, badges, outposts, milestones, recommendations, and readiness
-scoring.
+Progression, XP, badges, capability outposts, milestones, recommendations, and
+readiness scoring.
 
 The scoring model must prevent high readiness from being earned by purchasing
 equipment alone. Validated real-world capability should outweigh owned but
@@ -14,4 +14,7 @@ M2 owns:
 - Recommendation scoring that suppresses deferred categories.
 - Category progression path generation.
 - XP caps for purchase-only actions.
-- Badge, outpost, and milestone progress calculation.
+- Badge, capability outpost, and milestone progress calculation.
+
+Capability outposts are gamified category achievements. Physical location
+outposts belong to the inventory and location progression model.

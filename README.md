@@ -27,7 +27,7 @@ packages/
   api/           API contracts and client libraries
   ui/            Basecamp UI system and Kaizen adapter boundary
   content/       Structured curriculum, quests, badges, milestones, and seed content
-  gamification/  XP, scoring, badges, outposts, milestones, and unlock logic
+  gamification/  XP, scoring, badges, capability outposts, milestones, and unlock logic
   sync/          Offline sync and conflict-resolution primitives
 infra/       Linux self-hosting, containers, backups, and operations
 docs/        Product, architecture, UI, operations, and development docs

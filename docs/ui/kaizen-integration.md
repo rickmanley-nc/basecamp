@@ -70,7 +70,7 @@ Basecamp owns:
 - Progress maps.
 - Readiness gauges.
 - Quest nodes.
-- Badge and outpost visuals.
+- Badge and capability outpost visuals.
 - Category visual identities.
 - Equipment status visualizations.
 

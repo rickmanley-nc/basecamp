@@ -29,9 +29,21 @@ Multiple locations may reach `home_base` maturity. Location maturity is derived
 from inventory, kits, durable assets, maintenance, quests, evidence, drills, and
 category readiness at that location.
 
-Physical location outposts and gamified category outpost achievements are
-separate concepts. They may link to each other when a validated category
+Physical location outposts and gamified category capability outpost achievements
+are separate concepts. They may link to each other when a validated category
 capability exists at a specific place.
+
+## Impact On Previous Milestones
+
+- M0 architecture language remains valid but should name gamified achievements
+  as capability outposts when the distinction matters.
+- M1 seed content keeps the `outposts` collection for category capability
+  achievement templates. Those records are not physical places.
+- M2 progression paths should emit `capability_outpost` nodes, and dashboard
+  summaries should expose capability outpost progress separately from future
+  location maturity.
+- No M0-M2 SQLite migration currently stores physical locations, so M3 can add
+  location maturity without a data migration conflict.
 
 ## Consequences
 

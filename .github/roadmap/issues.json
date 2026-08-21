@@ -23,7 +23,7 @@
     "title": "Add structured content validation for seed data",
     "milestone": "M1 - Running Vertical Slice",
     "labels": ["roadmap", "type:testing", "priority:high", "area:content"],
-    "body": "## Outcome\n\nSeed content is validated beyond basic JSON parsing so broken quests, categories, levels, dependencies, badges, outposts, and milestones fail CI.\n\n## Acceptance Criteria\n\n- Validator checks IDs, references, duplicate IDs, required fields, and dependency targets.\n- Validator checks quests have validation criteria.\n- Validator runs through `pnpm check`.\n- Errors are readable for content authors.\n\n## Validation\n\n- Add at least one fixture or targeted test for invalid content."
+    "body": "## Outcome\n\nSeed content is validated beyond basic JSON parsing so broken quests, categories, levels, dependencies, badges, capability outposts, and milestones fail CI.\n\n## Acceptance Criteria\n\n- Validator checks IDs, references, duplicate IDs, required fields, and dependency targets.\n- Validator checks quests have validation criteria.\n- Validator runs through `pnpm check`.\n- Errors are readable for content authors.\n\n## Validation\n\n- Add at least one fixture or targeted test for invalid content."
   },
   {
     "title": "Select web and server framework stack ADR",
@@ -83,7 +83,7 @@
     "title": "Implement category progression paths",
     "milestone": "M2 - Readiness And Quest Core",
     "labels": ["roadmap", "type:feature", "priority:high", "area:web", "area:domain", "area:ui", "accessibility"],
-    "body": "## Outcome\n\nEach category can display a progression path with levels, nodes, node states, and accessible fallback navigation.\n\n## Acceptance Criteria\n\n- Path nodes represent accomplishments, skills, builds, tests, drills, milestones, and outposts.\n- Node states include completed, current, available, locked, deferred, failed validation, and maintenance required.\n- Keyboard/screen-reader usable list representation exists.\n\n## Validation\n\n- Tests or story fixtures cover core node states."
+    "body": "## Outcome\n\nEach category can display a progression path with levels, nodes, node states, and accessible fallback navigation.\n\n## Acceptance Criteria\n\n- Path nodes represent accomplishments, skills, builds, tests, drills, milestones, and capability outposts.\n- Node states include completed, current, available, locked, deferred, failed validation, and maintenance required.\n- Keyboard/screen-reader usable list representation exists.\n\n## Validation\n\n- Tests or story fixtures cover core node states."
   },
   {
     "title": "Implement dependency graph resolver",
@@ -104,10 +104,10 @@
     "body": "## Outcome\n\nBasecamp recommends a small set of useful next choices while preserving user control.\n\n## Acceptance Criteria\n\n- Recommendations consider probability, consequence, capability gap, dependency importance, friction, user interests, deferred categories, downstream unlocks, and quick wins.\n- Output can show best risk reduction, quick win, build project, skill, drill, or maintenance.\n- Recommendation does not automatically activate a quest.\n\n## Validation\n\n- Tests cover deferred category suppression and quick-win ranking."
   },
   {
-    "title": "Implement XP, badge, outpost, and milestone progress v1",
+    "title": "Implement XP, badge, capability outpost, and milestone progress v1",
     "milestone": "M2 - Readiness And Quest Core",
     "labels": ["roadmap", "type:feature", "priority:medium", "area:gamification", "area:content"],
-    "body": "## Outcome\n\nBasecamp tracks motivational progress without confusing XP with readiness.\n\n## Acceptance Criteria\n\n- XP events are recorded with source and reason.\n- Badge tier progress can be calculated from seed definitions.\n- Outpost and milestone requirements can be evaluated.\n- Purchase-only actions earn limited XP.\n\n## Validation\n\n- Tests cover badge progress and outpost requirement evaluation."
+    "body": "## Outcome\n\nBasecamp tracks motivational progress without confusing XP with readiness.\n\n## Acceptance Criteria\n\n- XP events are recorded with source and reason.\n- Badge tier progress can be calculated from seed definitions.\n- Capability outpost and milestone requirements can be evaluated.\n- Purchase-only actions earn limited XP.\n\n## Validation\n\n- Tests cover badge progress and capability outpost requirement evaluation."
   },
   {
     "title": "Implement category hold and defer controls",
@@ -119,7 +119,7 @@
     "title": "Implement inventory, location progression, assets, kits, and QR tag data model",
     "milestone": "M3 - Inventory, BOMs And Maintenance",
     "labels": ["roadmap", "type:feature", "priority:high", "area:database", "area:domain"],
-    "body": "## Outcome\n\nBasecamp can represent consumables, durable assets, user-named locations, location progression, kits/loadouts, and Basecamp QR asset tags.\n\n## Acceptance Criteria\n\n- Model covers inventory items, lots, assets, locations, location hierarchy, location readiness, kits, kit items, and asset tags.\n- Locations can be named by the user and can progress independently from known location to stash, outpost, basecamp, and home base.\n- Multiple locations can reach home base maturity.\n- Physical outpost locations are distinct from, but linkable to, gamified category outpost achievements.\n- States include owned, located, installed, configured, tested, in service, maintenance due, failed, retired, and expired.\n- Inventory events are modeled rather than only overwriting totals.\n\n## Validation\n\n- Migration and model tests cover core inventory scenarios and location progression scenarios."
+    "body": "## Outcome\n\nBasecamp can represent consumables, durable assets, user-named locations, location progression, kits/loadouts, and Basecamp QR asset tags.\n\n## Acceptance Criteria\n\n- Model covers inventory items, lots, assets, locations, location hierarchy, location readiness, kits, kit items, and asset tags.\n- Locations can be named by the user and can progress independently from known location to stash, outpost, basecamp, and home base.\n- Multiple locations can reach home base maturity.\n- Physical outpost locations are distinct from, but linkable to, gamified category capability outpost achievements.\n- States include owned, located, installed, configured, tested, in service, maintenance due, failed, retired, and expired.\n- Inventory events are modeled rather than only overwriting totals.\n\n## Validation\n\n- Migration and model tests cover core inventory scenarios and location progression scenarios."
   },
   {
     "title": "Implement BOM and acquisition rollup v1",
