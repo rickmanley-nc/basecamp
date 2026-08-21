@@ -19,6 +19,7 @@ const requiredFiles = [
   "docs/development/workflow.md",
   "docs/development/github-planning.md",
   "docs/development/privacy-and-portability.md",
+  "docs/development/verification.md",
   "docs/development/releases.md",
   "docs/ops/deployment.md",
   "docs/ops/iphone-installation.md",

@@ -117,6 +117,7 @@ Primary work:
 
 - Mobile app foundation.
 - iPhone install documentation for non-developer users.
+- Physical iPhone testing instructions for camera, offline, and sync behavior.
 - Quick Capture command parser v1.
 - Barcode and QR scanning.
 - Offline read model.
@@ -151,6 +152,7 @@ Primary work:
 
 - Docker Compose deployment.
 - Operator deployment guide for server/web install.
+- Local-machine, clean-environment, and admin-provided server validation paths.
 - Backup and restore automation.
 - Release packaging.
 - Security hardening.
@@ -167,6 +169,7 @@ Outcome:
 - Self-hosting and backups are documented and tested.
 - Server/web deployment and iPhone installation instructions are tested or
   explicitly validated for the release path.
+- Validation environments are documented for release-critical workflows.
 
 ## Issue Policy
 
@@ -177,6 +180,7 @@ product increment. Each issue should include:
 - Scope.
 - Acceptance criteria.
 - Validation.
+- Expected validation environment when local-only testing is not enough.
 - Links to relevant architecture docs.
 
 Issue labels should identify:
