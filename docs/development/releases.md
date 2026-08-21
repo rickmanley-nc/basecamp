@@ -32,6 +32,7 @@ project clearer.
 For installable self-hosting releases, also run:
 
 ```bash
+docker compose -f infra/compose.yml --env-file infra/basecamp.env.example config --quiet
 pnpm ops:release-check
 pnpm ops:security-check
 pnpm ops:backup
@@ -40,6 +41,11 @@ pnpm ops:export
 
 Run `pnpm ops:restore` against a disposable restore target before calling the
 release self-hosting ready.
+
+When a patch changes deployment behavior, audit previous milestone docs,
+operator runbooks, release notes, and the open v1.0 criteria before starting the
+next milestone. Record whether earlier milestones are unaffected or need
+follow-up work.
 
 ## Upgrade Notes Checklist
 
@@ -84,4 +90,5 @@ Every upgrade note should say:
 - `v0.5.0` - Mobile And Offline Sync
 - `v0.6.0` - Drills, Skills And Validation
 - `v0.7.0` - Self-Hosting Beta
+- `v0.7.1+` - Self-Hosting Beta patch releases
 - `v1.0.0` - MVP Readiness

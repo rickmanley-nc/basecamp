@@ -44,15 +44,25 @@ Edit `infra/basecamp.env` before startup:
 - Set `BASECAMP_PUBLIC_URL` to the LAN or reverse-proxy URL.
 - Set `BASECAMP_WEB_URL` to the web URL if different.
 - Replace `BASECAMP_ADMIN_TOKEN` with a random secret generated outside git.
+- Keep `BASECAMP_CONFIG_SOURCE=./basecamp.env` when the file lives in
+  `/opt/basecamp/infra`; set it to an absolute host path such as
+  `/etc/basecamp/basecamp.env` when config is stored outside the release tree.
 - Keep `BASECAMP_REMOTE_ACCESS=lan` unless a VPN or secure reverse proxy is
   configured.
+
+The real env file is intentionally ignored by git and is not loaded through a
+service-level Compose `env_file` entry. Pass it explicitly with
+`--env-file basecamp.env` on every Compose command. If the file lives at
+`/etc/basecamp/basecamp.env`, use `--env-file /etc/basecamp/basecamp.env`
+instead.
 
 Start:
 
 ```bash
 cd /opt/basecamp/infra
+docker compose --env-file basecamp.env config --quiet
 docker compose --env-file basecamp.env up -d --build
-docker compose ps
+docker compose --env-file basecamp.env ps
 ```
 
 Open:
@@ -100,6 +110,10 @@ docker compose --env-file basecamp.env run --rm backup pnpm ops:backup
 
 The backup service also runs `pnpm ops:backup` on
 `BASECAMP_BACKUP_INTERVAL_SECONDS`, which defaults to daily.
+
+The backup container mounts `BASECAMP_CONFIG_SOURCE` read-only at
+`/etc/basecamp/basecamp.env` and sets `BASECAMP_CONFIG_PATH` so the backup
+manifest can include the admin configuration file. Do not publish that file.
 
 Check backup status:
 
@@ -172,6 +186,7 @@ Command outline:
 
 ```bash
 cd /opt/basecamp/infra
+docker compose --env-file basecamp.env config --quiet
 docker compose --env-file basecamp.env pull
 docker compose --env-file basecamp.env up -d --build
 docker compose --env-file basecamp.env ps
@@ -231,8 +246,8 @@ issues, pull requests, releases, comments, or tracked files.
 
 ## Troubleshooting
 
-- If `server` is unhealthy, inspect `docker compose logs server` and confirm the
-  database and storage volumes are writable.
+- If `server` is unhealthy, inspect `docker compose --env-file basecamp.env logs
+  server` and confirm the database and storage volumes are writable.
 - If `proxy` is unhealthy, confirm `server` and `web` are healthy first.
 - If backup status is missing, run a manual backup and recheck
   `/api/admin/status`.

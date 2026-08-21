@@ -12,6 +12,9 @@ Local machine:
 
 - Acceptable for repository checks, unit tests, type checks, web/server local
   preview, seed import, local SQLite development, and early workflow smoke tests.
+- Acceptable for Docker Compose config validation when the Docker Compose plugin
+  is installed, because `docker compose ... config --quiet` does not prove a
+  running deployment.
 - Commands should be repo-relative and portable.
 - Public notes must not include personal workstation paths.
 
@@ -51,6 +54,8 @@ comments:
 - LAN address or DNS name.
 - SSH access method and whether `sudo` is available.
 - Whether Docker Engine and Docker Compose are already installed.
+- Whether `docker compose --env-file <env-file> config --quiet` passes before
+  starting services.
 - Desired persistent data path.
 - Desired backup path.
 - Remote access stance: LAN-only, VPN, or reverse proxy.

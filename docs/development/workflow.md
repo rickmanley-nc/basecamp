@@ -92,6 +92,7 @@ suggestions and skill expiration impacts are covered by local tests.
 
 M6 adds self-hosting beta operations:
 
+- `docker compose -f infra/compose.yml --env-file infra/basecamp.env.example config --quiet`
 - `pnpm ops:release-check`
 - `pnpm ops:security-check`
 - `pnpm ops:backup`
@@ -111,6 +112,11 @@ M6 server health/admin routes:
 Admin routes require `BASECAMP_ADMIN_TOKEN`. Self-hosting validation should use
 the Deployment Guide and report whether it ran locally, in a clean container
 environment, or on a separate server.
+
+The self-hosting Compose stack does not use service-level `env_file` entries.
+Operators must pass the env file explicitly with `--env-file` on every Compose
+command. The backup service mounts `BASECAMP_CONFIG_SOURCE` read-only so the
+admin config can be included in backup manifests without committing secrets.
 
 ## Branches
 
