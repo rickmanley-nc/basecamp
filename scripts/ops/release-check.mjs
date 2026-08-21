@@ -21,6 +21,10 @@ const requiredFiles = [
   "packages/database/scripts/postgres-migrate.ts",
   "packages/database/scripts/postgres-import.ts",
   "packages/database/scripts/postgres-status.ts",
+  "packages/database/src/connection.ts",
+  "packages/database/src/runtime.ts",
+  "packages/database/src/postgres-sync.ts",
+  "packages/database/src/postgres-sync-worker.js",
   "packages/database/scripts/create-user.ts",
   "packages/database/scripts/disable-user.ts"
 ];
@@ -64,6 +68,7 @@ for (const variable of [
   "BASECAMP_ADMIN_TOKEN",
   "BASECAMP_AUTH_MODE",
   "BASECAMP_DEPLOYMENT_PROFILE",
+  "BASECAMP_DATABASE_KIND",
   "BASECAMP_REMOTE_ACCESS",
   "BASECAMP_CONFIG_PATH"
 ]) {
@@ -84,6 +89,7 @@ for (const variable of [
   "BASECAMP_ADMIN_TOKEN",
   "BASECAMP_AUTH_MODE",
   "BASECAMP_DEPLOYMENT_PROFILE",
+  "BASECAMP_DATABASE_KIND",
   "BASECAMP_CONFIG_SOURCE",
   "BASECAMP_POSTGRES_DB",
   "BASECAMP_POSTGRES_USER",

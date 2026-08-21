@@ -1,12 +1,10 @@
 import {
   applyMigrations,
-  createDatabase,
   createLocalUser,
-  ensureDatabaseDirectory,
+  createRuntimeDatabase,
   recordAuditEvent
 } from "../src/index";
 
-const databasePath = requiredEnv("BASECAMP_DB_PATH", "var/basecamp-dev.sqlite");
 const username = requiredEnv("BASECAMP_USER_USERNAME", "");
 const password = requiredEnv("BASECAMP_USER_PASSWORD", "");
 const displayName = process.env.BASECAMP_USER_DISPLAY_NAME;
@@ -20,9 +18,7 @@ if (password.length === 0) {
   throw new Error("BASECAMP_USER_PASSWORD is required.");
 }
 
-await ensureDatabaseDirectory(databasePath);
-
-const database = createDatabase(databasePath);
+const { database } = await createRuntimeDatabase();
 
 try {
   applyMigrations(database);

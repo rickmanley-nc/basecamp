@@ -68,9 +68,10 @@ Active milestone order:
 8. M8 - Recovery And Homelab Boundary
 9. M9 - MVP Readiness Gate
 10. M10 - PostgreSQL Production Persistence Path
-11. v1.0 - MVP Readiness
+11. M11 - PostgreSQL API Runtime
+12. v1.0 - MVP Readiness
 
-M0 through M10 are historical after their corresponding releases.
+M0 through M11 are historical after their corresponding releases.
 
 ## Autonomous Delivery Mode
 
@@ -220,6 +221,7 @@ Release tags use semver:
 - `v0.8.1`: recovery and homelab boundary.
 - `v0.9.0`: MVP readiness gate.
 - `v0.9.1`: PostgreSQL production persistence path.
+- `v0.9.2`: PostgreSQL API runtime.
 - `v1.0.0`: MVP readiness.
 
 Patch releases are for corrections inside a milestone, such as `v0.2.1`.

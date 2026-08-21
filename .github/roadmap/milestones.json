@@ -77,6 +77,13 @@
     "description": "PostgreSQL migration, seed import, status, portable SQLite-beta import bridge, and validation profile."
   },
   {
+    "title": "M11 - PostgreSQL API Runtime",
+    "state": "closed",
+    "dueOn": "2027-01-08T23:59:59Z",
+    "release": "v0.9.2",
+    "description": "PostgreSQL-backed API runtime selection, admin status, local-user ops, export/import, and CI runtime smoke validation."
+  },
+  {
     "title": "v1.0 - MVP Readiness",
     "state": "open",
     "dueOn": "2027-01-15T23:59:59Z",

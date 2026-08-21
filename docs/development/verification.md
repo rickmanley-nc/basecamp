@@ -57,8 +57,8 @@ Cloud pilot:
   data or passwords are used.
 - PostgreSQL production-persistence validation may use the optional Compose
   `postgres` profile or an admin-provided PostgreSQL server. Record whether the
-  validation covered migrations only, portable SQLite import, or a promoted API
-  runtime adapter.
+  validation covered migrations only, portable SQLite import, promoted API
+  runtime behavior, runtime backup status, or restore drill proof.
 
 Separate server:
 
@@ -147,15 +147,24 @@ follow-up milestone or issue that must complete real-device or real-server
 validation.
 
 For PostgreSQL persistence work, acceptable validation includes the
-`PostgreSQL persistence validation` GitHub Actions job plus local or
-cloud-pilot checks when the environment is available. Local validation includes:
+`PostgreSQL persistence and runtime validation` GitHub Actions job plus local or
+cloud-pilot checks when the environment is available. Runtime work must include
+the API smoke test, not only migration/import commands. Local validation
+includes:
 
 ```bash
 docker compose -f infra/compose.yml --profile postgres --env-file infra/basecamp.env.example config --quiet
 pnpm ops:postgres:migrate
 pnpm ops:postgres:status
 pnpm ops:postgres:import
+BASECAMP_DATABASE_KIND=postgresql pnpm test tests/postgres-server-runtime.test.ts
+BASECAMP_DATABASE_KIND=postgresql pnpm ops:export
+BASECAMP_DATABASE_KIND=postgresql pnpm ops:backup
+BASECAMP_DATABASE_KIND=postgresql BASECAMP_USER_USERNAME=<user> BASECAMP_USER_PASSWORD=<password> pnpm ops:user:create
+BASECAMP_DATABASE_KIND=postgresql BASECAMP_USER_USERNAME=<user> pnpm ops:user:disable
 ```
 
 `pnpm ops:postgres:*` commands require `BASECAMP_DATABASE_URL` or
-`DATABASE_URL`; use a disposable PostgreSQL database for local checks.
+`DATABASE_URL`; PostgreSQL runtime commands also require that connection string.
+Use a disposable PostgreSQL database for local checks unless the issue
+explicitly targets the cloud pilot server.

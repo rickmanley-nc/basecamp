@@ -87,8 +87,12 @@ proxy responsibilities are separable from Compose.
   and admin status so recovery evidence follows the same profile boundary.
 - v0.9.1 provides PostgreSQL production-persistence migration, seed, status, and
   portable SQLite import commands, plus an optional Compose `postgres` profile
-  for validation. The API server still defaults to SQLite until the PostgreSQL
-  runtime adapter is promoted.
+  for validation.
+- v0.9.2 promotes PostgreSQL API runtime selection through
+  `BASECAMP_DATABASE_KIND=postgresql` and `BASECAMP_DATABASE_URL`, while keeping
+  SQLite as the default local-dev and beta fallback.
+- PostgreSQL backup status is now database-kind aware, but final PostgreSQL
+  restore drill proof remains part of the v1 backup/restore gate.
 - Release notes and issue comments should identify which deployment profile was
   validated.
 - Cloud pilot data must be treated as separate from future homelab data unless an

@@ -11,10 +11,10 @@ Responsibilities:
 - Local-network availability with no mandatory SaaS dependency.
 - Backup, restore, export, audit, and health endpoints.
 
-The v0.9.x server runtime still defaults to the SQLite beta store through
-`BASECAMP_DB_PATH`. PostgreSQL migrations, seed import, portable import, and
-status checks live in `@basecamp/database`; promoting the API runtime adapter to
-PostgreSQL remains a v1 blocker.
+The server runtime defaults to the SQLite beta store through `BASECAMP_DB_PATH`.
+For the v1 cloud pilot, set `BASECAMP_DATABASE_KIND=postgresql` and
+`BASECAMP_DATABASE_URL` so the API server, local-user ops, admin status,
+portable export/import, and runtime backup status use PostgreSQL.
 
 ## Local Routes
 

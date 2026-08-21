@@ -42,6 +42,7 @@ import {
   readAssetWithTags,
   readHouseholdProgress,
   readInventoryState,
+  databaseKind,
   recordAuditEvent,
   recordXpEvent,
   applySyncCommandBatch,
@@ -53,7 +54,9 @@ import {
   setCategoryPursuit,
   upsertEvidenceRecord,
   verifyLocalUserPassword,
-  upsertMaintenancePolicy
+  upsertMaintenancePolicy,
+  type BasecampDatabase,
+  type DatabaseKind
 } from "@basecamp/database";
 import { questActions, type InventoryItemType, type PursuitState } from "@basecamp/domain";
 import { createXpEventForQuest } from "@basecamp/gamification";
@@ -61,15 +64,16 @@ import type { PortableExportArchive } from "@basecamp/database";
 import type { DeploymentProfile } from "@basecamp/database";
 import type { SyncBatchRequest } from "@basecamp/sync";
 import Fastify, { type FastifyInstance } from "fastify";
-import type { DatabaseSync } from "node:sqlite";
 
 export interface BuildServerOptions {
   adminToken?: string;
   appVersion?: string;
   backupDir?: string;
   closeDatabaseOnClose?: boolean;
-  database?: DatabaseSync;
+  database?: BasecampDatabase;
+  databaseKind?: DatabaseKind;
   databasePath?: string;
+  databaseUrlConfigured?: boolean;
   logger?: boolean;
   remoteAccessMode?: "lan" | "vpn" | "reverse_proxy" | "unknown";
   deploymentProfile?: DeploymentProfile;
@@ -106,7 +110,7 @@ const inventoryItemTypes = new Set<InventoryItemType>([
 export function buildServer(options: BuildServerOptions = {}): FastifyInstance {
   const database = options.database ?? createDatabase();
   const ownsDatabase = options.database === undefined || options.closeDatabaseOnClose === true;
-  const appVersion = options.appVersion ?? process.env.BASECAMP_APP_VERSION ?? "0.9.1";
+  const appVersion = options.appVersion ?? process.env.BASECAMP_APP_VERSION ?? "0.9.2";
   const adminToken = normalizeAdminToken(options.adminToken ?? process.env.BASECAMP_ADMIN_TOKEN);
   const authMode = options.authMode ?? authModeFromEnv(process.env.BASECAMP_AUTH_MODE);
   const server = Fastify({
@@ -700,7 +704,7 @@ function publicBaseUrl(host: string | undefined): string {
 }
 
 function operationalStatus(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   options: BuildServerOptions,
   appVersion: string,
   adminToken: string | undefined,
@@ -708,6 +712,8 @@ function operationalStatus(
 ): OperationalStatusResponse {
   const statusOptions: Parameters<typeof buildOperationalStatus>[1] = {
     version: appVersion,
+    databaseKind: options.databaseKind ?? databaseKind(database),
+    databaseUrlConfigured: options.databaseUrlConfigured ?? process.env.BASECAMP_DATABASE_URL !== undefined,
     adminTokenConfigured: adminToken !== undefined && adminToken.trim().length > 0,
     adminTokenPlaceholder: isPlaceholderAdminToken(options.adminToken ?? process.env.BASECAMP_ADMIN_TOKEN),
     localAuthMode: authMode === "local" ? "local" : "disabled",
@@ -747,7 +753,7 @@ interface AdminAuthorizationResult {
 }
 
 function adminAuthorization(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   headers: Record<string, string | string[] | undefined>,
   adminToken: string | undefined
 ): AdminAuthorizationResult {
@@ -802,7 +808,7 @@ function firstHeader(value: string | string[] | undefined): string | undefined {
 }
 
 function recordAdminAudit(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   action: string,
   result: "success" | "failure",
   metadata: Record<string, unknown> = {},

@@ -94,7 +94,7 @@ export interface OperationalStatusResponse {
   };
   database: {
     ok: boolean;
-    kind: "sqlite";
+    kind: "sqlite" | "postgresql";
     writable: boolean;
     migrated: boolean;
     migrationCount: number;

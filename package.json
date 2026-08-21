@@ -16,7 +16,7 @@
     "check:repo": "node scripts/check-repo.mjs",
     "ops:backup": "pnpm --filter @basecamp/database backup",
     "ops:export": "pnpm --filter @basecamp/database export",
-    "ops:import": "pnpm --filter @basecamp/database import",
+    "ops:import": "pnpm --filter @basecamp/database run import",
     "ops:postgres:import": "pnpm --filter @basecamp/database postgres:import",
     "ops:postgres:migrate": "pnpm --filter @basecamp/database postgres:migrate",
     "ops:postgres:status": "pnpm --filter @basecamp/database postgres:status",

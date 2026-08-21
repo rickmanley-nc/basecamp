@@ -1,32 +1,33 @@
 import { basecampSeed } from "@basecamp/content";
 import {
   applyMigrations,
-  createBackup,
-  createDatabase,
-  ensureDatabaseDirectory,
+  createRuntimeBackup,
+  createRuntimeDatabase,
   importSeed,
   recordAuditEvent,
   verifyBackup,
   type DeploymentProfile
 } from "../src/index";
 
-const databasePath = requiredEnv("BASECAMP_DB_PATH", "var/basecamp-dev.sqlite");
+const databasePathFallback = requiredEnv("BASECAMP_DB_PATH", "var/basecamp-dev.sqlite");
 const storageDir = requiredEnv("BASECAMP_STORAGE_DIR", "var/storage");
 const backupDir = requiredEnv("BASECAMP_BACKUP_DIR", "var/backups");
 const configPath = process.env.BASECAMP_CONFIG_PATH;
-const appVersion = process.env.BASECAMP_APP_VERSION ?? "0.9.1";
+const appVersion = process.env.BASECAMP_APP_VERSION ?? "0.9.2";
 const deploymentProfile = deploymentProfileFromEnv(process.env.BASECAMP_DEPLOYMENT_PROFILE);
 
-await ensureDatabaseDirectory(databasePath);
-
-const database = createDatabase(databasePath);
+const runtimeDatabase = await createRuntimeDatabase({
+  databasePathFallback
+});
+const { database } = runtimeDatabase;
 
 try {
   applyMigrations(database);
   importSeed(database, basecampSeed);
 
-  const backup = createBackup({
-    databasePath,
+  const backup = createRuntimeBackup(database, {
+    databaseKind: runtimeDatabase.databaseKind,
+    ...(runtimeDatabase.databasePath === undefined ? {} : { databasePath: runtimeDatabase.databasePath }),
     storageDir,
     backupDir,
     appVersion,

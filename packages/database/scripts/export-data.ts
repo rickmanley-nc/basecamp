@@ -1,23 +1,20 @@
 import { basecampSeed } from "@basecamp/content";
 import {
   applyMigrations,
-  createDatabase,
   createPortableExport,
-  ensureDatabaseDirectory,
+  createRuntimeDatabase,
   importSeed,
   recordAuditEvent
 } from "../src/index";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-const databasePath = requiredEnv("BASECAMP_DB_PATH", "var/basecamp-dev.sqlite");
 const exportDir = requiredEnv("BASECAMP_EXPORT_DIR", "var/exports/latest");
-const appVersion = process.env.BASECAMP_APP_VERSION ?? "0.9.1";
+const appVersion = process.env.BASECAMP_APP_VERSION ?? "0.9.2";
 
-await ensureDatabaseDirectory(databasePath);
 await mkdir(exportDir, { recursive: true });
 
-const database = createDatabase(databasePath);
+const { database } = await createRuntimeDatabase();
 
 try {
   applyMigrations(database);

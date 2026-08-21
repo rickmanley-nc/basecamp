@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync, c
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
+import type { BasecampDatabase, DatabaseKind } from "./connection";
 
 export const portableExportVersion = "basecamp-portable-v1";
 
@@ -55,7 +56,7 @@ export type DeploymentProfile = "local-dev" | "cloud-pilot" | "homelab" | "unkno
 
 export interface BackupDeploymentMetadata {
   profile: DeploymentProfile;
-  databaseKind: "sqlite";
+  databaseKind: DatabaseKind;
   storageKind: "filesystem";
   backupDestination: "local-disk";
   configIncluded: boolean;
@@ -73,6 +74,16 @@ export interface BackupFileEntry {
 export interface BackupResult {
   backupPath: string;
   manifest: BackupManifest;
+}
+
+export interface LogicalDatabaseBackupArchive {
+  backupVersion: "basecamp-database-logical-v1";
+  createdAt: string;
+  appVersion: string;
+  contentSchemaVersion: string;
+  databaseKind: DatabaseKind;
+  tables: Record<string, DatabaseRow[]>;
+  checksum: string;
 }
 
 export interface BackupIntegrityResult {
@@ -135,7 +146,7 @@ export interface OperationalStatus {
   };
   database: {
     ok: boolean;
-    kind: "sqlite";
+    kind: DatabaseKind;
     writable: boolean;
     migrated: boolean;
     migrationCount: number;
@@ -206,7 +217,7 @@ const csvExportTables = [
 ] as const;
 
 export function createPortableExport(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   options: {
     appVersion: string;
     contentSchemaVersion: string;
@@ -257,7 +268,7 @@ export function createPortableExport(
 }
 
 export function importPortableExport(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   archive: PortableExportArchive,
   options: {
     expectedContentSchemaVersion: string;
@@ -336,7 +347,7 @@ export function portableExportChecksum(archive: PortableExportArchive): string {
 }
 
 export function recordAuditEvent(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   input: AuditEventInput
 ): AuditEvent {
   const occurredAt = input.occurredAt ?? new Date().toISOString();
@@ -364,7 +375,7 @@ export function recordAuditEvent(
   return event;
 }
 
-export function listAuditEvents(database: DatabaseSync): AuditEvent[] {
+export function listAuditEvents(database: BasecampDatabase): AuditEvent[] {
   if (!tableExists(database, "audit_events")) {
     return [];
   }
@@ -459,10 +470,132 @@ export function createBackup(
   };
 
   writeFileSync(path.join(backupPath, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
-  writeFileSync(
-    path.join(options.backupDir, "latest-backup.json"),
-    `${JSON.stringify({ backupPath, createdAt, ok: true }, null, 2)}\n`
+  writeLatestBackupMarker(options.backupDir, {
+    backupPath,
+    createdAt,
+    databaseKind: "sqlite"
+  });
+
+  return { backupPath, manifest };
+}
+
+export function createRuntimeBackup(
+  database: BasecampDatabase,
+  options: {
+    databaseKind: DatabaseKind;
+    databasePath?: string;
+    storageDir: string;
+    backupDir: string;
+    appVersion: string;
+    contentSchemaVersion: string;
+    now?: string;
+    configPath?: string;
+    deploymentProfile?: DeploymentProfile;
+  }
+): BackupResult {
+  if (options.databaseKind === "sqlite") {
+    if (options.databasePath === undefined) {
+      throw new Error("BASECAMP_DB_PATH is required for SQLite backups.");
+    }
+
+    return createBackup({
+      databasePath: options.databasePath,
+      storageDir: options.storageDir,
+      backupDir: options.backupDir,
+      appVersion: options.appVersion,
+      contentSchemaVersion: options.contentSchemaVersion,
+      ...(options.now === undefined ? {} : { now: options.now }),
+      ...(options.configPath === undefined ? {} : { configPath: options.configPath }),
+      ...(options.deploymentProfile === undefined ? {} : { deploymentProfile: options.deploymentProfile })
+    });
+  }
+
+  return createLogicalDatabaseBackup(database, options);
+}
+
+function createLogicalDatabaseBackup(
+  database: BasecampDatabase,
+  options: {
+    databaseKind: DatabaseKind;
+    storageDir: string;
+    backupDir: string;
+    appVersion: string;
+    contentSchemaVersion: string;
+    now?: string;
+    configPath?: string;
+    deploymentProfile?: DeploymentProfile;
+  }
+): BackupResult {
+  const createdAt = options.now ?? new Date().toISOString();
+  const backupName = `basecamp-backup-${slugify(createdAt)}`;
+  const backupPath = path.join(options.backupDir, backupName);
+  const databaseTarget = path.join(backupPath, "database", "basecamp-database.json");
+  const storageTarget = path.join(backupPath, "storage");
+  const storageEntries: BackupFileEntry[] = [];
+
+  mkdirSync(path.dirname(databaseTarget), { recursive: true });
+  mkdirSync(storageTarget, { recursive: true });
+
+  const tables = databaseRows(database);
+  const snapshotContent = {
+    backupVersion: "basecamp-database-logical-v1" as const,
+    createdAt,
+    appVersion: options.appVersion,
+    contentSchemaVersion: options.contentSchemaVersion,
+    databaseKind: options.databaseKind,
+    tables
+  };
+  const snapshot: LogicalDatabaseBackupArchive = {
+    ...snapshotContent,
+    checksum: checksumJson(snapshotContent)
+  };
+
+  writeFileSync(databaseTarget, `${JSON.stringify(snapshot, null, 2)}\n`);
+
+  if (existsSync(options.storageDir)) {
+    cpSync(options.storageDir, storageTarget, { recursive: true });
+    storageEntries.push(...listFiles(storageTarget).map((file) => fileEntry(backupPath, file)));
+  }
+
+  let configEntry: BackupFileEntry | undefined;
+
+  if (options.configPath !== undefined && existsSync(options.configPath)) {
+    const configTarget = path.join(backupPath, "config", "basecamp.env");
+
+    mkdirSync(path.dirname(configTarget), { recursive: true });
+    copyFileSync(options.configPath, configTarget);
+    configEntry = fileEntry(backupPath, configTarget);
+  }
+
+  const tableCounts = Object.fromEntries(
+    Object.entries(tables).map(([table, rows]) => [table, rows.length])
   );
+  const manifest: BackupManifest = {
+    backupVersion: "basecamp-backup-v1",
+    createdAt,
+    appVersion: options.appVersion,
+    contentSchemaVersion: options.contentSchemaVersion,
+    deployment: {
+      profile: options.deploymentProfile ?? "local-dev",
+      databaseKind: options.databaseKind,
+      storageKind: "filesystem",
+      backupDestination: "local-disk",
+      configIncluded: configEntry !== undefined,
+      tableCounts,
+      localUserCount: activeLocalUserCount(database),
+      storageFileCount: storageEntries.length
+    },
+    database: fileEntry(backupPath, databaseTarget),
+    storage: storageEntries,
+    ...(configEntry === undefined ? {} : { config: configEntry })
+  };
+
+  writeFileSync(path.join(backupPath, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
+  writeLatestBackupMarker(options.backupDir, {
+    backupPath,
+    createdAt,
+    databaseKind: options.databaseKind
+  });
 
   return { backupPath, manifest };
 }
@@ -543,6 +676,10 @@ export function restoreBackup(
 
   const manifest = readBackupManifest(options.backupPath);
 
+  if (manifest.deployment.databaseKind !== "sqlite") {
+    throw new Error("The restore command currently supports SQLite backup manifests. Use the PostgreSQL restore runbook for PostgreSQL logical backups.");
+  }
+
   if (!options.allowOverwrite && (existsSync(options.databasePath) || existsSync(options.storageDir))) {
     throw new Error("Restore target already exists. Set allowOverwrite to replace it.");
   }
@@ -578,7 +715,7 @@ export function restoreBackup(
 
 export function readBackupStatus(
   backupDir: string | undefined,
-  options: { now?: string; staleHours?: number } = {}
+  options: { now?: string; staleHours?: number; databaseKind?: DatabaseKind } = {}
 ): BackupStatus {
   if (backupDir === undefined || backupDir.trim().length === 0) {
     return {
@@ -604,6 +741,7 @@ export function readBackupStatus(
     backupPath?: string;
     createdAt?: string;
     ok?: boolean;
+    databaseKind?: DatabaseKind;
   };
 
   if (latest.ok !== true || latest.createdAt === undefined || latest.backupPath === undefined) {
@@ -612,6 +750,19 @@ export function readBackupStatus(
       ok: false,
       status: "failed",
       message: "Latest backup marker is incomplete or failed."
+    };
+  }
+
+  if (
+    options.databaseKind !== undefined &&
+    ((latest.databaseKind !== undefined && latest.databaseKind !== options.databaseKind) ||
+      (latest.databaseKind === undefined && options.databaseKind === "postgresql"))
+  ) {
+    return {
+      configured: true,
+      ok: false,
+      status: "failed",
+      message: `Latest backup marker does not match the ${options.databaseKind} database runtime.`
     };
   }
 
@@ -631,10 +782,12 @@ export function readBackupStatus(
 }
 
 export function buildOperationalStatus(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   options: {
     version: string;
+    databaseKind?: DatabaseKind;
     databasePath?: string;
+    databaseUrlConfigured?: boolean;
     storageDir?: string;
     backupDir?: string;
     adminTokenConfigured: boolean;
@@ -651,11 +804,13 @@ export function buildOperationalStatus(
   const migrationCount = tableExists(database, "schema_migrations")
     ? ((database.prepare("SELECT COUNT(*) as count FROM schema_migrations").get() as { count: number }).count)
     : 0;
-  const databaseWritable = canWriteDirectory(
-    options.databasePath === undefined ? undefined : path.dirname(options.databasePath)
-  );
+  const kind = options.databaseKind ?? "sqlite";
+  const databaseWritable =
+    kind === "postgresql"
+      ? true
+      : canWriteDirectory(options.databasePath === undefined ? undefined : path.dirname(options.databasePath));
   const storageWritable = canWriteDirectory(options.storageDir);
-  const backup = readBackupStatus(options.backupDir, { now: checkedAt });
+  const backup = readBackupStatus(options.backupDir, { now: checkedAt, databaseKind: kind });
   const databaseOk = migrationCount > 0 && databaseWritable;
   const storageOk = storageWritable;
 
@@ -677,11 +832,11 @@ export function buildOperationalStatus(
     },
     database: {
       ok: databaseOk,
-      kind: "sqlite",
+      kind,
       writable: databaseWritable,
       migrated: migrationCount > 0,
       migrationCount,
-      pathConfigured: options.databasePath !== undefined
+      pathConfigured: kind === "postgresql" ? options.databaseUrlConfigured === true : options.databasePath !== undefined
     },
     storage: {
       ok: storageOk,
@@ -710,7 +865,49 @@ export function redactConfigValue(value: string): string {
   return value;
 }
 
-function tableExists(database: DatabaseSync, table: string): boolean {
+function writeLatestBackupMarker(
+  backupDir: string,
+  marker: {
+    backupPath: string;
+    createdAt: string;
+    databaseKind: DatabaseKind;
+  }
+): void {
+  writeFileSync(
+    path.join(backupDir, "latest-backup.json"),
+    `${JSON.stringify({ ...marker, ok: true }, null, 2)}\n`
+  );
+}
+
+function databaseRows(database: BasecampDatabase): Record<string, DatabaseRow[]> {
+  return Object.fromEntries(
+    databaseTableNames(database).map((table) => [
+      table,
+      database.prepare(`SELECT * FROM ${quoteIdentifier(table)}`).all().map(normalizeRow)
+    ])
+  );
+}
+
+function databaseTableNames(database: BasecampDatabase): string[] {
+  return database
+    .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name")
+    .all()
+    .map((row) => (row as { name: string }).name);
+}
+
+function activeLocalUserCount(database: BasecampDatabase): number {
+  if (!tableExists(database, "local_users")) {
+    return 0;
+  }
+
+  const row = database.prepare("SELECT COUNT(*) as count FROM local_users WHERE status = 'active'").get() as {
+    count: number;
+  };
+
+  return row.count;
+}
+
+function tableExists(database: BasecampDatabase, table: string): boolean {
   const row = database
     .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?")
     .get(table);
@@ -718,7 +915,7 @@ function tableExists(database: DatabaseSync, table: string): boolean {
   return row !== undefined;
 }
 
-function insertRows(database: DatabaseSync, table: string, rows: DatabaseRow[]): void {
+function insertRows(database: BasecampDatabase, table: string, rows: DatabaseRow[]): void {
   const columns = tableColumns(database, table);
 
   for (const row of rows) {
@@ -735,7 +932,7 @@ function insertRows(database: DatabaseSync, table: string, rows: DatabaseRow[]):
   }
 }
 
-function tableColumns(database: DatabaseSync, table: string): Set<string> {
+function tableColumns(database: BasecampDatabase, table: string): Set<string> {
   return new Set(
     database
       .prepare(`PRAGMA table_info(${quoteIdentifier(table)})`)

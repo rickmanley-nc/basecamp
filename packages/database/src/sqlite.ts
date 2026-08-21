@@ -3,6 +3,7 @@ import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { fileURLToPath } from "node:url";
+import type { BasecampDatabase } from "./connection";
 import {
   applyQuestAction,
   calculateLocationProgression,
@@ -151,7 +152,7 @@ export async function ensureDatabaseDirectory(filename: string): Promise<void> {
 }
 
 export function applyMigrations(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   migrationsDir = defaultMigrationsDir
 ): MigrationResult {
   database.exec(`
@@ -187,7 +188,7 @@ export function applyMigrations(
   return { applied, skipped };
 }
 
-export function importSeed(database: DatabaseSync, seed: BasecampSeed): SeedImportResult {
+export function importSeed(database: BasecampDatabase, seed: BasecampSeed): SeedImportResult {
   database.exec("BEGIN");
 
   try {
@@ -320,14 +321,14 @@ export function importSeed(database: DatabaseSync, seed: BasecampSeed): SeedImpo
   };
 }
 
-export function countRows(database: DatabaseSync, table: string): number {
+export function countRows(database: BasecampDatabase, table: string): number {
   const result = database.prepare(`SELECT COUNT(*) as count FROM ${table}`).get() as {
     count: number;
   };
   return result.count;
 }
 
-export function readHouseholdProgress(database: DatabaseSync): HouseholdProgressSnapshot {
+export function readHouseholdProgress(database: BasecampDatabase): HouseholdProgressSnapshot {
   const categoryPursuits = database
     .prepare("SELECT category_id, pursuit_state, updated_at FROM category_pursuits ORDER BY category_id")
     .all()
@@ -368,7 +369,7 @@ export function readHouseholdProgress(database: DatabaseSync): HouseholdProgress
 }
 
 export function setCategoryPursuit(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   categoryId: CategoryId,
   pursuitState: PursuitState,
   now = new Date().toISOString()
@@ -395,7 +396,7 @@ export function setCategoryPursuit(
 }
 
 export function applyPersistedQuestAction(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   seed: BasecampSeed,
   questId: QuestId,
   action: QuestAction,
@@ -432,7 +433,7 @@ export function applyPersistedQuestAction(
   };
 }
 
-export function recordXpEvent(database: DatabaseSync, event: XpEvent): HouseholdProgressSnapshot {
+export function recordXpEvent(database: BasecampDatabase, event: XpEvent): HouseholdProgressSnapshot {
   database
     .prepare(
       `INSERT OR REPLACE INTO xp_events
@@ -445,7 +446,7 @@ export function recordXpEvent(database: DatabaseSync, event: XpEvent): Household
 }
 
 export function upsertEvidenceRecord(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   input: EvidenceRecordInput
 ): EvidenceRecord {
   const evidence = createEvidenceRecord(input);
@@ -476,7 +477,7 @@ export function upsertEvidenceRecord(
   return evidence;
 }
 
-export function listEvidenceRecords(database: DatabaseSync): EvidenceRecord[] {
+export function listEvidenceRecords(database: BasecampDatabase): EvidenceRecord[] {
   return database
     .prepare(
       `SELECT id, kind, title, links_json, metadata_json, status, version,
@@ -488,7 +489,7 @@ export function listEvidenceRecords(database: DatabaseSync): EvidenceRecord[] {
     .map(rowToEvidenceRecord);
 }
 
-export function listSkillProgress(database: DatabaseSync): SkillProgress[] {
+export function listSkillProgress(database: BasecampDatabase): SkillProgress[] {
   return database
     .prepare(
       `SELECT skill_id, name, category_id, state, training_records_json, evidence_ids_json,
@@ -501,7 +502,7 @@ export function listSkillProgress(database: DatabaseSync): SkillProgress[] {
 }
 
 export function recordSkillTraining(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   input: SkillTrainingInput
 ): { skill: SkillProgress; trainingRecord: TrainingRecord; progress: HouseholdProgressSnapshot } {
   const current = readSkillProgress(database, input.skillId);
@@ -539,7 +540,7 @@ export function recordSkillTraining(
   };
 }
 
-export function listDrillTemplates(database: DatabaseSync): DrillTemplate[] {
+export function listDrillTemplates(database: BasecampDatabase): DrillTemplate[] {
   return database
     .prepare(
       `SELECT id, title, category_id, scenario, estimated_minutes, success_criteria_json,
@@ -552,7 +553,7 @@ export function listDrillTemplates(database: DatabaseSync): DrillTemplate[] {
 }
 
 export function upsertDrillTemplate(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   template: DrillTemplate,
   now = new Date().toISOString()
 ): DrillTemplate {
@@ -581,7 +582,7 @@ export function upsertDrillTemplate(
   return template;
 }
 
-export function listDrillRuns(database: DatabaseSync): DrillRun[] {
+export function listDrillRuns(database: BasecampDatabase): DrillRun[] {
   return database
     .prepare(
       `SELECT id, template_id, category_id, result, started_at, completed_at,
@@ -594,7 +595,7 @@ export function listDrillRuns(database: DatabaseSync): DrillRun[] {
 }
 
 export function recordDrillRun(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   templateId: string,
   input: DrillRunInput
 ): { run: DrillRun; progress: HouseholdProgressSnapshot } {
@@ -636,7 +637,7 @@ export function recordDrillRun(
 }
 
 export function readInventoryState(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   now = new Date().toISOString()
 ): InventoryPersistenceState {
   const locations = database
@@ -789,7 +790,7 @@ export function readInventoryState(
 }
 
 export function recordQuickInventoryEntry(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   input: QuickInventoryEntryInput,
   now = new Date().toISOString()
 ): QuickInventoryEntryResult {
@@ -872,7 +873,7 @@ export function recordQuickInventoryEntry(
 }
 
 export function upsertLocation(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   location: {
     name: string;
     kind?: LocationKind;
@@ -906,7 +907,7 @@ export function upsertLocation(
 }
 
 export function upsertLocationReadiness(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   readiness: LocationReadiness
 ): LocationReadiness[] {
   database
@@ -935,7 +936,7 @@ export function upsertLocationReadiness(
 }
 
 export function upsertInventoryItem(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   item: {
     name: string;
     type: InventoryItemType;
@@ -997,7 +998,7 @@ export function upsertInventoryItem(
 }
 
 export function upsertAsset(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   asset: {
     name: string;
     type: InventoryItemType;
@@ -1063,7 +1064,7 @@ export function upsertAsset(
 }
 
 export function createBasecampAssetTag(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   assetId: string,
   now = new Date().toISOString(),
   baseUrl?: string
@@ -1097,7 +1098,7 @@ export function createBasecampAssetTag(
 }
 
 export function readAssetWithTags(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   assetId: string
 ): { asset: Asset; tags: AssetTag[] } | undefined {
   const assetRow = database
@@ -1129,7 +1130,7 @@ export function readAssetWithTags(
 }
 
 export function upsertMaintenancePolicy(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   input: MaintenancePolicyInput,
   now = new Date().toISOString()
 ): MaintenancePolicy {
@@ -1200,7 +1201,7 @@ export function upsertMaintenancePolicy(
 }
 
 export function recordMaintenanceCompletion(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   policyId: string,
   options: { now?: string; outcome?: MaintenanceEvent["outcome"]; notes?: string } = {}
 ): { policy: MaintenancePolicy; event: MaintenanceEvent; inventory: InventoryPersistenceState } {
@@ -1273,7 +1274,7 @@ export function recordMaintenanceCompletion(
 }
 
 export function applySyncCommandBatch(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   seed: BasecampSeed,
   batch: SyncBatchRequest,
   now = new Date().toISOString()
@@ -1347,7 +1348,7 @@ export function applySyncCommandBatch(
   };
 }
 
-export function listSyncConflicts(database: DatabaseSync): SyncConflict[] {
+export function listSyncConflicts(database: BasecampDatabase): SyncConflict[] {
   return database
     .prepare(
       `SELECT id, command_id, entity_type, entity_id, policy, reason, user_visible
@@ -1358,7 +1359,7 @@ export function listSyncConflicts(database: DatabaseSync): SyncConflict[] {
     .map(rowToSyncConflict);
 }
 
-export function listQuestEvents(database: DatabaseSync): QuestLifecycleEvent[] {
+export function listQuestEvents(database: BasecampDatabase): QuestLifecycleEvent[] {
   return database
     .prepare(
       `SELECT id, template_id, action, from_status, to_status, reason, occurred_at
@@ -1370,7 +1371,7 @@ export function listQuestEvents(database: DatabaseSync): QuestLifecycleEvent[] {
 }
 
 function getQuestInstance(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   templateId: QuestId
 ): QuestInstance | undefined {
   const row = database
@@ -1386,7 +1387,7 @@ function getQuestInstance(
 }
 
 function saveQuestInstance(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   instance: QuestInstance,
   updatedAt: string
 ): void {
@@ -1423,7 +1424,7 @@ function saveQuestInstance(
 }
 
 function saveQuestEvent(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   questInstanceId: string,
   event: QuestLifecycleEvent
 ): void {
@@ -1446,7 +1447,7 @@ function saveQuestEvent(
 }
 
 function readSkillProgress(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   skillId: string
 ): SkillProgress | undefined {
   const row = database
@@ -1462,7 +1463,7 @@ function readSkillProgress(
 }
 
 function saveSkillProgress(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   skill: SkillProgress,
   updatedAt: string
 ): void {
@@ -1500,7 +1501,7 @@ function saveSkillProgress(
 }
 
 function readDrillTemplate(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   templateId: string
 ): DrillTemplate | undefined {
   const row = database
@@ -1516,7 +1517,7 @@ function readDrillTemplate(
 }
 
 function readCategoryPursuit(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   categoryId: CategoryId
 ): PursuitState | undefined {
   const row = database
@@ -1536,7 +1537,7 @@ function templateCategoryState(seed: BasecampSeed, categoryId: CategoryId): Purs
   return category.defaultPursuitState;
 }
 
-function saveInventoryEvent(database: DatabaseSync, event: InventoryEvent): void {
+function saveInventoryEvent(database: BasecampDatabase, event: InventoryEvent): void {
   database
     .prepare(
       `INSERT OR REPLACE INTO inventory_events
@@ -1562,7 +1563,7 @@ function saveInventoryEvent(database: DatabaseSync, event: InventoryEvent): void
     );
 }
 
-function upsertSyncClient(database: DatabaseSync, clientId: string, now: string): void {
+function upsertSyncClient(database: BasecampDatabase, clientId: string, now: string): void {
   database
     .prepare(
       `INSERT INTO sync_clients (client_id, registered_at, last_seen_at, last_cursor)
@@ -1587,7 +1588,7 @@ function validateSyncCommand(clientId: string, command: OfflineCommand): void {
 }
 
 function readSyncCommandResult(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   commandId: string
 ): { cursor: string; result: SyncCommandResult } | undefined {
   const row = database
@@ -1614,7 +1615,7 @@ function readSyncCommandResult(
 }
 
 function insertSyncCommand(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   command: OfflineCommand,
   policy: SyncCommandResult["policy"],
   outcome: "accepted" | "duplicate" | "conflict",
@@ -1659,7 +1660,7 @@ function insertSyncCommand(
 }
 
 function insertSyncConflict(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   command: OfflineCommand,
   decision: ReturnType<typeof resolveOfflineCommandConflict>,
   now: string
@@ -1695,7 +1696,7 @@ function insertSyncConflict(
 }
 
 function applyAcceptedOfflineCommand(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   seed: BasecampSeed,
   command: OfflineCommand,
   now: string
@@ -1823,7 +1824,7 @@ function applyAcceptedOfflineCommand(
   }
 }
 
-function currentEntityVersionFor(database: DatabaseSync, command: OfflineCommand): number | undefined {
+function currentEntityVersionFor(database: BasecampDatabase, command: OfflineCommand): number | undefined {
   if (command.entityId === undefined) {
     return undefined;
   }
@@ -1879,7 +1880,7 @@ function evidenceLinkEntityTypeFor(entityType: OfflineCommand["entityType"]): Ev
   return "drill";
 }
 
-function latestSyncCursor(database: DatabaseSync): string {
+function latestSyncCursor(database: BasecampDatabase): string {
   const row = database
     .prepare("SELECT COALESCE(MAX(server_sequence), 0) as sequence FROM sync_commands")
     .get() as { sequence: number };
@@ -1914,7 +1915,7 @@ function rowToSyncConflict(row: unknown): SyncConflict {
 }
 
 function syncStoredLocationMaturity(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   locationId: string,
   now: string
 ): void {
