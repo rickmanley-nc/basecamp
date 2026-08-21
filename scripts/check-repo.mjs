@@ -59,6 +59,8 @@ const requiredFiles = [
   "packages/database/src/runtime.ts",
   "packages/database/src/postgres-sync.ts",
   "packages/database/src/postgres-sync-worker.js",
+  "packages/database/scripts/qa-reset.ts",
+  "packages/database/scripts/qa-seed.ts",
   "packages/api/package.json",
   "packages/ui/package.json",
   "packages/content/package.json",

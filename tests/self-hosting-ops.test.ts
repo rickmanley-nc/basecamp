@@ -540,6 +540,145 @@ describe("M6 self-hosting operations", () => {
     await rm(root, { recursive: true, force: true });
   });
 
+  it("guards cloud-pilot QA reset, seed, and observability controls", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "basecamp-qa-controls-"));
+    const databasePath = path.join(root, "basecamp.sqlite");
+    const storageDir = path.join(root, "storage");
+    const backupDir = path.join(root, "backups");
+    const adminToken = "test-admin-token";
+    const database = createDatabase(databasePath);
+    const server = buildServer({
+      database,
+      closeDatabaseOnClose: true,
+      databasePath,
+      storageDir,
+      backupDir,
+      adminToken,
+      appVersion: "0.9.2",
+      deploymentProfile: "cloud-pilot",
+      remoteAccessMode: "lan",
+      qaControlsEnabled: true,
+      webUrl: "http://basecamp.local:8080"
+    });
+
+    const quest = await server.inject({
+      method: "POST",
+      url: "/api/quests/home-label-utility-shutoffs/actions",
+      payload: { action: "start" }
+    });
+    const inventory = await server.inject({
+      method: "POST",
+      url: "/api/inventory/quick-entry",
+      payload: {
+        itemName: "QA reset proof water",
+        quantity: 2,
+        unit: "gallon",
+        locationName: "Cloud Pilot Home Base",
+        categoryId: "water",
+        type: "water_storage"
+      }
+    });
+    const upload = await server.inject({
+      method: "POST",
+      url: "/api/evidence/upload",
+      payload: {
+        kind: "photo",
+        title: "QA reset shelf photo",
+        link: { entityType: "inventory_event", entityId: inventory.json().event.id },
+        fileName: "qa-reset-shelf.txt",
+        contentType: "text/plain",
+        capturedAt: "2026-08-21T00:30:00.000Z",
+        base64: Buffer.from("qa reset proof").toString("base64")
+      }
+    });
+    const uploadedEvidenceExists = existsSync(path.join(storageDir, upload.json().storageKey));
+
+    const deniedObservability = await server.inject("/api/admin/observability");
+    const missingConfirmation = await server.inject({
+      method: "POST",
+      url: "/api/admin/qa/reset",
+      headers: { "x-basecamp-admin-token": adminToken }
+    });
+    const badConfirmation = await server.inject({
+      method: "POST",
+      url: "/api/admin/qa/reset",
+      headers: { "x-basecamp-admin-token": adminToken },
+      payload: { confirmation: "reset please" }
+    });
+    const reset = await server.inject({
+      method: "POST",
+      url: "/api/admin/qa/reset",
+      headers: { "x-basecamp-admin-token": adminToken },
+      payload: { confirmation: "RESET QA DATA", deleteEvidenceStorage: true }
+    });
+    const seed = await server.inject({
+      method: "POST",
+      url: "/api/admin/qa/seed",
+      headers: { "x-basecamp-admin-token": adminToken },
+      payload: { confirmation: "SEED CONTENT" }
+    });
+    const observability = await server.inject({
+      method: "GET",
+      url: "/api/admin/observability",
+      headers: { "x-basecamp-admin-token": adminToken }
+    });
+    const homelab = buildServer({
+      database: createDatabase(),
+      adminToken,
+      deploymentProfile: "homelab",
+      qaControlsEnabled: true
+    });
+    const homelabReset = await homelab.inject({
+      method: "POST",
+      url: "/api/admin/qa/reset",
+      headers: { "x-basecamp-admin-token": adminToken },
+      payload: { confirmation: "RESET QA DATA" }
+    });
+    const resetBody = reset.json();
+    const observabilityText = JSON.stringify(observability.json());
+
+    expect(quest.statusCode).toBe(200);
+    expect(upload.statusCode).toBe(201);
+    expect(uploadedEvidenceExists).toBe(true);
+    expect(deniedObservability.statusCode).toBe(401);
+    expect(missingConfirmation.statusCode).toBe(400);
+    expect(badConfirmation.statusCode).toBe(400);
+    expect(reset.statusCode).toBe(200);
+    expect(resetBody).toMatchObject({
+      deploymentProfile: "cloud-pilot",
+      databaseKind: "sqlite",
+      evidenceStorageDeleted: true,
+      status: {
+        deployment: { profile: "cloud-pilot" },
+        security: { adminTokenConfigured: true, remoteAccessMode: "lan" }
+      }
+    });
+    expect(resetBody.deletedRows.inventory_items).toBeGreaterThan(0);
+    expect(resetBody.deletedRows.quest_instances).toBeGreaterThan(0);
+    expect(resetBody.deletedRows.evidence_records).toBeGreaterThan(0);
+    expect(resetBody.preservedTables).toContain("local_users");
+    expect(existsSync(path.join(storageDir, "evidence"))).toBe(false);
+    expect((database.prepare("SELECT COUNT(*) AS count FROM inventory_items").get() as { count: number }).count).toBe(0);
+    expect((database.prepare("SELECT COUNT(*) AS count FROM quest_instances").get() as { count: number }).count).toBe(0);
+    expect(seed.statusCode).toBe(200);
+    expect(seed.json().imported.categories).toBe(basecampSeed.categories.length);
+    expect(observability.statusCode).toBe(200);
+    expect(observability.json()).toMatchObject({
+      logPolicy: { secretsRedacted: true, publicTextSafe: true },
+      status: { deployment: { profile: "cloud-pilot" } }
+    });
+    expect(observability.json().recentAuditEvents.map((event: { action: string }) => event.action)).toContain("qa.reset");
+    expect(observability.json().recentAuditEvents.map((event: { action: string }) => event.action)).toContain("qa.seed");
+    expect(observabilityText).not.toContain(adminToken);
+    expect(observabilityText).not.toContain(root);
+    expect(homelabReset.statusCode).toBe(403);
+    expect(homelabReset.json().error).toMatch(/homelab/);
+
+    await homelab.close();
+    await server.close();
+    await rm(root, { recursive: true, force: true });
+  });
+
   it("supports admin-created username/password accounts and bearer sessions", async () => {
     const root = await mkdtemp(path.join(os.tmpdir(), "basecamp-local-auth-"));
     const databasePath = path.join(root, "basecamp.sqlite");
@@ -682,12 +821,14 @@ describe("M6 self-hosting operations", () => {
     expect(compose).toContain("BASECAMP_ADMIN_TOKEN:");
     expect(compose).toContain("BASECAMP_AUTH_MODE:");
     expect(compose).toContain("BASECAMP_REMOTE_ACCESS:");
+    expect(compose).toContain("BASECAMP_QA_CONTROLS_ENABLED:");
     expect(compose).toContain("BASECAMP_CONFIG_PATH:");
     expect(compose).toContain("${BASECAMP_CONFIG_SOURCE");
     expect(envExample).toContain("BASECAMP_ADMIN_TOKEN=change-me");
     expect(envExample).toContain("BASECAMP_AUTH_MODE=local");
     expect(envExample).toContain("BASECAMP_APP_VERSION=0.9.2");
     expect(envExample).toContain("BASECAMP_DEPLOYMENT_PROFILE=cloud-pilot");
+    expect(envExample).toContain("BASECAMP_QA_CONTROLS_ENABLED=false");
     expect(envExample).toContain("BASECAMP_CONFIG_SOURCE=./basecamp.env");
     expect(envExample).toContain("BASECAMP_REMOTE_ACCESS=lan");
     expect(caddy).toContain("reverse_proxy server:4317");

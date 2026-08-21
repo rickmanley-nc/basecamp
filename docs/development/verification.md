@@ -101,6 +101,8 @@ comments:
 - Whether data is real user data, fake/demo data, or disposable QA data.
 - Whether cloud pilot data is isolated from future homelab data.
 - Whether test data can be destroyed after validation.
+- Whether `BASECAMP_QA_CONTROLS_ENABLED=true` is acceptable for a short reset
+  or seed window, and whether a backup has been taken first.
 
 Secrets, private keys, passwords, tokens, and one-time codes must be exchanged
 through a secure channel chosen by the admin, not committed to the repo or
@@ -168,3 +170,10 @@ BASECAMP_DATABASE_KIND=postgresql BASECAMP_USER_USERNAME=<user> pnpm ops:user:di
 `DATABASE_URL`; PostgreSQL runtime commands also require that connection string.
 Use a disposable PostgreSQL database for local checks unless the issue
 explicitly targets the cloud pilot server.
+
+For cloud-pilot QA reset/seed validation, local proof should exercise both the
+admin API routes and the ops scripts against disposable data. Cloud-pilot proof
+must record the deployment profile, database kind, whether evidence storage was
+deleted, whether a backup existed first, and the cleanup or rollback action
+performed. Do not close the v1 blocker from local-only validation when the issue
+requires server proof.

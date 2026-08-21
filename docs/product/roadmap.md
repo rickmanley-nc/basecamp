@@ -485,8 +485,23 @@ Current blocker map:
   reconnect sync plumbing exist, but simulator and physical iPhone validation
   remain required.
 - Physical iPhone field validation.
-- Cloud pilot reset, seed, and observability controls.
+- Cloud pilot reset, seed, and observability controls. Guarded API routes,
+  runtime-aware ops commands, explicit confirmation gates, homelab refusal, and
+  local clean-environment coverage exist; cloud-pilot server validation remains
+  required before the blocker can close.
 - Final v1 release-candidate validation and release notes.
+
+v1 reset/seed impact audit:
+
+- M0 through M5 keep the same product behavior. QA reset clears user workflow
+  tables but does not alter seed content, domain rules, scoring, sync contracts,
+  inventory semantics, drill logic, or mobile field workflow logic.
+- M6 through M8 are affected operationally. Deployment and backup docs now
+  include guarded reset/seed commands, observability output, backup-before-reset
+  guidance, and rollback via restore.
+- M9 through M11 are affected positively. The v1 readiness gate now has local
+  proof for reset/seed/observability controls, while actual cloud-pilot server
+  execution remains an open validation item.
 
 ## Issue Policy
 

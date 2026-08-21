@@ -20,6 +20,8 @@
     "ops:postgres:import": "pnpm --filter @basecamp/database postgres:import",
     "ops:postgres:migrate": "pnpm --filter @basecamp/database postgres:migrate",
     "ops:postgres:status": "pnpm --filter @basecamp/database postgres:status",
+    "ops:qa:reset": "pnpm --filter @basecamp/database qa:reset",
+    "ops:qa:seed": "pnpm --filter @basecamp/database qa:seed",
     "ops:release-check": "node scripts/ops/release-check.mjs",
     "ops:restore": "pnpm --filter @basecamp/database restore",
     "ops:security-check": "node scripts/ops/security-check.mjs",

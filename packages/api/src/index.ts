@@ -66,6 +66,9 @@ export const apiRoutes = {
   adminExport: "/api/admin/export",
   adminImport: "/api/admin/import",
   adminAudit: "/api/admin/audit",
+  adminObservability: "/api/admin/observability",
+  adminQaReset: "/api/admin/qa/reset",
+  adminQaSeed: "/api/admin/qa/seed",
   authLogin: "/api/auth/login",
   authSession: "/api/auth/session",
   authLogout: "/api/auth/logout",
@@ -411,6 +414,47 @@ export interface AdminAuditEventSummary {
   actor: string;
   result: "success" | "failure";
   occurredAt: string;
+}
+
+export interface AdminObservabilityResponse {
+  status: OperationalStatusResponse;
+  recentAuditEvents: AdminAuditEventSummary[];
+  logPolicy: {
+    secretsRedacted: true;
+    publicTextSafe: true;
+    notes: string[];
+  };
+}
+
+export interface AdminQaResetRequest {
+  confirmation: string;
+  deleteEvidenceStorage?: boolean;
+}
+
+export interface AdminQaResetResponse {
+  resetAt: string;
+  deploymentProfile: OperationalStatusResponse["deployment"]["profile"];
+  databaseKind: OperationalStatusResponse["database"]["kind"];
+  deletedRows: Record<string, number>;
+  preservedTables: string[];
+  evidenceStorageDeleted: boolean;
+  status: OperationalStatusResponse;
+}
+
+export interface AdminQaSeedRequest {
+  confirmation: string;
+}
+
+export interface AdminQaSeedResponse {
+  seededAt: string;
+  deploymentProfile: OperationalStatusResponse["deployment"]["profile"];
+  imported: {
+    categories: number;
+    levels: number;
+    quests: number;
+    drillTemplates: number;
+  };
+  status: OperationalStatusResponse;
 }
 
 export function createSeedContentResponse(seed: BasecampSeed): SeedContentResponse {

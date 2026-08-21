@@ -49,8 +49,14 @@ pnpm --filter @basecamp/server dev
 - `GET /api/admin/export`
 - `POST /api/admin/import`
 - `GET /api/admin/audit`
+- `GET /api/admin/observability`
+- `POST /api/admin/qa/seed`
+- `POST /api/admin/qa/reset`
 
 Cloud pilot routes use admin-created local username/password accounts when
 `BASECAMP_AUTH_MODE=local`. Admin routes accept a local admin bearer session and
 can also use `BASECAMP_ADMIN_TOKEN` as a fallback operational token when that
 token is set to a non-placeholder value.
+
+QA seed/reset admin routes require `BASECAMP_QA_CONTROLS_ENABLED=true`, exact
+confirmation payloads, and a deployment profile other than `homelab`.
