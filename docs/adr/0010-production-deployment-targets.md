@@ -23,10 +23,12 @@ These deployments have different trust, data, reliability, and reset
 requirements. The architecture needs to support them without mixing real
 cloud pilot data with future homelab data.
 
-The current v1 MVP target is a bare-metal Supermicro 1U server running Ubuntu
-24.04 with 12 GB or 16 GB RAM. The first pilot users are the admin and one
-trusted friend. The pilot should use real data, except where fake/demo data is
-needed for CI, QA, or repeatable tests.
+The current v1 MVP target is an x86_64/amd64 server running Ubuntu 22.04 LTS
+with 12 GB or 16 GB RAM. Ubuntu 22.04 LTS has standard security maintenance
+through May 2027. Migration to Ubuntu 24.04 LTS is deferred until the admin
+explicitly requests it. The first pilot users are the admin and one trusted
+friend. The pilot should use real data, except where fake/demo data is needed
+for CI, QA, or repeatable tests.
 
 ## Decision
 

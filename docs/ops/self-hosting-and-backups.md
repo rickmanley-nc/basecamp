@@ -17,10 +17,12 @@ Basecamp separates deployment profiles from the application architecture:
 
 - `local-dev`: contributor machine, local SQLite, fast iteration, and no
   production claims.
-- `cloud-pilot`: first v1 MVP target. It is a bare-metal Supermicro 1U server
-  running Ubuntu 24.04 with 12 GB or 16 GB RAM. It should use real pilot data,
-  admin-created username/password accounts, local disk backups, logs/metrics,
-  and an explicit reset path for QA.
+- `cloud-pilot`: first v1 MVP target. It is an x86_64/amd64 server running
+  Ubuntu 22.04 LTS with 12 GB or 16 GB RAM. Ubuntu 22.04 LTS remains under
+  standard security maintenance through May 2027. Migration to Ubuntu 24.04 LTS
+  is deferred until the admin explicitly requests it. It should use real pilot
+  data, admin-created username/password accounts, local disk backups,
+  logs/metrics, and an explicit reset path for QA.
 - `homelab`: later admin-controlled home network deployment. It is expected to
   be LAN-only at first, with UniFi handling IP assignment, hostname, DNS, and
   routing. TLS should be added when this profile is brought online or whenever

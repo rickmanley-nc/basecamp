@@ -37,8 +37,11 @@ Cloud pilot:
 
 - v1 MVP target for testing with the admin and one trusted friend outside a
   local developer machine.
-- Target host is a bare-metal Supermicro 1U server running Ubuntu 24.04 with
-  12 GB or 16 GB RAM.
+- Target host is an x86_64/amd64 server running Ubuntu 22.04 LTS with 12 GB or
+  16 GB RAM.
+- Ubuntu 22.04 LTS is accepted for v1 while it remains in standard security
+  maintenance through May 2027. Migration validation for Ubuntu 24.04 LTS is
+  deferred until the admin explicitly requests it.
 - Should use real user data, except fake/demo data needed for CI, QA, and
   repeatable tests.
 - Must use admin-created local username/password accounts and must not require
