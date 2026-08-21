@@ -23,7 +23,7 @@ project clearer.
    CI, local machine, clean local environment, separate server, simulator, or
    physical iPhone.
 9. For installable releases, record the deployment profile validated:
-   `local-dev`, `homelab`, `cloud-pilot`, or intentionally deferred.
+   `local-dev`, `cloud-pilot`, post-MVP `homelab`, or intentionally deferred.
 10. Confirm release notes and linked PR text contain no personal workstation
    paths.
 11. Draft release notes.

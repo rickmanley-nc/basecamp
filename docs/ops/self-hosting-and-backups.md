@@ -3,9 +3,9 @@
 Last updated: 2026-08-21
 
 Basecamp must run on a self-hosted Linux server and remain useful over a local
-network without internet access. The primary real deployment target is an
-admin-controlled homelab on a home network. A separate cloud pilot target can be
-used for testing with real users.
+network without internet access. The v1 MVP deployment target is a cloud pilot
+server used by the admin and one trusted friend with real data. The homelab
+deployment should wait until after the cloud pilot path is proven.
 
 The operator install path lives in [Deployment Guide](./deployment.md). Backup
 and restore steps must be included there before the self-hosting beta milestone
@@ -17,11 +17,14 @@ Basecamp separates deployment profiles from the application architecture:
 
 - `local-dev`: contributor machine, local SQLite, fast iteration, and no
   production claims.
-- `homelab`: admin-controlled home network deployment for real household data.
-  This is the primary product target.
-- `cloud-pilot`: cloud server for real-user testing with isolated pilot data,
-  stronger authentication expectations, logs/metrics, and an explicit reset
-  path.
+- `cloud-pilot`: first v1 MVP target. It is a bare-metal Supermicro 1U server
+  running Ubuntu 24.04 with 12 GB or 16 GB RAM. It should use real pilot data,
+  admin-created username/password accounts, local disk backups, logs/metrics,
+  and an explicit reset path for QA.
+- `homelab`: later admin-controlled home network deployment. It is expected to
+  be LAN-only at first, with UniFi handling IP assignment, hostname, DNS, and
+  routing. TLS should be added when this profile is brought online or whenever
+  remote access is enabled.
 
 M6 reference adapter:
 
@@ -32,12 +35,13 @@ M6 reference adapter:
 - Local DNS name or stable LAN IP.
 - Optional VPN for remote access.
 
-Avoid mandatory SaaS dependencies for normal homelab operation.
+Avoid mandatory SaaS dependencies for normal operation. Do not require SSO for
+v1 because eventual offgrid operation must remain possible.
 
 PostgreSQL remains the later production target. The M6 beta uses SQLite because
 that is the implemented application persistence layer. The cloud pilot profile
-should move PostgreSQL, stronger authentication, and clearer reset/seed controls
-from later ideas into v1.0 readiness work.
+should move PostgreSQL, local username/password authentication, and clearer
+reset/seed controls from later ideas into v1.0 readiness work.
 
 ## Runtime Services
 
@@ -95,6 +99,9 @@ Initial policy:
 - Visible warning for stale or failed backups.
 - Restore drill before marking backup system complete.
 
+For v1, cloud pilot backups may remain on local disk. Later homelab backups
+should add SAN/NAS storage as a destination.
+
 M6 backups include a manifest and checksums. The current commands are:
 
 ```bash
@@ -133,10 +140,11 @@ pnpm ops:import
 ## Open Decisions
 
 - Backup encryption mechanism.
-- PostgreSQL adapter timing for homelab and cloud pilot readiness.
+- PostgreSQL adapter timing for cloud pilot readiness.
 - Whether embedded object storage is needed after filesystem storage, and what
   S3-compatible contract is required for cloud pilot.
 - Cloud pilot reset/seed data controls.
-- Production authentication boundary for homelab and cloud pilot.
+- Local username/password authentication boundary for cloud pilot and later
+  homelab use.
 - Restore UX for non-technical users.
 - Remote access guidance: VPN-first, reverse proxy, or both.

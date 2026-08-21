@@ -16,8 +16,9 @@ but Basecamp can now be run locally, packaged through Docker Compose, backed up,
 restored, exported, and imported for beta review.
 
 Docker Compose is the current single-node reference adapter. The production
-deployment architecture targets homelab and cloud-pilot profiles with separable
-web, API, database, storage, secrets, backup, restore, and proxy responsibilities.
+deployment architecture targets a cloud-pilot MVP first and a later homelab
+profile, with separable web, API, database, storage, secrets, backup, restore,
+and proxy responsibilities.
 
 ## Repository Map
 

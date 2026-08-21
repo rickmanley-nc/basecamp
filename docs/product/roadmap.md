@@ -224,17 +224,21 @@ Outcome:
 Primary work:
 
 - MVP readiness criteria and non-goals.
-- Production deployment profiles from ADR 0010: `local-dev`, `homelab`, and
-  `cloud-pilot`.
+- Production deployment profiles from ADR 0010: `local-dev`, `cloud-pilot` for
+  v1 MVP, and post-MVP `homelab`.
 - PostgreSQL production persistence path.
-- Evidence/document storage abstraction with a filesystem path for homelab and
-  an S3-compatible path for cloud pilot when needed.
-- Homelab deployment profile and validation runbook.
-- Cloud pilot deployment profile for real-user testing with isolated pilot data,
-  reset/seed controls, logs/metrics, and no dependence on private homelab data.
-- Production authentication and secret-management baseline.
+- Evidence/document storage abstraction with filesystem storage for the v1 cloud
+  pilot and later SAN/NAS or object storage options.
+- Cloud pilot deployment profile for real-user testing on the Ubuntu 24.04
+  bare-metal server with real data, local disk backups, reset/seed controls, and
+  logs/metrics.
+- Post-MVP homelab migration constraints, including UniFi-managed LAN/DNS/routing
+  and future TLS/SAN/NAS expectations.
+- Production authentication and secret-management baseline using admin-created
+  local username/password accounts, not SSO.
 - Backup/restore proof for database, storage, and admin configuration across
   accepted deployment profiles.
+- Physical iPhone testing for field data capture before v1.
 
 ## Issue Policy
 

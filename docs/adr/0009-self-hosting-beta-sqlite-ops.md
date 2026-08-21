@@ -47,5 +47,6 @@ multi-user authorization are still future work.
 Introduce a PostgreSQL adapter after the domain model and operational backup
 contract settle. The portable JSON/CSV export and import baseline created in M6
 is the migration bridge from SQLite beta deployments to future PostgreSQL
-deployments. v1.0 planning separates the homelab profile from the cloud pilot
-profile so real home data is not mixed with test-user data.
+deployments. v1.0 planning makes cloud pilot the MVP deployment target and
+keeps later homelab data separated unless the admin explicitly exports/imports
+data between profiles.

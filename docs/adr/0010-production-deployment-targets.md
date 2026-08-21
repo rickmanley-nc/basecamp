@@ -14,14 +14,19 @@ architecture.
 
 The intended real deployment shape is broader:
 
-- A homelab primary deployment on an admin-controlled home network.
-- A cloud pilot deployment for testing with real users outside local developer
-  machines.
+- A cloud pilot deployment for the v1 MVP, used by the admin and one trusted
+  friend with real user data.
+- A later homelab primary deployment on an admin-controlled home network.
 - Local development environments for contributors.
 
 These deployments have different trust, data, reliability, and reset
 requirements. The architecture needs to support them without mixing real
-homelab data with cloud pilot/test data.
+cloud pilot data with future homelab data.
+
+The current v1 MVP target is a bare-metal Supermicro 1U server running Ubuntu
+24.04 with 12 GB or 16 GB RAM. The first pilot users are the admin and one
+trusted friend. The pilot should use real data, except where fake/demo data is
+needed for CI, QA, or repeatable tests.
 
 ## Decision
 
@@ -46,15 +51,19 @@ Deployment profiles:
 
 - `local-dev`: contributor machine, local SQLite, fast iteration, no production
   claims.
-- `homelab`: single-node admin-controlled home network deployment, VPN or secure
-  reverse proxy for remote access, durable backups, restore drills, and clear
-  upgrade/rollback instructions.
-- `cloud-pilot`: cloud server for testing with real users, isolated pilot data,
-  stronger authentication expectations, reset/seed controls, logs/metrics, and
-  no dependence on private homelab data.
+- `cloud-pilot`: v1 MVP server for testing with two real users, isolated pilot
+  data, admin-created local accounts, username/password login, reset/seed
+  controls for QA, logs/metrics, local-disk backups, and no SSO dependency.
+- `homelab`: post-MVP single-node admin-controlled home network deployment,
+  likely LAN-only with UniFi-managed IP, hostname, DNS, and routing. TLS should
+  be added when this profile is brought online, especially for remote access.
+
+The cloud pilot should be LAN/private-network only unless TLS is configured. If
+it is reachable over the public internet, TLS is required before real user data
+or passwords are used.
 
 Docker Compose remains the M6 and near-term single-node reference adapter. It is
-allowed to run the homelab beta and a simple cloud pilot, but v1.0 readiness
+allowed to run the MVP cloud pilot and later homelab beta, but v1.0 readiness
 must prove that app, database, storage, secrets, backup, restore, and reverse
 proxy responsibilities are separable from Compose.
 
@@ -64,11 +73,12 @@ proxy responsibilities are separable from Compose.
   deployment.
 - Compose files must not become the only place where production behavior is
   defined.
-- v1.0 needs explicit work for PostgreSQL, storage abstraction, authentication,
-  deployment profiles, cloud pilot isolation, and production-grade validation.
+- v1.0 needs explicit work for PostgreSQL, storage abstraction, local
+  username/password authentication, deployment profiles, cloud pilot operations,
+  physical iPhone testing, and production-grade validation.
 - Release notes and issue comments should identify which deployment profile was
   validated.
-- Cloud pilot data must be treated as separate from homelab data unless an
+- Cloud pilot data must be treated as separate from future homelab data unless an
   explicit export/import action is performed by the admin.
 
 ## Non-Goals
@@ -77,3 +87,4 @@ proxy responsibilities are separable from Compose.
 - High availability is not required for the homelab target.
 - Managed cloud services are not mandatory for normal operation.
 - Compose is not removed; it is reclassified as a reference adapter.
+- SSO is not part of v1.0 because it conflicts with eventual offgrid operation.
