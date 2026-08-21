@@ -79,15 +79,17 @@ Physical iPhone:
 
 Physical Android:
 
-- Required for Android validation involving camera, QR/barcode scanning, APK or
-  AAB installation, offline behavior, notifications, and real device pairing.
+- Required for post-v1 Android validation involving camera, QR/barcode
+  scanning, APK or AAB installation, offline behavior, notifications, and real
+  device pairing.
 - Emulator testing is acceptable for layout, navigation, pure domain logic, and
   early app-shell checks, but it does not replace physical device validation for
   field workflows.
 
-Physical iPhone and Android validation are both required for v1 field data
-capture because the mobile experience is the primary way data will be added away
-from a desk.
+Physical iPhone validation is required for v1 field data capture because the
+mobile experience is the primary way data will be added away from a desk.
+Physical Android validation is deferred to the post-v1 Android milestone because
+no Android test phone is currently available.
 
 ## Separate Server Access Checklist
 

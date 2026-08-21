@@ -4,8 +4,10 @@ Last updated: 2026-08-21
 
 This checklist defines when Basecamp is ready to be called a v1 MVP for real
 household preparedness use. It is intentionally stricter than "the app runs":
-v1 must be installable, recoverable, usable from iPhone and Android devices in
-the field, and clear about what is still post-MVP.
+v1 must be installable, recoverable, usable from an iPhone in the field, and
+clear about what is still post-MVP. Android remains required after launch, but
+it is not a v1 gate because no physical Android test device is currently
+available.
 
 ## Release Decision
 
@@ -37,14 +39,12 @@ v1 blockers in known limitations.
 - Admin status, export, import, audit, local user creation, local user disable,
   backup, and restore remain documented and tested.
 
-### Mobile And Field Use
+### Mobile And iPhone Field Use
 
-- Basecamp Mobile produces locally built iOS and Android artifacts from
-  admin-controlled build hosts.
+- Basecamp Mobile produces a locally built iPhone artifact from an
+  admin-controlled build host.
 - The iOS app can install on a physical iPhone through an Apple-supported path
   after a local Xcode build.
-- The Android app can install on a physical Android device from a locally built
-  APK/AAB without depending on Google Play.
 - The mobile app can connect to the cloud pilot server by manual URL entry or a
   documented pairing flow.
 - The mobile app signs in with the v1 local username/password model; required
@@ -53,8 +53,8 @@ v1 blockers in known limitations.
   mobile screens, not only a TypeScript shell preview.
 - Quick Capture can create confirmable field commands for inventory,
   maintenance, drills, skills, failures, and quest progress.
-- Barcode and Basecamp QR scans work with Camera permission on physical iPhone
-  and Android devices.
+- Barcode and Basecamp QR scans work with Camera permission on a physical
+  iPhone.
 - Evidence photo/document capture stores deployment-owned evidence bytes and
   syncs metadata without exposing private device or workstation paths.
 - Offline read data includes active quests, inventory, critical BOMs,
@@ -147,21 +147,19 @@ v1 blockers in known limitations.
 | Separate server | Accepted substitute for cloud pilot only when the admin explicitly points it at v1 validation. | Same as cloud pilot, plus why it is accepted. |
 | Simulator | Mobile layout, navigation, pure TypeScript logic, and non-camera smoke checks. | Simulator/device target and scope limits. |
 | Physical iPhone | Local Xcode-built install path, Local Network, Camera, Photos, offline storage, scan, field capture, reconnect sync. | iOS version, app build, install path, server URL mode, pass/fail notes, and screenshots when useful. |
-| Physical Android | Locally built APK/AAB install path, Camera, storage behavior, scan, field capture, offline queue, reconnect sync. | Android version, app version code, artifact type, install path, server URL mode, pass/fail notes, and screenshots when useful. |
 | CI | Repository checks on every PR and release candidate. | GitHub Actions run link. |
 
 ## Open v1 Blockers
 
 The v1.0 milestone should remain open until these blockers are complete:
 
-- Local iOS and Android app build path. The blocker remains open until local
-  iOS and Android artifacts are produced, installed, and validated on physical
-  devices.
+- Local iPhone app build path. The blocker remains open until a local iOS
+  artifact is produced, installed, and validated on a physical iPhone.
 - Mobile field data capture, offline sync, and evidence upload. Native screens,
   local queues, and server upload plumbing exist, but the blocker remains open
-  until simulator/emulator plus physical iPhone and Android validation prove the
-  implemented behavior.
-- Physical mobile-device field validation for iPhone and Android.
+  until simulator plus physical iPhone validation prove the implemented
+  behavior.
+- Physical iPhone field validation.
 - Final v1 release-candidate validation and release notes.
 
 ## Non-Goals For v1.0
@@ -174,5 +172,7 @@ The v1.0 milestone should remain open until these blockers are complete:
 - Mandatory managed cloud services.
 - Mandatory S3-compatible object storage unless the cloud pilot requires it.
 - Ubuntu 24.04 migration before the admin requests it.
-- App Store or Google Play public release if local/ad hoc/beta installation is
-  sufficient for the v1 pilot.
+- Android app launch, Android APK/AAB distribution, and physical Android device
+  validation. These are tracked in the post-v1 Android milestone.
+- App Store public release if local/ad hoc/beta installation is sufficient for
+  the v1 pilot.

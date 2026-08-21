@@ -89,5 +89,12 @@
     "dueOn": "2027-01-15T23:59:59Z",
     "release": "v1.0.0",
     "description": "Complete MVP for real household preparedness use across web, mobile, sync, validation, and self-hosting."
+  },
+  {
+    "title": "v1.1 - Android Mobile",
+    "state": "open",
+    "dueOn": "2027-02-12T23:59:59Z",
+    "release": "v1.1.0",
+    "description": "Post-v1 Android mobile app build, installation, and physical-device field validation after the web plus iPhone launch."
   }
 ]

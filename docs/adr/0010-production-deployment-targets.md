@@ -80,8 +80,8 @@ proxy responsibilities are separable from Compose.
   [Basecamp v1.0 MVP Readiness](../product/v1-mvp-readiness.md), which turns
   these deployment profiles into explicit validation gates.
 - v1.0 needs explicit work for PostgreSQL, storage hardening beyond the M7
-  portability boundary, cloud pilot operations, local iOS and Android build
-  validation, physical mobile-device testing, and production-grade validation.
+  portability boundary, cloud pilot operations, local iPhone build validation,
+  physical iPhone testing, and production-grade validation.
 - M7 provides the first cloud pilot local-auth baseline with admin-created
   username/password accounts and no SSO dependency.
 - M8 records deployment profile metadata in backup manifests, restore results,

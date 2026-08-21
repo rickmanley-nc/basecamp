@@ -2,8 +2,9 @@
 
 Last updated: 2026-08-21
 
-This guide defines the v1 mobile build path for Basecamp Mobile on iPhone and
-Android.
+This guide defines the mobile build path for Basecamp Mobile. v1 launches with
+the web app and iPhone app. Android is deferred to the post-v1 Android milestone
+because no physical Android test device is currently available.
 
 For the release decision, see
 [Basecamp v1.0 MVP Readiness](../product/v1-mvp-readiness.md). For the
@@ -11,16 +12,17 @@ architecture decision, see [ADR 0011](../adr/0011-local-mobile-build-path.md).
 
 ## Build Requirement
 
-Basecamp v1 requires locally produced mobile artifacts:
+Basecamp v1 requires a locally produced iPhone artifact:
 
 - iPhone app artifacts must be built on an admin-controlled macOS build host
   with the full Xcode app installed.
-- Android app artifacts must be built on an admin-controlled host with Android
-  SDK command-line tools, a JDK, and Gradle.
 - EAS Build and other cloud build services are not required for v1 and must not
   be the only way to create an app update.
 - TestFlight may be used as an Apple-supported connected distribution channel
   after a local iOS build is created, but it is not the build system.
+- Android app artifacts remain required after launch and must be built locally
+  with Android SDK command-line tools, a JDK, and Gradle when the Android
+  milestone starts.
 
 ## Current Repo State
 
@@ -35,8 +37,9 @@ Basecamp Mobile currently has:
 - Secure token storage and AsyncStorage-backed outbox state.
 - Reconnect sync attempts.
 
-The v1 blocker remains open until local iOS and Android artifacts are produced,
-installed, and validated on physical devices.
+The v1 blocker remains open until a local iPhone artifact is produced,
+installed, and validated on a physical iPhone. Android validation is tracked by
+the post-v1 Android milestone.
 
 ## Shared Checks
 
@@ -95,7 +98,9 @@ Disconnected iPhone updates are constrained by Apple signing and device
 management rules. Do not claim an iOS off-grid update path until the exact
 Apple-supported process is proven.
 
-## Android Build Path
+## Post-v1 Android Build Path
+
+Status: deferred until after web plus iPhone v1 launch.
 
 Required build host:
 
@@ -110,8 +115,8 @@ Local development run:
 pnpm --filter @basecamp/mobile android
 ```
 
-For an installable Android artifact, generate the native project and build with
-Gradle from the generated Android directory:
+For an installable Android artifact after the Android milestone starts, generate
+the native project and build with Gradle from the generated Android directory:
 
 ```bash
 pnpm --filter @basecamp/mobile native:prebuild
@@ -134,6 +139,9 @@ release notes.
 Before v1, the admin must validate the current app on:
 
 - A physical iPhone.
+
+After v1, the Android milestone must validate the current app on:
+
 - A physical Android device.
 
 Each platform test report should record:
@@ -144,7 +152,7 @@ Each platform test report should record:
 - OS version.
 - App version/build.
 - Build host class, such as corporate Mac, admin Mac build host, Linux Android
-  build host, or cloud-pilot server.
+  build host, or cloud-pilot server as appropriate for the milestone.
 - Install path.
 - Server URL mode: LAN, VPN, or secure remote.
 - Deployment profile, normally `cloud-pilot`.
