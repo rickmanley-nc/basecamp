@@ -1,4 +1,6 @@
 import { basecampSeed } from "@basecamp/content";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   applyMigrations,
   createDatabase,
@@ -6,7 +8,9 @@ import {
   importSeed
 } from "../src/index";
 
-const filename = process.env.BASECAMP_DB_PATH ?? "var/basecamp-dev.sqlite";
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
+const filename =
+  process.env.BASECAMP_DB_PATH ?? path.join(repoRoot, "var/basecamp-dev.sqlite");
 
 await ensureDatabaseDirectory(filename);
 

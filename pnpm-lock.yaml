@@ -46,6 +46,9 @@ importers:
       '@basecamp/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@basecamp/gamification':
+        specifier: workspace:*
+        version: link:../../packages/gamification
       fastify:
         specifier: 5.12.1
         version: 5.12.1
@@ -83,6 +86,9 @@ importers:
       '@basecamp/domain':
         specifier: workspace:*
         version: link:../domain
+      '@basecamp/gamification':
+        specifier: workspace:*
+        version: link:../gamification
 
   packages/content:
     dependencies:
@@ -101,7 +107,11 @@ importers:
 
   packages/domain: {}
 
-  packages/gamification: {}
+  packages/gamification:
+    dependencies:
+      '@basecamp/domain':
+        specifier: workspace:*
+        version: link:../domain
 
   packages/sync: {}
 
@@ -132,6 +142,9 @@ importers:
       '@basecamp/domain':
         specifier: workspace:*
         version: link:../packages/domain
+      '@basecamp/gamification':
+        specifier: workspace:*
+        version: link:../packages/gamification
       '@basecamp/server':
         specifier: workspace:*
         version: link:../apps/server

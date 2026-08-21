@@ -21,7 +21,7 @@ usernames, workstation home directories, or Codex cache paths in tracked files,
 PR descriptions, release notes, issues, or comments. Use repo-relative paths,
 anonymous placeholders, environment variables, or admin-controlled server paths.
 
-## M1 Local Run
+## Local Run
 
 Create the local development database:
 
@@ -49,6 +49,12 @@ Default local URLs:
 M1 uses Node's built-in `node:sqlite` for local seed import, which currently
 emits an experimental warning. PostgreSQL remains the production self-hosting
 target.
+
+M2 adds persisted quest and category state to the local database. Useful routes:
+
+- `GET /api/dashboard`
+- `PATCH /api/categories/:categoryId/pursuit`
+- `POST /api/quests/:questId/actions`
 
 ## Branches
 

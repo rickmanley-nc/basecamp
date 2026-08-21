@@ -1,4 +1,5 @@
 import { Button as KaizenButton } from "@nvidia/foundations-react-core";
+import React from "react";
 import type { PropsWithChildren, ReactNode } from "react";
 
 export interface PageShellProps extends PropsWithChildren {
@@ -28,29 +29,46 @@ export interface ButtonProps extends PropsWithChildren {
   type?: "button" | "submit" | "reset";
   className?: string;
   disabled?: boolean;
+  onClick?: () => void;
+  ariaLabel?: string;
+  ariaPressed?: boolean;
 }
 
-export function Button({ tone = "secondary", type = "button", className, disabled, children }: ButtonProps) {
-  const kind = tone === "primary" ? "primary" : tone === "quiet" ? "tertiary" : "secondary";
-  const color = tone === "primary" ? "brand" : "neutral";
+export function Button({
+  tone = "secondary",
+  type = "button",
+  className,
+  disabled,
+  onClick,
+  ariaLabel,
+  ariaPressed,
+  children
+}: ButtonProps) {
+  const kind: "primary" | "secondary" | "tertiary" =
+    tone === "primary" ? "primary" : tone === "quiet" ? "tertiary" : "secondary";
+  const color: "brand" | "neutral" = tone === "primary" ? "brand" : "neutral";
   const buttonClassName = ["bc-button", className].filter(Boolean).join(" ");
+
+  const buttonProps = {
+    className: buttonClassName,
+    color,
+    kind,
+    type,
+    ...(ariaLabel === undefined ? {} : { "aria-label": ariaLabel }),
+    ...(ariaPressed === undefined ? {} : { "aria-pressed": ariaPressed }),
+    ...(onClick === undefined ? {} : { onClick })
+  };
 
   if (disabled === undefined) {
     return (
-      <KaizenButton className={buttonClassName} color={color} kind={kind} type={type}>
+      <KaizenButton {...buttonProps}>
         {children}
       </KaizenButton>
     );
   }
 
   return (
-    <KaizenButton
-      className={buttonClassName}
-      color={color}
-      disabled={disabled}
-      kind={kind}
-      type={type}
-    >
+    <KaizenButton {...buttonProps} disabled={disabled}>
       {children}
     </KaizenButton>
   );
@@ -126,13 +144,17 @@ export function Metric({ label, value, detail }: MetricProps) {
 export interface QuestListItemProps {
   title: string;
   meta: string;
+  actions?: ReactNode;
 }
 
-export function QuestListItem({ title, meta }: QuestListItemProps) {
+export function QuestListItem({ title, meta, actions }: QuestListItemProps) {
   return (
     <li className="bc-list-item">
-      <span>{title}</span>
-      <small>{meta}</small>
+      <div>
+        <span>{title}</span>
+        <small>{meta}</small>
+      </div>
+      {actions ? <div className="bc-list-actions">{actions}</div> : null}
     </li>
   );
 }

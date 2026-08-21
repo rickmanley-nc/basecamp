@@ -9,9 +9,10 @@ skills, drills, maintenance, scoring, badges, and offline field use.
 
 ## Status
 
-This repository is in initial architecture and bootstrap. The first checked-in
-deliverable is the product architecture, implementation plan, monorepo layout,
-GitHub workflow, and seed content model.
+This repository has a running web/server vertical slice and the first readiness
+and quest-core implementation. Current work is still early, but Basecamp can now
+load seed content, score initial readiness, recommend quests, persist quest
+lifecycle changes, and show category progression paths.
 
 ## Repository Map
 
@@ -63,13 +64,13 @@ pnpm install
 pnpm check
 ```
 
-Run the M1 local database seed import:
+Run the local database seed import:
 
 ```bash
 pnpm --filter @basecamp/database db:reset
 ```
 
-Run the M1 server and web app in separate terminals:
+Run the server and web app in separate terminals:
 
 ```bash
 pnpm --filter @basecamp/server dev
@@ -78,6 +79,12 @@ pnpm --filter @basecamp/web dev
 
 Server: `http://127.0.0.1:4317`  
 Web: `http://127.0.0.1:4318`
+
+The M2 API surface includes:
+
+- `GET /api/dashboard`
+- `PATCH /api/categories/:categoryId/pursuit`
+- `POST /api/quests/:questId/actions`
 
 Roadmap labels, milestones, and issues can be synced to GitHub with:
 

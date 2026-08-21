@@ -3,5 +3,16 @@
   "version": "0.0.0",
   "private": true,
   "description": "XP, readiness scoring, badges, outposts, milestones, recommendations, and unlock logic.",
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@basecamp/domain": "workspace:*"
+  }
 }

@@ -26,6 +26,7 @@ const requiredFiles = [
   "docs/adr/0003-local-first-self-hosted-sync.md",
   "docs/adr/0004-vite-react-fastify-vertical-slice.md",
   "docs/adr/0005-sqlite-baseline-postgresql-target.md",
+  "docs/adr/0006-readiness-quest-core-engine.md",
   ".github/roadmap/labels.json",
   ".github/roadmap/milestones.json",
   ".github/roadmap/issues.json",
@@ -38,6 +39,8 @@ const requiredFiles = [
   "packages/ui/package.json",
   "packages/content/package.json",
   "packages/gamification/package.json",
+  "packages/gamification/src/index.ts",
+  "packages/gamification/tsconfig.json",
   "packages/sync/package.json",
   "packages/content/seed/basecamp-seed-v0.json"
 ];

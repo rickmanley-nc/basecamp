@@ -13,6 +13,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@basecamp/domain": "workspace:*"
+    "@basecamp/domain": "workspace:*",
+    "@basecamp/gamification": "workspace:*"
   }
 }
