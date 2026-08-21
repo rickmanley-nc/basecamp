@@ -22,6 +22,7 @@ import {
   readHouseholdProgress,
   readInventoryState,
   recordXpEvent,
+  applySyncCommandBatch,
   recordMaintenanceCompletion,
   recordQuickInventoryEntry,
   setCategoryPursuit,
@@ -29,6 +30,7 @@ import {
 } from "@basecamp/database";
 import { questActions, type InventoryItemType, type PursuitState } from "@basecamp/domain";
 import { createXpEventForQuest } from "@basecamp/gamification";
+import type { SyncBatchRequest } from "@basecamp/sync";
 import Fastify, { type FastifyInstance } from "fastify";
 import type { DatabaseSync } from "node:sqlite";
 
@@ -82,7 +84,7 @@ export function buildServer(options: BuildServerOptions = {}): FastifyInstance {
   server.get("/health", async (): Promise<HealthResponse> => ({
     ok: true,
     service: "basecamp-server",
-    version: "0.4.0-m3",
+    version: "0.5.0-m4",
     checkedAt: new Date().toISOString()
   }));
 
@@ -106,6 +108,22 @@ export function buildServer(options: BuildServerOptions = {}): FastifyInstance {
       readInventoryState(database)
     )
   );
+
+  server.post<{
+    Body: SyncBatchRequest;
+  }>("/api/sync", async (request, reply) => {
+    if (!Array.isArray(request.body.commands)) {
+      return reply.code(400).send({ error: "Sync commands must be an array." });
+    }
+
+    try {
+      return applySyncCommandBatch(database, basecampSeed, request.body);
+    } catch (error) {
+      return reply.code(400).send({
+        error: error instanceof Error ? error.message : "Sync failed."
+      });
+    }
+  });
 
   server.post<{
     Body: QuickInventoryEntryRequest;

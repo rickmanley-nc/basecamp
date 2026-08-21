@@ -2,6 +2,7 @@ import { basecampSeed } from "@basecamp/content";
 import {
   applyMigrations,
   applyPersistedQuestAction,
+  applySyncCommandBatch,
   createBasecampAssetTag,
   countRows,
   createDatabase,
@@ -9,6 +10,7 @@ import {
   listQuestEvents,
   readHouseholdProgress,
   readInventoryState,
+  listSyncConflicts,
   recordMaintenanceCompletion,
   recordQuickInventoryEntry,
   setCategoryPursuit,
@@ -17,6 +19,7 @@ import {
   upsertMaintenancePolicy
 } from "@basecamp/database";
 import { describe, expect, it } from "vitest";
+import { createOfflineCommand } from "@basecamp/sync";
 
 describe("database seed import", () => {
   it("applies the baseline migration and imports seed content", () => {
@@ -28,7 +31,8 @@ describe("database seed import", () => {
     expect(migrations.applied).toEqual([
       "0001_basecamp_seed_baseline",
       "0002_household_progress_state",
-      "0003_inventory_location_maintenance"
+      "0003_inventory_location_maintenance",
+      "0004_offline_sync_commands"
     ]);
     expect(imported.categories).toBe(basecampSeed.categories.length);
     expect(imported.levels).toBe(basecampSeed.levels.length);
@@ -146,6 +150,82 @@ describe("database seed import", () => {
       policyId: policy.id,
       status: "upcoming"
     });
+
+    database.close();
+  });
+
+  it("persists idempotent sync commands and user-visible conflicts", () => {
+    const database = createDatabase();
+
+    applyMigrations(database);
+    importSeed(database, basecampSeed);
+    const inventoryCommand = createOfflineCommand({
+      clientId: "iphone-test",
+      localSequence: 1,
+      createdAt: "2026-08-21T00:00:00.000Z",
+      entityType: "inventory",
+      intent: {
+        type: "inventory.adjust_quantity",
+        source: "quick_capture",
+        itemName: "Water",
+        quantityDelta: 2,
+        unit: "gallon",
+        locationName: "Primary Home"
+      }
+    });
+    const questConflict = createOfflineCommand({
+      clientId: "iphone-test",
+      localSequence: 2,
+      createdAt: "2026-08-21T00:01:00.000Z",
+      entityType: "quest",
+      entityId: "water-store-24-hour-drinking-water",
+      entityVersion: 0,
+      intent: {
+        type: "quest.set_status",
+        questId: "water-store-24-hour-drinking-water",
+        action: "complete"
+      }
+    });
+
+    applyPersistedQuestAction(
+      database,
+      basecampSeed,
+      "water-store-24-hour-drinking-water",
+      "start",
+      { now: "2026-08-21T00:00:30.000Z" }
+    );
+
+    const first = applySyncCommandBatch(
+      database,
+      basecampSeed,
+      {
+        clientId: "iphone-test",
+        commands: [inventoryCommand, questConflict]
+      },
+      "2026-08-21T00:02:00.000Z"
+    );
+    const replay = applySyncCommandBatch(
+      database,
+      basecampSeed,
+      {
+        clientId: "iphone-test",
+        sinceCursor: first.nextCursor,
+        commands: [inventoryCommand]
+      },
+      "2026-08-21T00:03:00.000Z"
+    );
+    const inventory = readInventoryState(database, "2026-08-21T00:04:00.000Z");
+
+    expect(first.accepted.map((result) => result.status)).toEqual(["accepted", "conflict"]);
+    expect(first.conflicts[0]).toMatchObject({
+      entityType: "quest",
+      userVisible: true
+    });
+    expect(replay.replayedCommandCount).toBe(1);
+    expect(inventory.items[0]).toMatchObject({
+      name: "Water"
+    });
+    expect(listSyncConflicts(database)).toHaveLength(1);
 
     database.close();
   });

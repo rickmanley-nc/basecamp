@@ -3,5 +3,20 @@
   "version": "0.0.0",
   "private": true,
   "description": "Basecamp mobile companion for capture, scanning, field use, and offline reference.",
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "types": "./src/index.ts",
+  "scripts": {
+    "dev": "tsx src/preview.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@basecamp/api": "workspace:*",
+    "@basecamp/content": "workspace:*",
+    "@basecamp/domain": "workspace:*",
+    "@basecamp/sync": "workspace:*"
+  }
 }

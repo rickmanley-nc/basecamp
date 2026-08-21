@@ -251,6 +251,14 @@ M3 adds the first inventory/location/maintenance migration slice:
 - `maintenance_policies` and `maintenance_events` for recurring scope, next due
   calculation, completion records, and issue/failure follow-up context.
 
+M4 adds the first offline sync persistence slice:
+
+- `sync_clients` for registered mobile/web clients and last server cursor.
+- `sync_commands` for idempotent command batches with client ID, local sequence,
+  timestamp, entity version, intent, result, and server sequence cursor.
+- `sync_conflicts` for user-visible conflicts when entity-specific merge
+  policies cannot safely apply a queued command.
+
 This is not the final production schema; it is the first persistent read/write
 slice that keeps user action history recoverable for future sync.
 

@@ -45,6 +45,7 @@ export const apiRoutes = {
   assetLookup: "/api/assets/:assetId",
   maintenancePolicy: "/api/maintenance/policies",
   maintenanceCompletion: "/api/maintenance/:policyId/completions",
+  sync: "/api/sync",
   categoryPursuit: "/api/categories/:categoryId/pursuit",
   questAction: "/api/quests/:questId/actions"
 } as const;

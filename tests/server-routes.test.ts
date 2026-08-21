@@ -2,6 +2,7 @@ import { createDashboardSummary } from "@basecamp/api";
 import { basecampSeed } from "@basecamp/content";
 import { createDatabase, upsertAsset, upsertLocation } from "@basecamp/database";
 import { buildServer } from "@basecamp/server";
+import { createOfflineCommand } from "@basecamp/sync";
 import { describe, expect, it } from "vitest";
 
 describe("server routes", () => {
@@ -83,6 +84,50 @@ describe("server routes", () => {
         notes: "Starter battery weak."
       }
     });
+    const syncInventoryCommand = createOfflineCommand({
+      clientId: "iphone-test",
+      localSequence: 1,
+      createdAt: "2026-08-21T00:00:00.000Z",
+      entityType: "inventory",
+      intent: {
+        type: "inventory.adjust_quantity",
+        source: "quick_capture",
+        itemName: "Water",
+        quantityDelta: 1,
+        unit: "gallon",
+        locationName: "Primary Home"
+      }
+    });
+    const syncQuestConflictCommand = createOfflineCommand({
+      clientId: "iphone-test",
+      localSequence: 2,
+      createdAt: "2026-08-21T00:01:00.000Z",
+      entityType: "quest",
+      entityId: "home-label-utility-shutoffs",
+      entityVersion: 0,
+      intent: {
+        type: "quest.set_status",
+        questId: "home-label-utility-shutoffs",
+        action: "complete"
+      }
+    });
+    const syncBatch = await server.inject({
+      method: "POST",
+      url: "/api/sync",
+      payload: {
+        clientId: "iphone-test",
+        commands: [syncInventoryCommand, syncQuestConflictCommand]
+      }
+    });
+    const syncReplay = await server.inject({
+      method: "POST",
+      url: "/api/sync",
+      payload: {
+        clientId: "iphone-test",
+        sinceCursor: syncBatch.json().nextCursor,
+        commands: [syncInventoryCommand]
+      }
+    });
 
     expect(health.statusCode).toBe(200);
     expect(health.json()).toMatchObject({ ok: true, service: "basecamp-server" });
@@ -118,6 +163,17 @@ describe("server routes", () => {
     expect(maintenanceCompletion.json().event.followUpQuestTitle).toBe(
       "Resolve maintenance issue: Generator monthly run"
     );
+    expect(syncBatch.statusCode).toBe(200);
+    expect(syncBatch.json().accepted.map((result: { status: string }) => result.status)).toEqual([
+      "accepted",
+      "conflict"
+    ]);
+    expect(syncBatch.json().conflicts[0]).toMatchObject({
+      entityType: "quest",
+      userVisible: true
+    });
+    expect(syncReplay.statusCode).toBe(200);
+    expect(syncReplay.json().replayedCommandCount).toBe(1);
 
     await server.close();
     database.close();

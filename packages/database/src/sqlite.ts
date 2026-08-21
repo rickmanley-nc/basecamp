@@ -43,6 +43,14 @@ import {
   type QuestStatus,
   type XpEvent
 } from "@basecamp/domain";
+import {
+  resolveOfflineCommandConflict,
+  type OfflineCommand,
+  type SyncBatchRequest,
+  type SyncBatchResponse,
+  type SyncCommandResult,
+  type SyncConflict
+} from "@basecamp/sync";
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const defaultMigrationsDir = path.join(packageRoot, "migrations");
@@ -110,6 +118,10 @@ export interface MaintenancePolicyInput {
   lastCompletedAt?: string;
   nextDueAt?: string;
   instructions?: string;
+}
+
+export interface SyncPersistenceResult extends SyncBatchResponse {
+  replayedCommandCount: number;
 }
 
 export function createDatabase(filename = ":memory:"): DatabaseSync {
@@ -1016,6 +1028,92 @@ export function recordMaintenanceCompletion(
   };
 }
 
+export function applySyncCommandBatch(
+  database: DatabaseSync,
+  seed: BasecampSeed,
+  batch: SyncBatchRequest,
+  now = new Date().toISOString()
+): SyncPersistenceResult {
+  if (batch.clientId.trim().length === 0) {
+    throw new Error("Sync client ID is required.");
+  }
+
+  upsertSyncClient(database, batch.clientId, now);
+
+  const accepted: SyncCommandResult[] = [];
+  const conflicts: SyncConflict[] = [];
+
+  for (const command of batch.commands) {
+    validateSyncCommand(batch.clientId, command);
+
+    const existing = readSyncCommandResult(database, command.commandId);
+
+    if (existing !== undefined) {
+      accepted.push({
+        commandId: command.commandId,
+        status: "duplicate",
+        policy: "idempotent_duplicate",
+        cursor: existing.cursor,
+        message: "Command was already processed."
+      });
+      continue;
+    }
+
+    const currentEntityVersion = currentEntityVersionFor(database, command);
+    const decision = resolveOfflineCommandConflict(
+      command,
+      currentEntityVersion === undefined ? {} : { currentEntityVersion }
+    );
+    const cursor = insertSyncCommand(database, command, decision.policy, decision.outcome, now);
+
+    if (decision.outcome === "conflict") {
+      const conflict = insertSyncConflict(database, command, decision, now);
+      conflicts.push(conflict);
+      accepted.push({
+        commandId: command.commandId,
+        status: "conflict",
+        policy: decision.policy,
+        cursor,
+        message: decision.reason
+      });
+      continue;
+    }
+
+    applyAcceptedOfflineCommand(database, seed, command, now);
+    accepted.push({
+      commandId: command.commandId,
+      status: decision.outcome === "duplicate" ? "duplicate" : "accepted",
+      policy: decision.policy,
+      cursor,
+      message: decision.reason
+    });
+  }
+
+  const nextCursor = latestSyncCursor(database);
+  database
+    .prepare("UPDATE sync_clients SET last_seen_at = ?, last_cursor = ? WHERE client_id = ?")
+    .run(now, nextCursor, batch.clientId);
+
+  return {
+    clientId: batch.clientId,
+    nextCursor,
+    accepted,
+    conflicts,
+    replayedCommandCount: accepted.filter((result) => result.status === "duplicate").length
+  };
+}
+
+export function listSyncConflicts(database: DatabaseSync): SyncConflict[] {
+  return database
+    .prepare(
+      `SELECT id, command_id, entity_type, entity_id, policy, reason, user_visible
+       FROM sync_conflicts
+       ORDER BY created_at, id`
+    )
+    .all()
+    .map(rowToSyncConflict);
+}
+
 export function listQuestEvents(database: DatabaseSync): QuestLifecycleEvent[] {
   return database
     .prepare(
@@ -1148,6 +1246,257 @@ function saveInventoryEvent(database: DatabaseSync, event: InventoryEvent): void
       event.notes ?? null,
       event.occurredAt
     );
+}
+
+function upsertSyncClient(database: DatabaseSync, clientId: string, now: string): void {
+  database
+    .prepare(
+      `INSERT INTO sync_clients (client_id, registered_at, last_seen_at, last_cursor)
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT(client_id) DO UPDATE SET last_seen_at = excluded.last_seen_at`
+    )
+    .run(clientId, now, now, "sync:0");
+}
+
+function validateSyncCommand(clientId: string, command: OfflineCommand): void {
+  if (command.clientId !== clientId) {
+    throw new Error(`Command ${command.commandId} belongs to a different client.`);
+  }
+
+  if (command.localSequence < 1) {
+    throw new Error(`Command ${command.commandId} has an invalid local sequence.`);
+  }
+
+  if (command.commandId.trim().length === 0) {
+    throw new Error("Command ID is required.");
+  }
+}
+
+function readSyncCommandResult(
+  database: DatabaseSync,
+  commandId: string
+): { cursor: string; result: SyncCommandResult } | undefined {
+  const row = database
+    .prepare(
+      `SELECT server_sequence, result_json
+       FROM sync_commands
+       WHERE command_id = ?`
+    )
+    .get(commandId) as
+    | {
+        server_sequence: number;
+        result_json: string;
+      }
+    | undefined;
+
+  if (row === undefined) {
+    return undefined;
+  }
+
+  return {
+    cursor: syncCursor(row.server_sequence),
+    result: JSON.parse(row.result_json) as SyncCommandResult
+  };
+}
+
+function insertSyncCommand(
+  database: DatabaseSync,
+  command: OfflineCommand,
+  policy: SyncCommandResult["policy"],
+  outcome: "accepted" | "duplicate" | "conflict",
+  now: string
+): string {
+  const result = {
+    commandId: command.commandId,
+    status: outcome,
+    policy,
+    message: `Stored command ${command.commandId}.`
+  };
+
+  database
+    .prepare(
+      `INSERT INTO sync_commands
+       (
+         command_id, client_id, local_sequence, created_at, received_at, entity_type,
+         entity_id, entity_version, intent_json, status, policy, result_json
+       )
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    )
+    .run(
+      command.commandId,
+      command.clientId,
+      command.localSequence,
+      command.createdAt,
+      now,
+      command.entityType,
+      command.entityId ?? null,
+      command.entityVersion ?? null,
+      JSON.stringify(command.intent),
+      outcome,
+      policy,
+      JSON.stringify(result)
+    );
+
+  const row = database
+    .prepare("SELECT server_sequence FROM sync_commands WHERE command_id = ?")
+    .get(command.commandId) as { server_sequence: number };
+
+  return syncCursor(row.server_sequence);
+}
+
+function insertSyncConflict(
+  database: DatabaseSync,
+  command: OfflineCommand,
+  decision: ReturnType<typeof resolveOfflineCommandConflict>,
+  now: string
+): SyncConflict {
+  const conflict: SyncConflict = {
+    id: `sync-conflict-${slugify(command.commandId)}`,
+    commandId: command.commandId,
+    entityType: command.entityType,
+    ...(command.entityId === undefined ? {} : { entityId: command.entityId }),
+    policy: decision.policy,
+    reason: decision.reason,
+    userVisible: decision.userVisible
+  };
+
+  database
+    .prepare(
+      `INSERT OR REPLACE INTO sync_conflicts
+       (id, command_id, entity_type, entity_id, policy, reason, user_visible, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    )
+    .run(
+      conflict.id,
+      conflict.commandId,
+      conflict.entityType,
+      conflict.entityId ?? null,
+      conflict.policy,
+      conflict.reason,
+      conflict.userVisible ? 1 : 0,
+      now
+    );
+
+  return conflict;
+}
+
+function applyAcceptedOfflineCommand(
+  database: DatabaseSync,
+  seed: BasecampSeed,
+  command: OfflineCommand,
+  now: string
+): void {
+  const intent = command.intent;
+
+  if (intent.type === "inventory.adjust_quantity" && intent.quantityDelta > 0) {
+    recordQuickInventoryEntry(
+      database,
+      {
+        itemName: intent.itemName ?? intent.itemId ?? "Unknown inventory",
+        quantity: intent.quantityDelta,
+        locationName: intent.locationName ?? "Unassigned",
+        ...(intent.unit === undefined ? {} : { unit: intent.unit }),
+        ...(intent.expiresAt === undefined ? {} : { expiresAt: intent.expiresAt }),
+        ...(intent.notes === undefined ? {} : { notes: intent.notes })
+      },
+      now
+    );
+    return;
+  }
+
+  if (intent.type === "maintenance.complete" && intent.policyId !== undefined) {
+    recordMaintenanceCompletion(database, intent.policyId, {
+      now,
+      outcome: intent.outcome,
+      ...(intent.notes === undefined ? {} : { notes: intent.notes })
+    });
+    return;
+  }
+
+  if (intent.type === "quest.set_status" && intent.questId !== undefined) {
+    applyPersistedQuestAction(database, seed, intent.questId, intent.action, {
+      now,
+      ...(intent.notes === undefined ? {} : { reason: intent.notes })
+    });
+    return;
+  }
+
+  if (intent.type === "asset.report_issue") {
+    saveInventoryEvent(database, {
+      id: `inventory-event-${slugify(command.commandId)}`,
+      eventType: "fail",
+      assetId: intent.assetId,
+      stateAfter: "failed",
+      notes: intent.issue,
+      occurredAt: now
+    });
+    return;
+  }
+
+  if (intent.type === "asset.inspect" || intent.type === "asset.maintain") {
+    saveInventoryEvent(database, {
+      id: `inventory-event-${slugify(command.commandId)}`,
+      eventType: "inspect",
+      assetId: intent.assetId,
+      stateAfter: "maintained",
+      ...(intent.notes === undefined ? {} : { notes: intent.notes }),
+      occurredAt: now
+    });
+  }
+}
+
+function currentEntityVersionFor(database: DatabaseSync, command: OfflineCommand): number | undefined {
+  if (command.entityId === undefined) {
+    return undefined;
+  }
+
+  if (command.entityType === "quest") {
+    return countRows(database, "quest_events");
+  }
+
+  if (command.entityType === "inventory" || command.entityType === "asset") {
+    return countRows(database, "inventory_events");
+  }
+
+  if (command.entityType === "maintenance") {
+    return countRows(database, "maintenance_events");
+  }
+
+  return undefined;
+}
+
+function latestSyncCursor(database: DatabaseSync): string {
+  const row = database
+    .prepare("SELECT COALESCE(MAX(server_sequence), 0) as sequence FROM sync_commands")
+    .get() as { sequence: number };
+
+  return syncCursor(row.sequence);
+}
+
+function syncCursor(sequence: number): string {
+  return `sync:${sequence}`;
+}
+
+function rowToSyncConflict(row: unknown): SyncConflict {
+  const value = row as {
+    id: string;
+    command_id: string;
+    entity_type: SyncConflict["entityType"];
+    entity_id: string | null;
+    policy: SyncConflict["policy"];
+    reason: string;
+    user_visible: number;
+  };
+
+  return {
+    id: value.id,
+    commandId: value.command_id,
+    entityType: value.entity_type,
+    ...(value.entity_id === null ? {} : { entityId: value.entity_id }),
+    policy: value.policy,
+    reason: value.reason,
+    userVisible: value.user_visible === 1
+  };
 }
 
 function syncStoredLocationMaturity(

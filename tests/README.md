@@ -16,3 +16,7 @@ and the first web dashboard render. M2 adds tests for lifecycle transitions,
 dependency locks, readiness ceilings, recommendation suppression, progression
 node states, XP caps, badge and capability outpost progress, persistent audit
 events, server mutation routes, and the readiness-core web shell.
+
+M3 adds inventory, location maturity, BOM rollup, maintenance, QR tag, and web
+dashboard tests. M4 adds Quick Capture parser, QR/barcode scan workflow, durable
+outbox, conflict policy, sync persistence/API, and mobile shell tests.

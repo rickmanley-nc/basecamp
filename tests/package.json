@@ -11,7 +11,9 @@
     "@basecamp/database": "workspace:*",
     "@basecamp/domain": "workspace:*",
     "@basecamp/gamification": "workspace:*",
+    "@basecamp/mobile": "workspace:*",
     "@basecamp/server": "workspace:*",
+    "@basecamp/sync": "workspace:*",
     "@basecamp/web": "workspace:*",
     "react": "19.2.8",
     "react-dom": "19.2.8"

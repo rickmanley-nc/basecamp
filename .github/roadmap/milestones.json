@@ -29,7 +29,7 @@
   },
   {
     "title": "M4 - Mobile And Offline Sync",
-    "state": "open",
+    "state": "closed",
     "dueOn": "2026-10-22T23:59:59Z",
     "release": "v0.5.0",
     "description": "Mobile foundation, Quick Capture, scanning, offline read models, command outbox, and sync API."

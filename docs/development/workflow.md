@@ -68,6 +68,16 @@ M3 adds inventory, location, asset tag, and maintenance routes:
 Set `BASECAMP_PUBLIC_URL` when QR tags should point at a known server or LAN
 host rather than using the request host.
 
+M4 adds mobile/offline sync commands:
+
+- `POST /api/sync`
+- `pnpm --filter @basecamp/mobile dev`
+
+The mobile preview is a local TypeScript app-shell check. Physical iPhone checks
+for TestFlight installation, Camera permission, Local Network permission, offline
+device storage, and reconnect sync remain pending until a signed iPhone build
+exists.
+
 ## Branches
 
 - `main` should remain releasable.

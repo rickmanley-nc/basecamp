@@ -31,6 +31,7 @@ const requiredFiles = [
   "docs/adr/0005-sqlite-baseline-postgresql-target.md",
   "docs/adr/0006-readiness-quest-core-engine.md",
   "docs/adr/0007-location-progression-and-home-bases.md",
+  "docs/adr/0008-mobile-expo-offline-sync.md",
   ".github/roadmap/labels.json",
   ".github/roadmap/milestones.json",
   ".github/roadmap/issues.json",

@@ -33,7 +33,20 @@ importers:
         specifier: 4.1.11
         version: 4.1.11(@types/node@26.2.0)(jsdom@30.0.1)(vite@8.2.2(@types/node@26.2.0)(esbuild@0.28.2)(tsx@4.23.12))
 
-  apps/mobile: {}
+  apps/mobile:
+    dependencies:
+      '@basecamp/api':
+        specifier: workspace:*
+        version: link:../../packages/api
+      '@basecamp/content':
+        specifier: workspace:*
+        version: link:../../packages/content
+      '@basecamp/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
+      '@basecamp/sync':
+        specifier: workspace:*
+        version: link:../../packages/sync
 
   apps/server:
     dependencies:
@@ -52,6 +65,9 @@ importers:
       '@basecamp/gamification':
         specifier: workspace:*
         version: link:../../packages/gamification
+      '@basecamp/sync':
+        specifier: workspace:*
+        version: link:../../packages/sync
       fastify:
         specifier: 5.12.1
         version: 5.12.1
@@ -110,6 +126,9 @@ importers:
       '@basecamp/domain':
         specifier: workspace:*
         version: link:../domain
+      '@basecamp/sync':
+        specifier: workspace:*
+        version: link:../sync
 
   packages/domain: {}
 
@@ -119,7 +138,14 @@ importers:
         specifier: workspace:*
         version: link:../domain
 
-  packages/sync: {}
+  packages/sync:
+    dependencies:
+      '@basecamp/api':
+        specifier: workspace:*
+        version: link:../api
+      '@basecamp/domain':
+        specifier: workspace:*
+        version: link:../domain
 
   packages/ui:
     dependencies:
@@ -151,9 +177,15 @@ importers:
       '@basecamp/gamification':
         specifier: workspace:*
         version: link:../packages/gamification
+      '@basecamp/mobile':
+        specifier: workspace:*
+        version: link:../apps/mobile
       '@basecamp/server':
         specifier: workspace:*
         version: link:../apps/server
+      '@basecamp/sync':
+        specifier: workspace:*
+        version: link:../packages/sync
       '@basecamp/web':
         specifier: workspace:*
         version: link:../apps/web

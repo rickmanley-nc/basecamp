@@ -16,6 +16,7 @@
       "@basecamp/database": ["./packages/database/src/index.ts"],
       "@basecamp/domain": ["./packages/domain/src/index.ts"],
       "@basecamp/gamification": ["./packages/gamification/src/index.ts"],
+      "@basecamp/mobile": ["./apps/mobile/src/index.ts"],
       "@basecamp/sync": ["./packages/sync/src/index.ts"],
       "@basecamp/ui": ["./packages/ui/src/index.ts"]
     }
