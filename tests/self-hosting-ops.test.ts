@@ -253,6 +253,10 @@ describe("M6 self-hosting operations", () => {
     expect(compose).toContain("basecamp_database");
     expect(compose).toContain("basecamp_storage");
     expect(compose).toContain("basecamp_backups");
+    expect(compose).not.toContain("env_file:");
+    expect(compose).toContain("BASECAMP_APP_VERSION:");
+    expect(compose).toContain("BASECAMP_ADMIN_TOKEN:");
+    expect(compose).toContain("BASECAMP_REMOTE_ACCESS:");
     expect(envExample).toContain("BASECAMP_ADMIN_TOKEN=change-me");
     expect(envExample).toContain("BASECAMP_REMOTE_ACCESS=lan");
     expect(caddy).toContain("reverse_proxy server:4317");

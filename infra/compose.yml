@@ -6,14 +6,18 @@ services:
       context: ..
       dockerfile: infra/server.Dockerfile
     restart: unless-stopped
-    env_file:
-      - ./basecamp.env
     environment:
       HOST: 0.0.0.0
       PORT: 4317
+      BASECAMP_APP_VERSION: ${BASECAMP_APP_VERSION:-0.7.0-m6}
+      BASECAMP_PUBLIC_URL: ${BASECAMP_PUBLIC_URL:-http://basecamp.local:8080}
+      BASECAMP_WEB_URL: ${BASECAMP_WEB_URL:-http://basecamp.local:8080}
+      BASECAMP_ADMIN_TOKEN: ${BASECAMP_ADMIN_TOKEN:-change-me-generate-a-random-token}
       BASECAMP_DB_PATH: /var/lib/basecamp/basecamp.sqlite
       BASECAMP_STORAGE_DIR: /var/lib/basecamp/storage
       BASECAMP_BACKUP_DIR: /var/backups/basecamp
+      BASECAMP_REMOTE_ACCESS: ${BASECAMP_REMOTE_ACCESS:-lan}
+      BASECAMP_LOG_LEVEL: ${BASECAMP_LOG_LEVEL:-info}
     volumes:
       - basecamp_database:/var/lib/basecamp
       - basecamp_storage:/var/lib/basecamp/storage
@@ -49,8 +53,6 @@ services:
         condition: service_healthy
       web:
         condition: service_healthy
-    env_file:
-      - ./basecamp.env
     ports:
       - "${BASECAMP_HTTP_PORT:-8080}:8080"
     volumes:
@@ -72,12 +74,12 @@ services:
     depends_on:
       server:
         condition: service_healthy
-    env_file:
-      - ./basecamp.env
     environment:
+      BASECAMP_APP_VERSION: ${BASECAMP_APP_VERSION:-0.7.0-m6}
       BASECAMP_DB_PATH: /var/lib/basecamp/basecamp.sqlite
       BASECAMP_STORAGE_DIR: /var/lib/basecamp/storage
       BASECAMP_BACKUP_DIR: /var/backups/basecamp
+      BASECAMP_BACKUP_INTERVAL_SECONDS: ${BASECAMP_BACKUP_INTERVAL_SECONDS:-86400}
     command: ["sh", "-lc", "while true; do pnpm ops:backup; sleep ${BASECAMP_BACKUP_INTERVAL_SECONDS:-86400}; done"]
     volumes:
       - basecamp_database:/var/lib/basecamp
