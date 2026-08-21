@@ -66,10 +66,10 @@ v1 blockers in known limitations.
   standard security maintenance through May 2027.
 - Ubuntu 24.04 LTS migration remains deferred until the admin explicitly
   requests it.
-- PostgreSQL production persistence is implemented or the release is held before
-  `v1.0.0`. The v0.9.x migration/import validation path is not enough by itself
-  unless the API runtime adapter is promoted or the release notes explicitly
-  hold v1.
+- PostgreSQL production persistence and API runtime selection are implemented
+  for the cloud pilot. v1 still requires cloud-pilot validation, including
+  backup/restore proof and release-candidate evidence against the PostgreSQL
+  runtime.
 - SQLite beta data has a tested or documented migration bridge using portable
   export/import when direct migration is not available.
 - Filesystem evidence/document storage is acceptable for the v1 cloud pilot if
@@ -105,6 +105,8 @@ v1 blockers in known limitations.
   inclusion, release version, seed/content version, deployment profile, database
   kind, storage kind, table counts, active local user count, storage file count,
   and checksums.
+- PostgreSQL runtime backups include a Basecamp logical database snapshot and a
+  database-native dump until PostgreSQL restore drill proof is complete.
 - Restore drill on the cloud pilot profile proves local users, inventory,
   evidence metadata, evidence file bytes, reports, readiness data, and admin
   status.
@@ -147,10 +149,10 @@ v1 blockers in known limitations.
 
 The v1.0 milestone should remain open until these blockers are complete:
 
-- PostgreSQL API runtime adapter promotion and cloud-pilot validation.
 - Installable iPhone beta distribution path.
 - Mobile field data capture, offline sync, and evidence upload.
 - Physical iPhone field validation.
+- PostgreSQL cloud-pilot backup/restore proof and operational validation.
 - Cloud pilot reset, seed, and observability controls.
 - Final v1 release-candidate validation and release notes.
 

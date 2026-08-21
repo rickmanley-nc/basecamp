@@ -12,7 +12,8 @@ Operator-facing server and web installation requirements are tracked in
 ## M6 Beta Files
 
 - `compose.yml` - web, server, reverse proxy, persistent volumes, backup job,
-  and optional `postgres` profile for production-persistence validation.
+  and optional `postgres` profile for production-persistence and API runtime
+  validation.
 - `basecamp.env.example` - safe environment template.
 - `server.Dockerfile` - API server and ops command image.
 - `web.Dockerfile` - static web app image.
@@ -36,6 +37,11 @@ PostgreSQL validation uses the optional profile:
 docker compose --profile postgres --env-file basecamp.env run --rm postgres-tools pnpm ops:postgres:migrate
 docker compose --profile postgres --env-file basecamp.env run --rm postgres-tools pnpm ops:postgres:status
 ```
+
+To run the server against PostgreSQL, set `BASECAMP_DATABASE_KIND=postgresql`
+and `BASECAMP_DATABASE_URL` in `basecamp.env`, start the `postgres` profile, and
+then start `server`, `web`, `proxy`, and `backup`. Runtime-aware ops commands
+use the same selected database mode.
 
 For the cloud pilot profile, keep `BASECAMP_AUTH_MODE=local` and create the
 first admin account after startup:

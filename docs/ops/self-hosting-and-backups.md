@@ -40,14 +40,15 @@ M6 reference adapter:
 Avoid mandatory SaaS dependencies for normal operation. Do not require SSO for
 v1 because eventual offgrid operation must remain possible.
 
-PostgreSQL is now represented by a production-persistence data path: migrations,
-seed import, status, and portable SQLite-beta import are runnable against a real
-PostgreSQL service. The v0.9.x API server still defaults to SQLite until the
-PostgreSQL runtime adapter is promoted, and v1.0 must not ship while hiding that
-limitation. The v0.8 cloud pilot foundation adds local username/password
-authentication. The v0.8.1 recovery checkpoint proves cloud-pilot backup/restore
-for the implemented SQLite and filesystem storage path while keeping clearer
-reset/seed controls in v1.0 readiness work.
+PostgreSQL is now represented by a production-persistence and API runtime path:
+migrations, seed import, status, portable SQLite-beta import, local-user ops,
+admin status, export/import, and runtime backup status can target PostgreSQL
+when `BASECAMP_DATABASE_KIND=postgresql` and `BASECAMP_DATABASE_URL` are set.
+SQLite remains the default local-dev and beta fallback. The v0.8 cloud pilot
+foundation adds local username/password authentication. The v0.8.1 recovery
+checkpoint proves cloud-pilot backup/restore for the implemented SQLite and
+filesystem storage path while PostgreSQL restore-drill proof remains part of the
+v1 backup/restore work.
 
 ## Runtime Services
 
@@ -55,14 +56,15 @@ Current M6 services:
 
 - Web application.
 - API/sync server.
-- SQLite database file in a persistent volume.
+- SQLite database file in a persistent volume for default local/beta mode, or
+  PostgreSQL for cloud-pilot runtime mode.
 - File/object storage path for photos, evidence, documents, and exports.
 - Reverse proxy.
 - Backup job.
 
-Optional v1 production-persistence validation service:
+Optional v1 production-persistence service:
 
-- PostgreSQL database for production/pilot.
+- PostgreSQL database for production/pilot runtime.
 
 Future services:
 
@@ -90,7 +92,9 @@ After deployment, Basecamp must not depend on external network access for:
 Back up:
 
 - SQLite database.
-- PostgreSQL database when the production adapter exists.
+- PostgreSQL database logical snapshot when `BASECAMP_DATABASE_KIND=postgresql`
+  and a database-native dump for restore safety until the PostgreSQL restore
+  drill is closed.
 - Local user accounts and password hashes through database backup/restore.
 - Evidence/photo/document files.
 - Configuration.
@@ -114,12 +118,19 @@ Initial policy:
 For v1, cloud pilot backups may remain on local disk. Later homelab backups
 should add SAN/NAS storage as a destination.
 
-M6 backups include a manifest and checksums. The current commands are:
+M6 backups include a manifest and checksums. v0.9.2 makes the backup command
+runtime-aware: SQLite mode stores the database file, and PostgreSQL mode stores
+a logical database snapshot in the backup manifest. The current commands are:
 
 ```bash
 pnpm ops:backup
 pnpm ops:restore
 ```
+
+`pnpm ops:restore` currently restores SQLite physical backup manifests.
+PostgreSQL restore proof remains a v1 backup/restore blocker; take a
+database-native `pg_dump` alongside the Basecamp backup before PostgreSQL cloud
+pilot upgrades or destructive validation.
 
 ## Restore Drill
 
@@ -164,7 +175,7 @@ pnpm ops:postgres:import
 ## Open Decisions
 
 - Backup encryption mechanism.
-- PostgreSQL adapter timing for cloud pilot readiness.
+- PostgreSQL restore drill proof for cloud pilot readiness.
 - Whether embedded object storage is needed after filesystem storage, and what
   S3-compatible contract is required for cloud pilot.
 - Cloud pilot reset/seed data controls.

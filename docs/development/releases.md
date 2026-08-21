@@ -53,10 +53,16 @@ PostgreSQL database:
 pnpm ops:postgres:migrate
 pnpm ops:postgres:status
 pnpm ops:postgres:import
+BASECAMP_DATABASE_KIND=postgresql pnpm test tests/postgres-server-runtime.test.ts
+BASECAMP_DATABASE_KIND=postgresql pnpm ops:export
+BASECAMP_DATABASE_KIND=postgresql pnpm ops:backup
+BASECAMP_DATABASE_KIND=postgresql BASECAMP_USER_USERNAME=<user> BASECAMP_USER_PASSWORD=<password> pnpm ops:user:create
+BASECAMP_DATABASE_KIND=postgresql BASECAMP_USER_USERNAME=<user> pnpm ops:user:disable
 ```
 
 Record whether validation covered only migration/import or a promoted API
-runtime adapter.
+runtime adapter. For PostgreSQL runtime releases, record whether restore drill
+proof is complete or still tracked in the v1 backup/restore milestone.
 
 When a patch changes deployment behavior, audit previous milestone docs,
 operator runbooks, release notes, and the open v1.0 criteria before starting the
@@ -112,4 +118,5 @@ Every upgrade note should say:
 - `v0.8.1` - Recovery And Homelab Boundary
 - `v0.9.0` - MVP Readiness Gate
 - `v0.9.1` - PostgreSQL Production Persistence Path
+- `v0.9.2` - PostgreSQL API Runtime
 - `v1.0.0` - MVP Readiness

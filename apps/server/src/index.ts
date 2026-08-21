@@ -1,4 +1,4 @@
-import { createDatabase, ensureDatabaseDirectory } from "@basecamp/database";
+import { createRuntimeDatabase } from "@basecamp/database";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -11,13 +11,21 @@ const databasePath =
   process.env.BASECAMP_DB_PATH ?? path.join(repoRoot, "var/basecamp-dev.sqlite");
 const storageDir = process.env.BASECAMP_STORAGE_DIR ?? path.join(repoRoot, "var/storage");
 const backupDir = process.env.BASECAMP_BACKUP_DIR ?? path.join(repoRoot, "var/backups");
+const runtimeDatabase = await createRuntimeDatabase({
+  databasePathFallback: databasePath
+});
 const serverOptions: BuildServerOptions = {
   closeDatabaseOnClose: true,
-  databasePath,
+  databaseKind: runtimeDatabase.databaseKind,
+  databaseUrlConfigured: runtimeDatabase.databaseUrlConfigured,
   storageDir,
   backupDir,
   logger: true
 };
+
+if (runtimeDatabase.databasePath !== undefined) {
+  serverOptions.databasePath = runtimeDatabase.databasePath;
+}
 
 if (process.env.BASECAMP_APP_VERSION !== undefined) {
   serverOptions.appVersion = process.env.BASECAMP_APP_VERSION;
@@ -40,12 +48,10 @@ serverOptions.remoteAccessMode =
     ? process.env.BASECAMP_REMOTE_ACCESS
     : "unknown";
 
-await ensureDatabaseDirectory(databasePath);
 await mkdir(storageDir, { recursive: true });
 await mkdir(backupDir, { recursive: true });
 
-const database = createDatabase(databasePath);
-const server = buildServer({ ...serverOptions, database });
+const server = buildServer({ ...serverOptions, database: runtimeDatabase.database });
 
 try {
   await server.listen({ port, host });

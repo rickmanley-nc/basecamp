@@ -32,7 +32,7 @@ jobs:
         run: pnpm check
 
   postgres-validation:
-    name: PostgreSQL persistence validation
+    name: PostgreSQL persistence and runtime validation
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -77,6 +77,41 @@ jobs:
 
       - name: Import portable export into PostgreSQL
         run: pnpm ops:postgres:import
+
+      - name: PostgreSQL runtime import
+        env:
+          BASECAMP_DATABASE_KIND: postgresql
+          BASECAMP_IMPORT_FILE: var/exports/latest/basecamp-export.json
+        run: pnpm ops:import
+
+      - name: PostgreSQL runtime local-user ops
+        run: |
+          BASECAMP_DATABASE_KIND=postgresql \
+          BASECAMP_USER_USERNAME="ci-admin-${GITHUB_RUN_ID}" \
+          BASECAMP_USER_DISPLAY_NAME="CI Admin" \
+          BASECAMP_USER_PASSWORD="correct horse battery staple" \
+          pnpm ops:user:create
+
+          BASECAMP_DATABASE_KIND=postgresql \
+          BASECAMP_USER_USERNAME="ci-admin-${GITHUB_RUN_ID}" \
+          pnpm ops:user:disable
+
+      - name: PostgreSQL API runtime smoke
+        env:
+          BASECAMP_DATABASE_KIND: postgresql
+        run: pnpm test tests/postgres-server-runtime.test.ts
+
+      - name: PostgreSQL runtime export
+        env:
+          BASECAMP_DATABASE_KIND: postgresql
+          BASECAMP_EXPORT_DIR: var/exports/postgres-runtime
+        run: pnpm ops:export
+
+      - name: PostgreSQL runtime backup
+        env:
+          BASECAMP_DATABASE_KIND: postgresql
+          BASECAMP_BACKUP_DIR: var/backups/postgres-runtime
+        run: pnpm ops:backup
 
       - name: PostgreSQL status
         run: pnpm ops:postgres:status

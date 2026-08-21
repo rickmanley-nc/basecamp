@@ -1404,8 +1404,9 @@ Core production shape:
 - Static web application artifact.
 - Stateless API/sync server.
 - PostgreSQL production database target. v0.9.1 includes the migration, seed,
-  status, and portable SQLite import path; the API runtime adapter promotion is
-  still required before `v1.0.0`.
+  status, and portable SQLite import path; v0.9.2 promotes the API runtime
+  adapter through `BASECAMP_DATABASE_KIND=postgresql` and
+  `BASECAMP_DATABASE_URL`.
 - Evidence/document storage abstraction, starting with filesystem storage and
   allowing S3-compatible object storage later.
 - Reverse proxy and TLS controlled by the deployment environment.
@@ -1437,6 +1438,7 @@ not become the only expression of production behavior.
 Backup targets:
 
 - PostgreSQL dumps and WAL/archive strategy when appropriate.
+- Basecamp runtime backup manifests that record the active database kind.
 - Evidence/photo/document storage.
 - Configuration.
 - Deployment profile metadata.

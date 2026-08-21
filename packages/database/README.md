@@ -15,7 +15,10 @@ skill progress, training records, drill templates, and drill runs. M6 adds audit
 events, portable JSON/CSV export/import, backup manifests, integrity checks, and
 restore helpers. v0.8 adds local user accounts and bearer sessions for the cloud
 pilot profile. v0.9.1 adds PostgreSQL migrations, seed import, status checks,
-and portable SQLite-beta import for the production-persistence validation path.
+and portable SQLite-beta import for the production-persistence path. v0.9.2
+adds runtime database selection so server and ops commands can target
+PostgreSQL with `BASECAMP_DATABASE_KIND=postgresql` and
+`BASECAMP_DATABASE_URL`.
 
 ## Local Seed Import
 
@@ -57,3 +60,9 @@ pnpm ops:postgres:import
 The PostgreSQL commands require `BASECAMP_DATABASE_URL` or `DATABASE_URL`.
 `postgres:import` also reads `BASECAMP_IMPORT_FILE`, which defaults to
 `var/exports/latest/basecamp-export.json`.
+
+Runtime-aware commands such as `ops:backup`, `ops:export`, `ops:import`,
+`ops:user:create`, and `ops:user:disable` use SQLite by default and switch to
+PostgreSQL when `BASECAMP_DATABASE_KIND=postgresql` is set. PostgreSQL backup
+creates a Basecamp logical database snapshot; SQLite restore remains the
+implemented `ops:restore` path until PostgreSQL restore-drill proof is closed.

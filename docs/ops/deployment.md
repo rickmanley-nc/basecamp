@@ -26,9 +26,10 @@ inventory, evidence storage, reports, and admin readiness.
 
 v0.9.1 adds the PostgreSQL production-persistence data path: PostgreSQL
 migrations, seed import, portable SQLite-beta export import, an optional Compose
-`postgres` profile, and operator status checks. The runnable API server still
-defaults to SQLite in the v0.9.x beta until the PostgreSQL runtime adapter is
-promoted; v1.0 cannot ship with that limitation hidden. See
+`postgres` profile, and operator status checks. v0.9.2 promotes the API runtime
+adapter so the server can run against PostgreSQL by setting
+`BASECAMP_DATABASE_KIND=postgresql` and `BASECAMP_DATABASE_URL`. SQLite remains
+the default local-dev and beta fallback. See
 [ADR 0009](../adr/0009-self-hosting-beta-sqlite-ops.md) and
 [ADR 0010](../adr/0010-production-deployment-targets.md).
 
@@ -49,14 +50,13 @@ responsibilities are separable from Compose.
 
 Database modes:
 
-- `sqlite-beta`: current local-dev and v0.9.x API runtime default. Data lives in
-  `BASECAMP_DB_PATH` and is protected by the backup/restore path.
-- `postgresql-validation`: v1 production-persistence validation path. Data lives
-  in PostgreSQL via `BASECAMP_DATABASE_URL`; migrations, seed import, status,
-  and portable SQLite import are runnable today.
-- `postgresql-runtime`: required before `v1.0.0` can be shipped as production
-  ready. If the server runtime adapter is not promoted, the v1 release must be
-  held.
+- `sqlite`: default local-dev and beta fallback. Data lives in
+  `BASECAMP_DB_PATH` and is protected by the SQLite physical backup/restore
+  path.
+- `postgresql`: selectable v1 cloud-pilot runtime. Data lives in PostgreSQL via
+  `BASECAMP_DATABASE_URL`; migrations, seed import, status, local-user ops,
+  portable export/import, admin status, and runtime backup status use the
+  PostgreSQL adapter.
 
 For v1, the cloud pilot should use admin-created local accounts with
 username/password login. Do not add SSO as a required dependency because it
@@ -109,6 +109,10 @@ Edit `infra/basecamp.env` before startup:
   `/etc/basecamp/basecamp.env` when config is stored outside the release tree.
 - Keep `BASECAMP_REMOTE_ACCESS=lan` unless a VPN or secure reverse proxy is
   configured.
+- Keep `BASECAMP_DATABASE_KIND=sqlite` for local-dev or SQLite beta review.
+  For the v1 cloud pilot PostgreSQL runtime, set
+  `BASECAMP_DATABASE_KIND=postgresql` and set `BASECAMP_DATABASE_URL` to the
+  PostgreSQL connection string.
 
 The real env file is intentionally ignored by git and is not loaded through a
 service-level Compose `env_file` entry. Pass it explicitly with
@@ -125,16 +129,18 @@ docker compose --env-file basecamp.env up -d --build
 docker compose --env-file basecamp.env ps
 ```
 
-## PostgreSQL Production Persistence
+## PostgreSQL API Runtime
 
-The PostgreSQL path is available for cloud-pilot persistence validation before
-the API server switches its default runtime database. Use it on the accepted v1
-cloud-pilot target or in a clean local container environment.
+The PostgreSQL path is available for cloud-pilot persistence and API runtime
+validation. The default remains SQLite until the operator sets
+`BASECAMP_DATABASE_KIND=postgresql`; this lets local-dev stay lightweight while
+the v1 cloud pilot can use the production database target.
 
 Operator variables:
 
+- `BASECAMP_DATABASE_KIND`: set to `postgresql` for PostgreSQL runtime mode.
 - `BASECAMP_DATABASE_URL`: PostgreSQL connection string for admin-run database
-  operations.
+  operations and server runtime.
 - `BASECAMP_POSTGRES_SSL`: `disable`, `require`, or `allow-self-signed`.
 - `BASECAMP_POSTGRES_DB`, `BASECAMP_POSTGRES_USER`, and
   `BASECAMP_POSTGRES_PASSWORD`: optional Compose `postgres` profile values.
@@ -146,11 +152,14 @@ cd /opt/basecamp/infra
 docker compose --profile postgres --env-file basecamp.env up -d postgres
 docker compose --profile postgres --env-file basecamp.env run --rm postgres-tools pnpm ops:postgres:migrate
 docker compose --profile postgres --env-file basecamp.env run --rm postgres-tools pnpm ops:postgres:status
+docker compose --profile postgres --env-file basecamp.env up -d --build server web proxy backup
 ```
 
 The migrate command applies the schema migrations and imports the packaged seed
-content idempotently. The status command reports `database.kind: "postgresql"`,
-migration count, and table counts.
+content idempotently. Server startup also applies migrations and seed content
+idempotently. The status command and `/api/admin/status` report
+`database.kind: "postgresql"`, migration count, and table counts when the
+runtime is configured for PostgreSQL.
 
 To bridge existing SQLite beta data into PostgreSQL, create a portable export
 from the SQLite deployment, then import that archive into the PostgreSQL
@@ -172,9 +181,10 @@ docker compose --profile postgres --env-file basecamp.env run --rm \
 
 Portable export/import migrates structured application data, CSV-readable
 records, audit events, and evidence/document references. It rejects incompatible
-content schema versions and modified archives. Admin-created local accounts are
-still protected by database backup/restore in the SQLite beta path; recreate or
-explicitly migrate users when the PostgreSQL runtime adapter is promoted.
+content schema versions and modified archives. Local account tables and active
+sessions remain deployment-local in portable exports; create admin accounts
+after import, or use a proven same-runtime backup/restore path when the goal is
+to preserve accounts.
 
 Create the first admin account after the server has applied migrations. The
 password must be at least 12 characters. The example uses shell prompts so the
@@ -193,7 +203,8 @@ unset BASECAMP_USER_PASSWORD
 
 The user creation command prints the created user record without the password.
 If the env file lives at `/etc/basecamp/basecamp.env`, use that same path with
-`--env-file` for this command.
+`--env-file` for this command. The same command targets PostgreSQL when
+`BASECAMP_DATABASE_KIND=postgresql` and `BASECAMP_DATABASE_URL` are set.
 
 To revoke a pilot user's access, set `BASECAMP_USER_USERNAME` to that username
 and run:
@@ -241,7 +252,8 @@ backup recency, and beta security posture. It should report
 
 Backups include:
 
-- SQLite database file.
+- SQLite database file, or a PostgreSQL logical database snapshot when
+  `BASECAMP_DATABASE_KIND=postgresql`.
 - Evidence/photo/document storage directory.
 - Configuration file when `BASECAMP_CONFIG_PATH` points at it.
 - App version.
@@ -259,6 +271,19 @@ docker compose --env-file basecamp.env run --rm backup pnpm ops:backup
 
 The backup service also runs `pnpm ops:backup` on
 `BASECAMP_BACKUP_INTERVAL_SECONDS`, which defaults to daily.
+
+In PostgreSQL mode, `pnpm ops:backup` writes a Basecamp logical database
+snapshot at `database/basecamp-database.json` inside the backup directory and
+records `databaseKind: "postgresql"` in both the manifest and latest backup
+marker. Until the PostgreSQL restore drill is completed, also take a
+database-native dump before upgrades or destructive validation:
+
+```bash
+mkdir -p /var/backups/basecamp
+docker compose --profile postgres --env-file basecamp.env exec -T postgres \
+  sh -lc 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --format=custom' \
+  > /var/backups/basecamp/basecamp-postgres-$(date -u +%Y%m%dT%H%M%SZ).dump
+```
 
 The backup container mounts `BASECAMP_CONFIG_SOURCE` read-only at
 `/etc/basecamp/basecamp.env` and sets `BASECAMP_CONFIG_PATH` so the backup
@@ -303,10 +328,12 @@ jq '{
 }' /var/backups/basecamp/<backup-directory>/manifest.json
 ```
 
-Expected cloud pilot values for v0.9.1:
+Expected cloud pilot values for v0.9.2:
 
-- `appVersion` is `0.9.1`.
+- `appVersion` is `0.9.2`.
 - `deployment.profile` is `cloud-pilot`.
+- `deployment.databaseKind` is `sqlite` for SQLite beta deployments or
+  `postgresql` for the PostgreSQL runtime.
 - `deployment.configIncluded` is `true` when `BASECAMP_CONFIG_SOURCE` points at
   the real admin config file.
 - `deployment.localUserCount` is the active local user count and is at least 1
@@ -344,6 +371,12 @@ docker compose --env-file basecamp.env run --rm \
   server pnpm ops:restore
 ```
 
+`pnpm ops:restore` currently restores SQLite physical backup manifests. For a
+PostgreSQL runtime deployment, keep the Basecamp logical backup and the
+database-native `pg_dump` together, and use the PostgreSQL restore drill from
+the backup/restore milestone before trusting the cloud pilot with irreplaceable
+data.
+
 ## Export And Import
 
 Portable export:
@@ -363,7 +396,9 @@ portable evidence file references. Host filesystem paths such as
 `/Users/<admin>/Evidence/...`, `/home/<admin>/...`, or Windows profile paths are
 not emitted into the evidence manifest. Local account tables and active sessions
 are deployment-local; use backup/restore, not portable export/import, when the
-goal is to preserve accounts on the same deployment profile.
+goal is to preserve accounts on the same deployment profile. Export and import
+commands target PostgreSQL when `BASECAMP_DATABASE_KIND=postgresql` and
+`BASECAMP_DATABASE_URL` are set.
 
 ## Upgrade
 
@@ -458,6 +493,9 @@ issues, pull requests, releases, comments, or tracked files.
 - If admin endpoints return `503`, create a local admin user or configure a
   non-placeholder `BASECAMP_ADMIN_TOKEN`.
 - If import fails, confirm export version, content schema version, and checksum.
+- If PostgreSQL mode cannot start, confirm `BASECAMP_DATABASE_KIND=postgresql`,
+  `BASECAMP_DATABASE_URL`, and `BASECAMP_POSTGRES_SSL`, then run
+  `pnpm ops:postgres:status` against the same database.
 
 ## Local Preview
 

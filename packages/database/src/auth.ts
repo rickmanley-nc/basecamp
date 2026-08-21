@@ -1,5 +1,5 @@
 import { createHash, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
-import type { DatabaseSync } from "node:sqlite";
+import type { BasecampDatabase } from "./connection";
 
 export type LocalUserRole = "admin" | "member";
 export type LocalUserStatus = "active" | "disabled";
@@ -44,7 +44,7 @@ const scryptParameters = {
 
 const sessionTtlMs = 1000 * 60 * 60 * 24 * 14;
 
-export function createLocalUser(database: DatabaseSync, input: LocalUserInput): LocalUser {
+export function createLocalUser(database: BasecampDatabase, input: LocalUserInput): LocalUser {
   const username = normalizeUsername(input.username);
   const displayName = (input.displayName ?? username).trim();
   const password = input.password;
@@ -86,7 +86,7 @@ export function createLocalUser(database: DatabaseSync, input: LocalUserInput): 
 }
 
 export function verifyLocalUserPassword(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   usernameInput: string,
   password: string,
   now = new Date().toISOString()
@@ -110,7 +110,7 @@ export function verifyLocalUserPassword(
 }
 
 export function createAuthSession(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   user: LocalUser,
   now = new Date().toISOString()
 ): AuthSession {
@@ -129,7 +129,7 @@ export function createAuthSession(
 }
 
 export function authenticateSession(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   token: string | undefined,
   now = new Date().toISOString()
 ): AuthenticatedSession | undefined {
@@ -171,7 +171,7 @@ export function authenticateSession(
 }
 
 export function revokeAuthSession(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   token: string | undefined,
   now = new Date().toISOString()
 ): boolean {
@@ -187,7 +187,7 @@ export function revokeAuthSession(
 }
 
 export function disableLocalUser(
-  database: DatabaseSync,
+  database: BasecampDatabase,
   usernameInput: string,
   now = new Date().toISOString()
 ): LocalUser {
@@ -212,7 +212,7 @@ export function disableLocalUser(
   return toLocalUser({ ...row, status: "disabled", updated_at: now });
 }
 
-export function countActiveLocalUsers(database: DatabaseSync): number {
+export function countActiveLocalUsers(database: BasecampDatabase): number {
   const row = database.prepare("SELECT COUNT(*) as count FROM local_users WHERE status = 'active'").get() as {
     count: number;
   };

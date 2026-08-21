@@ -4,6 +4,8 @@ import {
   countActiveLocalUsers,
   createBackup,
   createDatabase,
+  createRuntimeBackup,
+  databaseKindFromEnv,
   disableLocalUser,
   createLocalUser,
   createPortableExport,
@@ -29,6 +31,13 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("M6 self-hosting operations", () => {
+  it("rejects unknown runtime database kinds instead of falling back silently", () => {
+    expect(databaseKindFromEnv(undefined)).toBe("sqlite");
+    expect(databaseKindFromEnv("sqlite")).toBe("sqlite");
+    expect(databaseKindFromEnv("postgresql")).toBe("postgresql");
+    expect(() => databaseKindFromEnv("postgres")).toThrow(/sqlite or postgresql/);
+  });
+
   it("exports structured JSON and CSV, then imports into another local deployment", () => {
     const source = createDatabase();
     const target = createDatabase();
@@ -319,6 +328,101 @@ describe("M6 self-hosting operations", () => {
     await rm(root, { recursive: true, force: true });
   });
 
+  it("records runtime-aware logical backups for PostgreSQL mode", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "basecamp-postgres-backup-"));
+    const storageDir = path.join(root, "storage");
+    const backupDir = path.join(root, "backups");
+    const configPath = path.join(root, "basecamp.env");
+
+    mkdirSync(storageDir, { recursive: true });
+    writeFileSync(path.join(storageDir, "readiness-note.txt"), "runtime backup proof");
+    writeFileSync(
+      configPath,
+      [
+        "BASECAMP_APP_VERSION=0.9.2",
+        "BASECAMP_AUTH_MODE=local",
+        "BASECAMP_DEPLOYMENT_PROFILE=cloud-pilot",
+        "BASECAMP_DATABASE_KIND=postgresql"
+      ].join("\n")
+    );
+
+    const database = createDatabase();
+
+    applyMigrations(database);
+    importSeed(database, basecampSeed);
+    createLocalUser(database, {
+      username: "postgres-admin",
+      password: "correct horse battery staple",
+      displayName: "PostgreSQL Admin",
+      role: "admin",
+      now: "2026-08-21T00:00:00.000Z"
+    });
+    recordQuickInventoryEntry(database, {
+      itemName: "Runtime backup water",
+      quantity: 8,
+      unit: "gallon",
+      locationName: "Cloud Pilot Home Base",
+      categoryId: "water",
+      type: "water_storage"
+    });
+
+    const backup = createRuntimeBackup(database, {
+      databaseKind: "postgresql",
+      storageDir,
+      backupDir,
+      appVersion: "0.9.2",
+      contentSchemaVersion: basecampSeed.schemaVersion,
+      deploymentProfile: "cloud-pilot",
+      configPath,
+      now: "2026-08-21T00:10:00.000Z"
+    });
+    const manifest = readBackupManifest(backup.backupPath);
+    const snapshot = JSON.parse(readFileSync(path.join(backup.backupPath, manifest.database.path), "utf8")) as {
+      databaseKind: string;
+      tables: Record<string, unknown[]>;
+    };
+    const status = readBackupStatus(backupDir, {
+      now: "2026-08-21T01:10:00.000Z",
+      databaseKind: "postgresql"
+    });
+    const mismatchedStatus = readBackupStatus(backupDir, {
+      now: "2026-08-21T01:10:00.000Z",
+      databaseKind: "sqlite"
+    });
+
+    expect(manifest.deployment).toMatchObject({
+      profile: "cloud-pilot",
+      databaseKind: "postgresql",
+      localUserCount: 1,
+      storageFileCount: 1
+    });
+    expect(manifest.database.path).toBe("database/basecamp-database.json");
+    expect(snapshot.databaseKind).toBe("postgresql");
+    expect(snapshot.tables.local_users).toHaveLength(1);
+    expect(snapshot.tables.inventory_items).toHaveLength(1);
+    expect(verifyBackup(backup.backupPath, "2026-08-21T01:10:00.000Z").ok).toBe(true);
+    expect(status).toMatchObject({
+      configured: true,
+      ok: true,
+      status: "fresh"
+    });
+    expect(mismatchedStatus).toMatchObject({
+      configured: true,
+      ok: false,
+      status: "failed"
+    });
+    expect(() =>
+      restoreBackup({
+        backupPath: backup.backupPath,
+        databasePath: path.join(root, "restore", "basecamp.sqlite"),
+        storageDir: path.join(root, "restore-storage")
+      })
+    ).toThrow(/SQLite backup manifests/);
+
+    database.close();
+    await rm(root, { recursive: true, force: true });
+  });
+
   it("reports actionable backup restore failure modes", async () => {
     const root = await mkdtemp(path.join(os.tmpdir(), "basecamp-backup-failure-"));
     const databasePath = path.join(root, "data", "basecamp.sqlite");
@@ -582,7 +686,7 @@ describe("M6 self-hosting operations", () => {
     expect(compose).toContain("${BASECAMP_CONFIG_SOURCE");
     expect(envExample).toContain("BASECAMP_ADMIN_TOKEN=change-me");
     expect(envExample).toContain("BASECAMP_AUTH_MODE=local");
-    expect(envExample).toContain("BASECAMP_APP_VERSION=0.9.1");
+    expect(envExample).toContain("BASECAMP_APP_VERSION=0.9.2");
     expect(envExample).toContain("BASECAMP_DEPLOYMENT_PROFILE=cloud-pilot");
     expect(envExample).toContain("BASECAMP_CONFIG_SOURCE=./basecamp.env");
     expect(envExample).toContain("BASECAMP_REMOTE_ACCESS=lan");

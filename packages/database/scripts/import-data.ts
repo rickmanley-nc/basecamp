@@ -1,8 +1,7 @@
 import { basecampSeed } from "@basecamp/content";
 import {
   applyMigrations,
-  createDatabase,
-  ensureDatabaseDirectory,
+  createRuntimeDatabase,
   importPortableExport,
   importSeed,
   recordAuditEvent,
@@ -10,12 +9,9 @@ import {
 } from "../src/index";
 import { readFile } from "node:fs/promises";
 
-const databasePath = requiredEnv("BASECAMP_DB_PATH", "var/basecamp-dev.sqlite");
 const importFile = requiredEnv("BASECAMP_IMPORT_FILE", "var/exports/latest/basecamp-export.json");
 
-await ensureDatabaseDirectory(databasePath);
-
-const database = createDatabase(databasePath);
+const { database } = await createRuntimeDatabase();
 
 try {
   applyMigrations(database);

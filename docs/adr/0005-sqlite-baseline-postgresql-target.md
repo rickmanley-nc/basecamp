@@ -54,6 +54,12 @@ the SQLite beta runtime:
 - The portable export/import bridge is the documented migration path when a
   direct runtime migration is not available.
 
-Before `v1.0.0`, the PostgreSQL runtime adapter must be promoted for the API
-server or the release must be held. SQLite remains useful for local development
-and mobile/offline-shaped data, but it is not the production database target.
+v0.9.2 promotes the PostgreSQL API runtime adapter:
+
+- Server startup selects SQLite or PostgreSQL through `BASECAMP_DATABASE_KIND`.
+- PostgreSQL runtime mode requires `BASECAMP_DATABASE_URL`.
+- Local-user ops, admin status, portable export/import, and runtime backup
+  status use the selected database runtime.
+
+SQLite remains useful for local development and mobile/offline-shaped data, but
+it is not the production database target.

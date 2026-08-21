@@ -18,7 +18,9 @@ restored, exported, and imported for beta review.
 Docker Compose is the current single-node reference adapter. The production
 deployment architecture targets a cloud-pilot MVP first and a later homelab
 profile, with separable web, API, database, storage, secrets, backup, restore,
-and proxy responsibilities.
+and proxy responsibilities. SQLite remains the default local-dev database, while
+the cloud-pilot API runtime can be switched to PostgreSQL with
+`BASECAMP_DATABASE_KIND=postgresql` and `BASECAMP_DATABASE_URL`.
 
 ## Repository Map
 

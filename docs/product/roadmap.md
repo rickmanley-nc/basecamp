@@ -36,6 +36,7 @@ The sync script lives in:
 | `v0.8.1` | M8 - Recovery And Homelab Boundary | Backup/restore proof, deployment-profile metadata, and homelab deferral clarity. | Cloud pilot restore can prove real data, users, evidence, reports, admin status, and recoverable failure modes. |
 | `v0.9.0` | M9 - MVP Readiness Gate | v1 release criteria, validation matrix, non-goals, and remaining blocker issue map. | The v1 MVP gate is explicit enough that work can proceed without asking what comes next. |
 | `v0.9.1` | M10 - PostgreSQL Production Persistence Path | PostgreSQL migration, seed, status, and portable SQLite import bridge. | The production-persistence data path is validated and the remaining runtime blocker is explicit. |
+| `v0.9.2` | M11 - PostgreSQL API Runtime | Selectable PostgreSQL API runtime, local-user ops, admin status, export/import, runtime backup status, and CI smoke validation. | The API server can run the cloud-pilot path against PostgreSQL. |
 | `v1.0.0` | v1.0 - MVP Readiness | Complete MVP for real household preparedness use. | Core workflows are usable, tested, documented, and releasable. |
 
 ## Milestone Detail
@@ -347,23 +348,24 @@ M9 impact audit:
 
 ### M10 - PostgreSQL Production Persistence Path
 
-Status: complete once `v0.9.1` is released.
+Status: complete. `v0.9.1` delivered the PostgreSQL production-persistence
+path; `v0.9.2` follows with runtime promotion.
 
 Outcome:
 
 - PostgreSQL production-persistence data path exists for the v1 cloud pilot.
 - PostgreSQL migrations, seed import, status checks, and portable SQLite-beta
   import are runnable by an operator.
-- The remaining v1 blocker is narrowed to promoting the API server runtime to
-  PostgreSQL and validating it against the cloud-pilot profile.
+- The remaining v1 blocker is narrowed to proving cloud-pilot backup/restore,
+  operations, and release-candidate validation against the PostgreSQL runtime.
 
 Primary work:
 
 - Translate the SQLite baseline migrations into PostgreSQL-compatible DDL.
 - Add PostgreSQL operator scripts for migrate, status, and portable import.
 - Add an optional Compose `postgres` profile for clean local validation.
-- Document database modes for `sqlite-beta`, `postgresql-validation`, and the
-  still-required `postgresql-runtime`.
+- Document database modes for SQLite local/beta use and PostgreSQL production
+  persistence.
 - Keep Ubuntu 22.04 LTS as the accepted v1 cloud-pilot target and keep Ubuntu
   24.04 LTS deferred until the admin explicitly requests it.
 
@@ -381,11 +383,58 @@ M10 impact audit:
   dashboard behavior, inventory, maintenance, mobile shell, sync fixtures,
   drills, skills, and evidence records keep the same product contracts.
 - M6 through M8 are affected operationally. Deployment, backup, restore,
-  security, and cloud-pilot docs now distinguish the SQLite beta runtime from
-  PostgreSQL validation and future runtime promotion.
+  security, and cloud-pilot docs distinguish SQLite local/beta use from
+  PostgreSQL production persistence.
 - M9 is affected by narrowing the v1 PostgreSQL blocker: migration/import is no
-  longer the unknown, but PostgreSQL API runtime validation remains required
-  before `v1.0.0`.
+  longer the unknown, but API runtime validation remains required before
+  `v1.0.0`.
+
+### M11 - PostgreSQL API Runtime
+
+Status: complete once `v0.9.2` is released.
+
+Outcome:
+
+- The API server can run the v1 cloud pilot against PostgreSQL by setting
+  `BASECAMP_DATABASE_KIND=postgresql` and `BASECAMP_DATABASE_URL`.
+- Admin-created local accounts, username/password login, admin status,
+  portable export/import, inventory, quests, drills, skills, evidence metadata,
+  sync routes, audit events, and runtime backup status work through the
+  PostgreSQL adapter.
+- SQLite remains available for local development and portable/mobile-shaped
+  test data.
+
+Primary work:
+
+- Add a shared database connection interface for SQLite and PostgreSQL runtime
+  implementations.
+- Add a synchronous PostgreSQL adapter for existing server repository calls.
+- Route server startup and ops scripts through runtime database selection.
+- Make backup status database-kind aware and add logical PostgreSQL runtime
+  backup snapshots.
+- Add CI PostgreSQL API runtime smoke validation and runtime export validation.
+- Update deployment, backup, release, verification, ADR, and v1 readiness docs.
+
+Validation:
+
+- `pnpm check`.
+- Docker Compose config validation with the tracked env example and the
+  optional `postgres` profile.
+- PostgreSQL migration/import validation plus API runtime smoke validation in
+  CI.
+
+M11 impact audit:
+
+- M0 through M5 keep the same product contracts. The database adapter changes
+  persistence mechanics but not quest, inventory, location, sync, drill, skill,
+  evidence, scoring, or dashboard behavior.
+- M6 through M8 are affected operationally. Deployment docs now show how to run
+  the cloud-pilot API against PostgreSQL, and backup status is tied to the
+  active database kind instead of assuming SQLite.
+- M9 is affected positively. PostgreSQL API runtime promotion is no longer an
+  open v1 blocker, but cloud-pilot backup/restore proof, iPhone validation,
+  reset/seed controls, observability, and final release-candidate validation
+  remain.
 
 ### v1.0 - MVP Readiness
 
@@ -404,7 +453,8 @@ Primary work:
 - The v1 gate in [Basecamp v1.0 MVP Readiness](./v1-mvp-readiness.md).
 - Production deployment profiles from ADR 0010: `local-dev`, `cloud-pilot` for
   v1 MVP, and post-MVP `homelab`.
-- PostgreSQL API runtime adapter promotion and cloud-pilot validation.
+- PostgreSQL cloud-pilot validation, including backup/restore proof and release
+  candidate evidence against the promoted runtime.
 - Evidence/document storage hardening beyond the v0.8 portability boundary,
   including filesystem bytes for the v1 cloud pilot and later SAN/NAS or object
   storage options.

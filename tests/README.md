@@ -26,4 +26,5 @@ report section tests, persistence tests, server route tests, and web dashboard
 render coverage for the gap report. M6 adds portable export/import tests,
 backup/restore integrity tests, admin-token route tests, audit event tests, and
 self-hosting artifact checks for Compose, proxy, persistent volumes, and safe
-environment defaults.
+environment defaults. v0.9 adds PostgreSQL migration/import validation and a
+PostgreSQL API runtime smoke test when `BASECAMP_DATABASE_URL` is available.
