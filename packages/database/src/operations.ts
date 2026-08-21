@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync, c
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
-import type { BasecampDatabase, DatabaseKind } from "./connection";
+import { databaseKind, type BasecampDatabase, type DatabaseKind } from "./connection";
 
 export const portableExportVersion = "basecamp-portable-v1";
 
@@ -106,6 +106,7 @@ export interface BackupStatus {
 export interface RestoreResult {
   restoredAt: string;
   databasePath: string;
+  databaseKind: DatabaseKind;
   storageDir: string;
   restoredFiles: number;
   manifest: {
@@ -255,6 +256,41 @@ const qaResetPreservedTables = [
   "capability_levels",
   "quest_templates",
   "drill_templates",
+  "local_users",
+  "auth_sessions",
+  "audit_events"
+] as const;
+
+const logicalDatabaseRestoreTableOrder = [
+  "schema_migrations",
+  "seed_imports",
+  "categories",
+  "capability_levels",
+  "quest_templates",
+  "category_pursuits",
+  "quest_instances",
+  "quest_events",
+  "xp_events",
+  "locations",
+  "location_relationships",
+  "location_readiness",
+  "inventory_items",
+  "inventory_lots",
+  "assets",
+  "asset_tags",
+  "kits",
+  "kit_items",
+  "inventory_events",
+  "maintenance_policies",
+  "maintenance_events",
+  "sync_clients",
+  "sync_commands",
+  "sync_conflicts",
+  "evidence_records",
+  "skill_progress",
+  "training_records",
+  "drill_templates",
+  "drill_runs",
   "local_users",
   "auth_sessions",
   "audit_events"
@@ -744,6 +780,8 @@ export function restoreBackup(
     backupPath: string;
     databasePath: string;
     storageDir: string;
+    database?: BasecampDatabase;
+    databaseKind?: DatabaseKind;
     allowOverwrite?: boolean;
     restoredAt?: string;
   }
@@ -757,7 +795,7 @@ export function restoreBackup(
   const manifest = readBackupManifest(options.backupPath);
 
   if (manifest.deployment.databaseKind !== "sqlite") {
-    throw new Error("The restore command currently supports SQLite backup manifests. Use the PostgreSQL restore runbook for PostgreSQL logical backups.");
+    return restoreLogicalDatabaseBackup(options, manifest);
   }
 
   if (!options.allowOverwrite && (existsSync(options.databasePath) || existsSync(options.storageDir))) {
@@ -783,6 +821,7 @@ export function restoreBackup(
   return {
     restoredAt: options.restoredAt ?? new Date().toISOString(),
     databasePath: options.databasePath,
+    databaseKind: "sqlite",
     storageDir: options.storageDir,
     restoredFiles: listFiles(options.storageDir).length + 1,
     manifest: {
@@ -791,6 +830,151 @@ export function restoreBackup(
       deployment: manifest.deployment
     }
   };
+}
+
+function restoreLogicalDatabaseBackup(
+  options: {
+    backupPath: string;
+    databasePath: string;
+    storageDir: string;
+    database?: BasecampDatabase;
+    databaseKind?: DatabaseKind;
+    allowOverwrite?: boolean;
+    restoredAt?: string;
+  },
+  manifest: BackupManifest
+): RestoreResult {
+  if (options.database === undefined) {
+    throw new Error("A live database connection is required to restore PostgreSQL logical backup manifests.");
+  }
+
+  const targetDatabaseKind = options.databaseKind ?? databaseKind(options.database);
+
+  if (targetDatabaseKind !== manifest.deployment.databaseKind) {
+    throw new Error(
+      `Backup database kind ${manifest.deployment.databaseKind} does not match restore target ${targetDatabaseKind}.`
+    );
+  }
+
+  const archive = readLogicalDatabaseBackup(options.backupPath, manifest.database.path);
+
+  if (archive.databaseKind !== manifest.deployment.databaseKind) {
+    throw new Error(
+      `Logical backup database kind ${archive.databaseKind} does not match manifest ${manifest.deployment.databaseKind}.`
+    );
+  }
+
+  if (archive.contentSchemaVersion !== manifest.contentSchemaVersion) {
+    throw new Error(
+      `Logical backup content schema ${archive.contentSchemaVersion} does not match manifest ${manifest.contentSchemaVersion}.`
+    );
+  }
+
+  const existingRows = logicalRestoreExistingRowCount(options.database);
+
+  if (!options.allowOverwrite && existingRows > 0) {
+    throw new Error("Restore target already has database rows. Set allowOverwrite to replace it.");
+  }
+
+  const storageSource = path.join(options.backupPath, "storage");
+
+  if (existsSync(options.storageDir)) {
+    if (!options.allowOverwrite) {
+      throw new Error("Restore target already exists. Set allowOverwrite to replace it.");
+    }
+
+    rmSync(options.storageDir, { recursive: true, force: true });
+  }
+
+  mkdirSync(options.storageDir, { recursive: true });
+
+  if (existsSync(storageSource)) {
+    cpSync(storageSource, options.storageDir, { recursive: true });
+  }
+
+  restoreLogicalRows(options.database, archive.tables);
+
+  return {
+    restoredAt: options.restoredAt ?? new Date().toISOString(),
+    databasePath: options.databasePath,
+    databaseKind: targetDatabaseKind,
+    storageDir: options.storageDir,
+    restoredFiles: listFiles(options.storageDir).length + 1,
+    manifest: {
+      appVersion: manifest.appVersion,
+      contentSchemaVersion: manifest.contentSchemaVersion,
+      deployment: manifest.deployment
+    }
+  };
+}
+
+function readLogicalDatabaseBackup(backupPath: string, databaseEntryPath: string): LogicalDatabaseBackupArchive {
+  const databasePath = path.join(backupPath, databaseEntryPath);
+  const archive = JSON.parse(readFileSync(databasePath, "utf8")) as LogicalDatabaseBackupArchive;
+
+  if (archive.backupVersion !== "basecamp-database-logical-v1") {
+    throw new Error(`Unsupported logical database backup version ${archive.backupVersion}.`);
+  }
+
+  const expectedChecksum = checksumJson({
+    backupVersion: archive.backupVersion,
+    createdAt: archive.createdAt,
+    appVersion: archive.appVersion,
+    contentSchemaVersion: archive.contentSchemaVersion,
+    databaseKind: archive.databaseKind,
+    tables: archive.tables
+  });
+
+  if (archive.checksum !== expectedChecksum) {
+    throw new Error("Logical database backup checksum does not match archive contents.");
+  }
+
+  return archive;
+}
+
+function logicalRestoreExistingRowCount(database: BasecampDatabase): number {
+  return orderedLogicalTables(databaseTableNames(database)).reduce((total, table) => {
+    const row = database.prepare(`SELECT COUNT(*) as count FROM ${quoteIdentifier(table)}`).get() as {
+      count: number;
+    };
+
+    return total + row.count;
+  }, 0);
+}
+
+function restoreLogicalRows(database: BasecampDatabase, tables: Record<string, DatabaseRow[]>): void {
+  const targetTables = orderedLogicalTables(databaseTableNames(database));
+  const sourceTables = orderedLogicalTables(Object.keys(tables)).filter((table) => tableExists(database, table));
+
+  database.exec("BEGIN");
+
+  try {
+    for (const table of [...targetTables].reverse()) {
+      database.prepare(`DELETE FROM ${quoteIdentifier(table)}`).run();
+    }
+
+    for (const table of sourceTables) {
+      const rows = tables[table] ?? [];
+
+      if (rows.length > 0) {
+        insertRows(database, table, rows);
+      }
+    }
+
+    database.exec("COMMIT");
+  } catch (error) {
+    database.exec("ROLLBACK");
+    throw error;
+  }
+}
+
+function orderedLogicalTables(tables: string[]): string[] {
+  const available = new Set(tables);
+  const ordered = logicalDatabaseRestoreTableOrder.filter((table) => available.has(table));
+  const restoreOrder = logicalDatabaseRestoreTableOrder as readonly string[];
+  const remaining = tables.filter((table) => !restoreOrder.includes(table)).sort();
+
+  return [...ordered, ...remaining];
 }
 
 export function readBackupStatus(

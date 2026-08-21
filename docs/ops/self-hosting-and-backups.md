@@ -127,10 +127,11 @@ pnpm ops:backup
 pnpm ops:restore
 ```
 
-`pnpm ops:restore` currently restores SQLite physical backup manifests.
-PostgreSQL restore proof remains a v1 backup/restore blocker; take a
-database-native `pg_dump` alongside the Basecamp backup before PostgreSQL cloud
-pilot upgrades or destructive validation.
+`pnpm ops:restore` restores SQLite physical backup manifests and PostgreSQL
+logical backup manifests. PostgreSQL restore proof remains a v1 backup/restore
+blocker until it is run against the cloud-pilot path. Take a database-native
+`pg_dump` alongside the Basecamp backup before PostgreSQL cloud-pilot upgrades
+or destructive validation.
 
 ## Restore Drill
 

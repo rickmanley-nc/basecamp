@@ -1,9 +1,18 @@
 import { buildServer } from "@basecamp/server";
+import { basecampSeed } from "@basecamp/content";
 import {
+  applyMigrations,
+  countActiveLocalUsers,
   createLocalUser,
   createPostgresDatabaseSync,
-  postgresSslFromEnv
+  createRuntimeBackup,
+  importSeed,
+  postgresSslFromEnv,
+  readInventoryState,
+  recordQuickInventoryEntry,
+  restoreBackup
 } from "@basecamp/database";
+import { existsSync, writeFileSync } from "node:fs";
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -115,6 +124,68 @@ describePostgres("PostgreSQL API runtime", () => {
     expect(exported.json().manifest.tableCounts.quest_instances).toBeGreaterThan(0);
 
     await server.close();
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it("restores a PostgreSQL logical backup through the runtime adapter", async () => {
+    const root = await mkdtempBasecamp("basecamp-postgres-restore-");
+    const storageDir = path.join(root, "storage");
+    const backupDir = path.join(root, "backups");
+    const restoredStorageDir = path.join(root, "restore-storage");
+    const database = createPostgresDatabaseSync({
+      connectionString: connectionString as string,
+      ssl: postgresSslFromEnv(process.env.BASECAMP_POSTGRES_SSL)
+    });
+    const suffix = String(Date.now());
+    const itemName = `Postgres Restore Water ${suffix}`;
+
+    await mkdir(storageDir, { recursive: true });
+    await mkdir(backupDir, { recursive: true });
+    writeFileSync(path.join(storageDir, "restore-note.txt"), "postgres restore proof");
+
+    applyMigrations(database);
+    importSeed(database, basecampSeed);
+    createLocalUser(database, {
+      username: `pg-restore-admin-${suffix}`,
+      password: "correct horse battery staple",
+      displayName: "Postgres Restore Admin",
+      role: "admin"
+    });
+    recordQuickInventoryEntry(database, {
+      itemName,
+      quantity: 5,
+      unit: "gallon",
+      locationName: "Cloud Pilot Restore",
+      categoryId: "water",
+      type: "water_storage"
+    });
+
+    const backup = createRuntimeBackup(database, {
+      databaseKind: "postgresql",
+      storageDir,
+      backupDir,
+      appVersion: "0.9.2",
+      contentSchemaVersion: basecampSeed.schemaVersion,
+      deploymentProfile: "cloud-pilot",
+      now: "2026-08-21T00:30:00.000Z"
+    });
+    const restored = restoreBackup({
+      backupPath: backup.backupPath,
+      databasePath: "postgresql",
+      storageDir: restoredStorageDir,
+      database,
+      databaseKind: "postgresql",
+      allowOverwrite: true,
+      restoredAt: "2026-08-21T00:31:00.000Z"
+    });
+
+    expect(restored.databaseKind).toBe("postgresql");
+    expect(restored.restoredFiles).toBe(2);
+    expect(countActiveLocalUsers(database)).toBeGreaterThan(0);
+    expect(readInventoryState(database).items.map((item) => item.name)).toContain(itemName);
+    expect(existsSync(path.join(restoredStorageDir, "restore-note.txt"))).toBe(true);
+
+    database.close();
     await rm(root, { recursive: true, force: true });
   });
 });
