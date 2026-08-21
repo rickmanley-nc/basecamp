@@ -480,7 +480,10 @@ Current blocker map:
   promoted PostgreSQL runtime.
 - Installable iPhone beta distribution path. Expo/EAS/TestFlight configuration
   exists, but physical iPhone TestFlight install validation is still required.
-- Mobile field data capture, offline sync, and evidence upload.
+- Mobile field data capture, offline sync, and evidence upload. Native field
+  tabs, storage boundaries, scan/quick-capture queueing, evidence upload, and
+  reconnect sync plumbing exist, but simulator and physical iPhone validation
+  remain required.
 - Physical iPhone field validation.
 - Cloud pilot reset, seed, and observability controls.
 - Final v1 release-candidate validation and release notes.

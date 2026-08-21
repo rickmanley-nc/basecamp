@@ -3,6 +3,9 @@ import { basecampSeed } from "@basecamp/content";
 import { createDatabase, upsertAsset, upsertLocation } from "@basecamp/database";
 import { buildServer } from "@basecamp/server";
 import { createOfflineCommand } from "@basecamp/sync";
+import { mkdtempSync, readFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("server routes", () => {
@@ -244,6 +247,49 @@ describe("server routes", () => {
     )).toBe(true);
     expect(gapReport.statusCode).toBe(200);
     expect(gapReport.json().validationGaps.length).toBeGreaterThan(0);
+
+    await server.close();
+    database.close();
+  });
+
+  it("stores mobile evidence uploads in deployment-owned storage without local path metadata", async () => {
+    const database = createDatabase();
+    const storageDir = mkdtempSync(path.join(os.tmpdir(), "basecamp-mobile-evidence-"));
+    const server = buildServer({ database, storageDir });
+    const payload = Buffer.from("field evidence bytes").toString("base64");
+    const upload = await server.inject({
+      method: "POST",
+      url: "/api/evidence/upload",
+      payload: {
+        kind: "photo",
+        title: "Water shelf photo",
+        link: {
+          entityType: "quest",
+          entityId: "water-store-24-hour-drinking-water"
+        },
+        fileName: "../../private phone path/water shelf.jpg",
+        contentType: "image/jpeg",
+        capturedAt: "2026-08-21T00:30:00.000Z",
+        base64: payload,
+        notes: "Before rotation."
+      }
+    });
+
+    expect(upload.statusCode).toBe(201);
+    expect(upload.json()).toMatchObject({
+      storageKey: "evidence/mobile/evidence-mobile-2026-08-21t00-30-00-000z-water-shelf-jpg/water-shelf.jpg",
+      byteLength: "field evidence bytes".length
+    });
+    expect(upload.json().evidence.metadata).toMatchObject({
+      capturedAt: "2026-08-21T00:30:00.000Z",
+      fileName: "water-shelf.jpg",
+      mimeType: "image/jpeg",
+      byteSize: "field evidence bytes".length
+    });
+    expect(upload.json().evidence.metadata.localUri).toBeUndefined();
+    expect(JSON.stringify(upload.json())).not.toContain("file://");
+    expect(JSON.stringify(upload.json())).not.toContain("/private/var/mobile");
+    expect(readFileSync(path.join(storageDir, upload.json().storageKey), "utf8")).toBe("field evidence bytes");
 
     await server.close();
     database.close();

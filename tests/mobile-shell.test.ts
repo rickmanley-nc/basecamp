@@ -1,12 +1,26 @@
 import { createDashboardSummary } from "@basecamp/api";
 import { basecampSeed } from "@basecamp/content";
 import {
+  applyMobileSyncResponse,
+  createEvidenceUploadRequest,
   createMobileAppShell,
+  createMobileFieldScreens,
   createMobileLoginRequest,
+  createPendingEvidenceUpload,
+  createSyncBatchRequest,
+  defaultEvidenceLink,
   localLoginEndpoint,
   mobileBetaDistribution,
-  normalizeBasecampServerUrl
+  normalizeBasecampServerUrl,
+  previewScanWorkflow,
+  queueAssetActionCommand,
+  queueQuickCaptureCommand,
+  queueScanCommand,
+  restoreMobileOutbox,
+  routeForScannedCode,
+  serializeMobileOutbox
 } from "@basecamp/mobile";
+import { createCommandOutbox } from "@basecamp/sync";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
@@ -102,6 +116,7 @@ describe("mobile app shell", () => {
       installChannel: "TestFlight",
       authModel: "local_username_password"
     });
+    expect(appConfig.expo.plugins).toContain("expo-secure-store");
     expect(easConfig.cli.version).toBe(">= 22.2.0");
     expect(easConfig.build.testflight).toMatchObject({
       distribution: "store",
@@ -109,5 +124,147 @@ describe("mobile app shell", () => {
       autoIncrement: "buildNumber"
     });
     expect(easConfig.submit.testflight.ios).toEqual({});
+  });
+
+  it("models native field screens and durable command queue behavior", () => {
+    const screens = createMobileFieldScreens();
+    let outbox = createCommandOutbox("iphone-field-test");
+
+    expect(screens.map((screen) => screen.route)).toEqual([
+      "home",
+      "capture",
+      "scan",
+      "quests",
+      "inventory",
+      "offline"
+    ]);
+    expect(screens.every((screen) => screen.offlineCapable)).toBe(true);
+
+    const quickCapture = queueQuickCaptureCommand(outbox, "completed water store 24 hour drinking water", "2026-08-21T00:00:00.000Z");
+    outbox = quickCapture.outbox;
+
+    expect(quickCapture.command).toMatchObject({
+      commandId: "iphone-field-test-000001",
+      entityType: "quest",
+      intent: {
+        type: "quest.set_status",
+        action: "complete"
+      }
+    });
+
+    const barcode = routeForScannedCode("012345678901");
+    const barcodeWorkflow = previewScanWorkflow(outbox, barcode, "2026-08-21T00:01:00.000Z");
+    const barcodeQueued = queueScanCommand(outbox, barcode, "2026-08-21T00:01:00.000Z");
+
+    expect(barcodeWorkflow.target).toBe("inventory_barcode");
+    expect(barcodeQueued?.command).toMatchObject({
+      commandId: "iphone-field-test-000002",
+      entityType: "inventory",
+      intent: {
+        type: "inventory.adjust_quantity",
+        source: "barcode",
+        barcode: "012345678901"
+      }
+    });
+
+    outbox = barcodeQueued?.outbox ?? outbox;
+
+    const assetWorkflow = previewScanWorkflow(outbox, routeForScannedCode("basecamp://assets/asset-backup-generator"));
+
+    expect(assetWorkflow).toMatchObject({
+      target: "asset",
+      assetId: "asset-backup-generator",
+      offlineBehavior: "open_cached_asset"
+    });
+    expect(assetWorkflow.availableAssetActions).toContain("maintain");
+
+    const assetQueued = queueAssetActionCommand({
+      outbox,
+      assetId: "asset-backup-generator",
+      action: "report_issue",
+      notes: "Reported from mobile scan.",
+      now: "2026-08-21T00:02:00.000Z"
+    });
+
+    outbox = assetQueued.outbox;
+
+    expect(assetQueued.command).toMatchObject({
+      commandId: "iphone-field-test-000003",
+      entityType: "asset",
+      intent: {
+        type: "asset.report_issue",
+        issue: "Reported from mobile scan."
+      }
+    });
+
+    const restored = restoreMobileOutbox(serializeMobileOutbox(outbox), "fallback-client");
+
+    expect(restored).toEqual(outbox);
+    expect(createSyncBatchRequest(restored).commands.map((command) => command.commandId)).toEqual([
+      "iphone-field-test-000001",
+      "iphone-field-test-000002",
+      "iphone-field-test-000003"
+    ]);
+  });
+
+  it("creates evidence upload requests without leaking device-local URIs", () => {
+    const link = defaultEvidenceLink();
+    const pending = createPendingEvidenceUpload({
+      kind: "photo",
+      entityType: link.entityType,
+      entityId: link.entityId,
+      title: "Water shelf photo",
+      fileName: "../private phone path/water shelf.jpg",
+      contentType: "image/jpeg",
+      localUri: "file:///private/var/mobile/Containers/Data/Application/example/water-shelf.jpg",
+      capturedAt: "2026-08-21T00:03:00.000Z",
+      notes: "Shelf state before rotation."
+    });
+    const request = createEvidenceUploadRequest(pending, "ZmllbGQgZXZpZGVuY2U=");
+
+    expect(pending.localUri).toContain("file://");
+    expect(request).toMatchObject({
+      kind: "photo",
+      title: "Water shelf photo",
+      link,
+      fileName: "..-private-phone-path-water-shelf.jpg",
+      contentType: "image/jpeg",
+      capturedAt: "2026-08-21T00:03:00.000Z"
+    });
+    expect(JSON.stringify(request)).not.toContain("file://");
+    expect(JSON.stringify(request)).not.toContain("/private/var/mobile");
+  });
+
+  it("applies sync acknowledgements and user-visible conflicts to the mobile outbox", () => {
+    let outbox = createCommandOutbox("iphone-sync-test");
+    outbox = queueQuickCaptureCommand(outbox, "added 1 gallon of water", "2026-08-21T00:00:00.000Z").outbox;
+    outbox = queueQuickCaptureCommand(outbox, "completed water store 24 hour drinking water", "2026-08-21T00:01:00.000Z").outbox;
+
+    const synced = applyMobileSyncResponse(outbox, {
+      clientId: "iphone-sync-test",
+      nextCursor: "sync:2",
+      accepted: [
+        {
+          commandId: "iphone-sync-test-000001",
+          status: "accepted",
+          policy: "clean_apply",
+          cursor: "sync:1",
+          message: "Accepted."
+        }
+      ],
+      conflicts: [
+        {
+          id: "sync-conflict-quest",
+          commandId: "iphone-sync-test-000002",
+          entityType: "quest",
+          policy: "user_visible_conflict",
+          reason: "Quest changed before sync.",
+          userVisible: true
+        }
+      ]
+    });
+
+    expect(synced.queued.map((queued) => queued.status)).toEqual(["acknowledged", "conflict"]);
+    expect(synced.queued[1].lastError).toBe("Quest changed before sync.");
   });
 });

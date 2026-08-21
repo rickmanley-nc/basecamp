@@ -30,10 +30,10 @@ The M4 foundation starts with:
   available.
 
 The first app shell remains available as a local TypeScript preview and
-navigation model. The native Expo entrypoint now supports server URL entry and
-local username/password sign-in. Camera bindings, secure storage, field capture,
-and durable offline reconnect UX can build on this foundation without changing
-the command contract.
+navigation model. The native Expo entrypoint now supports server URL entry,
+local username/password sign-in, native field tabs, CameraView scan handling,
+photo/document evidence selection, SecureStore token storage, AsyncStorage
+outbox persistence, evidence upload, and reconnect sync attempts.
 
 ## Alternatives Considered
 
@@ -47,8 +47,9 @@ the command contract.
 ## Consequences
 
 - Shared TypeScript packages stay the contract between web, server, and mobile.
-- Mobile camera, local-network, TestFlight installation, and offline storage
-  behavior still require physical iPhone validation before v1.
+- Mobile camera, local-network, TestFlight installation, Photos/Documents access,
+  offline storage across app restart, evidence upload, and reconnect behavior
+  still require physical iPhone validation before v1.
 - Normal users should install through TestFlight or a stable Apple-supported
   channel; contributor builds remain separate.
 
@@ -57,6 +58,6 @@ the command contract.
 Shared mobile logic validates locally through `pnpm check` and
 `pnpm --filter @basecamp/mobile dev`. Expo configuration validates with
 `pnpm --filter @basecamp/mobile expo:config`. Physical iPhone validation for
-TestFlight installation, camera, Local Network permission, offline device
-storage, and reconnect behavior remains pending until a signed mobile build is
-uploaded and installed.
+TestFlight installation, camera, Photos/Documents access, Local Network
+permission, offline device storage, evidence upload, and reconnect behavior
+remains pending until a signed mobile build is uploaded and installed.

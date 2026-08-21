@@ -37,6 +37,7 @@ pnpm --filter @basecamp/server dev
 - `GET /api/drills/templates`
 - `POST /api/drills/:templateId/runs`
 - `POST /api/evidence`
+- `POST /api/evidence/upload`
 - `POST /api/skills/training`
 - `POST /api/sync`
 - `POST /api/auth/login`

@@ -26,6 +26,28 @@ export {
   type MobileInstallChannel,
   type MobileLoginRequest
 } from "./connection";
+export {
+  applyMobileSyncResponse,
+  createEvidenceUploadRequest,
+  createMobileFieldScreens,
+  createMobileFieldSession,
+  createPendingEvidenceUpload,
+  createSyncBatchRequest,
+  defaultEvidenceLink,
+  markMobileSyncFailure,
+  previewScanWorkflow,
+  queueAssetActionCommand,
+  queueQuickCaptureCommand,
+  queueScanCommand,
+  restoreMobileOutbox,
+  routeForScannedCode,
+  serializeMobileOutbox,
+  type MobileFieldScreen,
+  type MobileFieldScreenKind,
+  type MobileFieldSession,
+  type MobilePendingEvidenceUpload,
+  type MobileQueuedCommandResult
+} from "./field-workflows";
 
 export interface MobileScreen {
   route: MobileRoute;
