@@ -3,12 +3,14 @@ import { basecampSeed } from "@basecamp/content";
 import {
   applyMobileSyncResponse,
   createEvidenceUploadRequest,
+  createIphoneValidationReport,
   createMobileAppShell,
   createMobileFieldScreens,
   createMobileLoginRequest,
   createPendingEvidenceUpload,
   createSyncBatchRequest,
   defaultEvidenceLink,
+  iphoneValidationRows,
   localLoginEndpoint,
   mobileDistribution,
   normalizeBasecampServerUrl,
@@ -264,5 +266,65 @@ describe("mobile app shell", () => {
 
     expect(synced.queued.map((queued) => queued.status)).toEqual(["acknowledged", "conflict"]);
     expect(synced.queued[1].lastError).toBe("Quest changed before sync.");
+  });
+
+  it("provides a public-safe physical iPhone validation report for the v1 gate", () => {
+    const requiredAreas = [
+      "Install",
+      "Server URL",
+      "Sign-in",
+      "First sync",
+      "Local Network",
+      "Quick Capture online",
+      "Evidence photo",
+      "Evidence document",
+      "Basecamp QR scan",
+      "Barcode scan",
+      "Offline cache",
+      "Offline queue restart",
+      "Reconnect sync",
+      "Conflict visibility",
+      "Sign-out",
+      "Lost device/user disable procedure"
+    ];
+    const report = createIphoneValidationReport({
+      date: "2026-08-21",
+      tester: "admin",
+      iphoneModel: "iPhone test device",
+      iosVersion: "17.x",
+      appVersionBuild: "1.0.0-beta.1 (1)",
+      installChannel: "TestFlight",
+      serverUrlMode: "secure remote",
+      deploymentProfile: "cloud-pilot",
+      databaseKind: "postgresql",
+      backupConfirmed: "yes"
+    });
+
+    expect(iphoneValidationRows.map((row) => row.area)).toEqual(requiredAreas);
+    expect(iphoneValidationRows.every((row) => row.issues.includes(77))).toBe(true);
+    expect(iphoneValidationRows.every((row) => row.environment !== "simulator")).toBe(true);
+    expect(report).toContain("## Physical iPhone Validation");
+    expect(report).toContain("Do not include passwords, tokens, private hostnames, private IPs");
+    expect(report).toContain("| Install |  | physical-iphone; issues #75, #77 | |");
+    expect(report).toContain("| Lost device/user disable procedure |  | cloud-pilot; issues #75, #77 | |");
+    expect(report).not.toMatch(/Android|apk|aab/i);
+    expect(report).not.toMatch(/file:\/\/|\/private\/var\/mobile/);
+  });
+
+  it("keeps the iPhone validation report documentation aligned with the typed checklist", () => {
+    const reportDoc = readFileSync(
+      new URL("../docs/ops/iphone-field-validation-report.md", import.meta.url),
+      "utf8"
+    );
+
+    for (const row of iphoneValidationRows) {
+      expect(reportDoc).toContain(`| ${row.area} |`);
+      expect(reportDoc).toContain(row.passCriteria);
+    }
+
+    expect(reportDoc).toContain("issues #75, #76, and #77");
+    expect(reportDoc).toContain("Do not include passwords, tokens");
+    expect(reportDoc).not.toMatch(/Android|apk|aab/i);
+    expect(reportDoc).not.toMatch(/file:\/\/|\/private\/var\/mobile/);
   });
 });

@@ -140,6 +140,11 @@ run on the required device platform:
 - Reconnect/sync verification steps.
 - Where to report pass/fail notes and screenshots if needed.
 
+Physical iPhone v1 validation should use
+[Basecamp iPhone Field Validation Report](../ops/iphone-field-validation-report.md)
+so the same public-safe evidence format can be attached to issues #75, #76, and
+#77.
+
 ## Validation Reporting
 
 Every issue resolution comment should state where validation happened:
