@@ -463,11 +463,32 @@ docker compose --env-file basecamp.env run --rm \
   server pnpm ops:restore
 ```
 
-`pnpm ops:restore` currently restores SQLite physical backup manifests. For a
-PostgreSQL runtime deployment, keep the Basecamp logical backup and the
-database-native `pg_dump` together, and use the PostgreSQL restore drill from
-the backup/restore milestone before trusting the cloud pilot with irreplaceable
-data.
+`pnpm ops:restore` restores SQLite physical backup manifests and PostgreSQL
+logical backup manifests. PostgreSQL restore requires a target database URL and
+`BASECAMP_RESTORE_OVERWRITE=true` because the restore replaces the target
+database rows with the backup snapshot. For cloud-pilot drills, restore into a
+disposable database first:
+
+```bash
+cd /opt/basecamp/infra
+docker compose --profile postgres --env-file basecamp.env exec -T postgres \
+  sh -lc 'dropdb -U "$POSTGRES_USER" --if-exists basecamp_restore_drill && createdb -U "$POSTGRES_USER" basecamp_restore_drill'
+
+docker compose --profile postgres --env-file basecamp.env run --rm \
+  -e BASECAMP_DATABASE_KIND=postgresql \
+  -e BASECAMP_DATABASE_URL=postgresql://<user>:<password>@postgres:5432/basecamp_restore_drill \
+  -e BASECAMP_RESTORE_BACKUP=/var/backups/basecamp/<backup-directory> \
+  -e BASECAMP_RESTORE_OVERWRITE=true \
+  server pnpm ops:restore
+
+docker compose --profile postgres --env-file basecamp.env run --rm \
+  -e BASECAMP_DATABASE_URL=postgresql://<user>:<password>@postgres:5432/basecamp_restore_drill \
+  postgres-tools pnpm ops:postgres:status
+```
+
+Keep the Basecamp logical backup and the database-native `pg_dump` together
+until restore drills are routine for the cloud pilot. Do not point
+`BASECAMP_DATABASE_URL` at the live database during a drill.
 
 ## Export And Import
 

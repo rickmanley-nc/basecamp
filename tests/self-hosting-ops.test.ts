@@ -332,6 +332,7 @@ describe("M6 self-hosting operations", () => {
     const root = await mkdtemp(path.join(os.tmpdir(), "basecamp-postgres-backup-"));
     const storageDir = path.join(root, "storage");
     const backupDir = path.join(root, "backups");
+    const restoredStorageDir = path.join(root, "restore-storage");
     const configPath = path.join(root, "basecamp.env");
 
     mkdirSync(storageDir, { recursive: true });
@@ -414,12 +415,41 @@ describe("M6 self-hosting operations", () => {
     expect(() =>
       restoreBackup({
         backupPath: backup.backupPath,
-        databasePath: path.join(root, "restore", "basecamp.sqlite"),
-        storageDir: path.join(root, "restore-storage")
+        databasePath: "postgresql",
+        storageDir: restoredStorageDir
       })
-    ).toThrow(/SQLite backup manifests/);
+    ).toThrow(/live database connection/);
+
+    const restoreTarget = createDatabase();
+
+    applyMigrations(restoreTarget);
+
+    const restored = restoreBackup({
+      backupPath: backup.backupPath,
+      databasePath: "postgresql",
+      storageDir: restoredStorageDir,
+      database: restoreTarget,
+      databaseKind: "postgresql",
+      allowOverwrite: true,
+      restoredAt: "2026-08-21T00:20:00.000Z"
+    });
+
+    expect(restored).toMatchObject({
+      databaseKind: "postgresql",
+      restoredFiles: 2,
+      manifest: {
+        deployment: {
+          databaseKind: "postgresql",
+          localUserCount: 1
+        }
+      }
+    });
+    expect(countActiveLocalUsers(restoreTarget)).toBe(1);
+    expect(readInventoryState(restoreTarget).items.map((item) => item.name)).toContain("Runtime backup water");
+    expect(existsSync(path.join(restoredStorageDir, "readiness-note.txt"))).toBe(true);
 
     database.close();
+    restoreTarget.close();
     await rm(root, { recursive: true, force: true });
   });
 
