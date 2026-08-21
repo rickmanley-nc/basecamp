@@ -22,12 +22,14 @@ project clearer.
 8. Confirm required validation environments are satisfied or explicitly recorded:
    CI, local machine, clean local environment, separate server, simulator, or
    physical iPhone.
-9. Confirm release notes and linked PR text contain no personal workstation
+9. For installable releases, record the deployment profile validated:
+   `local-dev`, `homelab`, `cloud-pilot`, or intentionally deferred.
+10. Confirm release notes and linked PR text contain no personal workstation
    paths.
-10. Draft release notes.
-11. Tag the release.
-12. Create the GitHub Release.
-13. Close the milestone when appropriate.
+11. Draft release notes.
+12. Tag the release.
+13. Create the GitHub Release.
+14. Close the milestone when appropriate.
 
 For installable self-hosting releases, also run:
 
@@ -62,6 +64,7 @@ Every upgrade note should say:
 - Whether migrations run automatically on server startup.
 - How rollback should be performed.
 - Which validation environment was used.
+- Which deployment profile was validated.
 
 ## Release Notes Template
 
@@ -90,5 +93,5 @@ Every upgrade note should say:
 - `v0.5.0` - Mobile And Offline Sync
 - `v0.6.0` - Drills, Skills And Validation
 - `v0.7.0` - Self-Hosting Beta
-- `v0.7.1+` - Self-Hosting Beta patch releases
+- `v0.7.x` - Self-Hosting Beta patch releases
 - `v1.0.0` - MVP Readiness

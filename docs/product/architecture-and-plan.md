@@ -1393,23 +1393,37 @@ Content standards:
 - Evidence should be useful but not tedious.
 - Personal deferral is allowed.
 
-## Linux Deployment Architecture
+## Deployment Architecture
 
-Recommended target:
+Basecamp targets portable deployment profiles rather than a single orchestrator.
+See [ADR 0010](../adr/0010-production-deployment-targets.md).
 
-- Single Linux host or small home server.
-- Containerized web, server, database, and reverse proxy.
-- PostgreSQL data volume.
-- Object/file storage for evidence and photos.
-- Local DNS or stable LAN address.
-- TLS optional for local LAN, required for remote access.
-- No mandatory SaaS dependency.
+Core production shape:
 
-Deployment modes:
+- Static web application artifact.
+- Stateless API/sync server.
+- PostgreSQL production database target.
+- Evidence/document storage abstraction, starting with filesystem storage and
+  allowing S3-compatible object storage later.
+- Reverse proxy and TLS controlled by the deployment environment.
+- Secrets injected by the deployment environment.
+- Explicit migrations, health checks, backups, restore drills, export, import,
+  and audit events.
 
-- Local-only LAN.
-- LAN plus VPN.
-- Remote access behind user-managed reverse proxy.
+Primary deployment profiles:
+
+- `local-dev`: contributor machine, local SQLite, fast iteration, no production
+  claims.
+- `homelab`: admin-controlled home network deployment, likely single-node,
+  VPN or secure reverse proxy for remote access, durable backups, and clear
+  upgrade/rollback instructions.
+- `cloud-pilot`: cloud server for real-user testing, isolated pilot data,
+  stronger authentication expectations, reset/seed controls, logs/metrics, and
+  no dependence on private homelab data.
+
+Docker Compose is the current single-node reference adapter for the M6 beta. It
+can support homelab beta installs and simple cloud pilot testing, but it must
+not become the only expression of production behavior.
 
 ## Backup And Recovery Strategy
 
@@ -1418,6 +1432,7 @@ Backup targets:
 - PostgreSQL dumps and WAL/archive strategy when appropriate.
 - Evidence/photo/document storage.
 - Configuration.
+- Deployment profile metadata.
 - Seed/content version.
 - Exportable personal data archive.
 
@@ -1480,6 +1495,13 @@ Decision summaries are recorded as ADRs:
 - [ADR 0001: Monorepo, TypeScript, React](../adr/0001-monorepo-typescript-react.md)
 - [ADR 0002: Basecamp UI Kaizen Adapter](../adr/0002-basecamp-ui-kaizen-adapter.md)
 - [ADR 0003: Local-First Self-Hosted Sync](../adr/0003-local-first-self-hosted-sync.md)
+- [ADR 0004: Vite, React, Fastify Vertical Slice](../adr/0004-vite-react-fastify-vertical-slice.md)
+- [ADR 0005: SQLite Baseline, PostgreSQL Target](../adr/0005-sqlite-baseline-postgresql-target.md)
+- [ADR 0006: Readiness Quest Core Engine](../adr/0006-readiness-quest-core-engine.md)
+- [ADR 0007: Location Progression And Home Bases](../adr/0007-location-progression-and-home-bases.md)
+- [ADR 0008: Mobile Expo Offline Sync](../adr/0008-mobile-expo-offline-sync.md)
+- [ADR 0009: Self-Hosting Beta SQLite Ops](../adr/0009-self-hosting-beta-sqlite-ops.md)
+- [ADR 0010: Production Deployment Targets And Profiles](../adr/0010-production-deployment-targets.md)
 
 ## Implementation Phases
 

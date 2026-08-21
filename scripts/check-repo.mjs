@@ -33,6 +33,7 @@ const requiredFiles = [
   "docs/adr/0007-location-progression-and-home-bases.md",
   "docs/adr/0008-mobile-expo-offline-sync.md",
   "docs/adr/0009-self-hosting-beta-sqlite-ops.md",
+  "docs/adr/0010-production-deployment-targets.md",
   "infra/compose.yml",
   "infra/basecamp.env.example",
   "infra/server.Dockerfile",

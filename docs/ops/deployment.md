@@ -9,11 +9,26 @@ on an admin-controlled Linux host.
 
 M6 adds an installable Docker Compose beta for the web app, API server,
 reverse proxy, persistent SQLite database volume, persistent storage volume,
-and backup service.
+and backup service. Compose is the current reference single-node deployment
+adapter, not the final production architecture.
 
 The long-term production target remains PostgreSQL. For M6, the runnable beta
 uses SQLite because that is the persistence layer implemented by the application
-today. See [ADR 0009](../adr/0009-self-hosting-beta-sqlite-ops.md).
+today. See [ADR 0009](../adr/0009-self-hosting-beta-sqlite-ops.md) and
+[ADR 0010](../adr/0010-production-deployment-targets.md).
+
+## Deployment Profiles
+
+- `local-dev`: contributor machine, local SQLite, and fast iteration.
+- `homelab`: admin-controlled home network deployment for real household data.
+  This is the primary real Basecamp target.
+- `cloud-pilot`: cloud server used to test with real users. It must use isolated
+  pilot data, have a clear reset path, and should not depend on private homelab
+  data.
+
+The commands below document the M6 reference adapter. v1.0 readiness must prove
+the underlying app, database, storage, secrets, backup, restore, and proxy
+responsibilities are separable from Compose.
 
 ## Install Runbook
 
