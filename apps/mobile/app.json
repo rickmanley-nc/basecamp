@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "Basecamp Mobile",
+    "slug": "basecamp-mobile",
+    "scheme": "basecamp",
+    "version": "1.0.0-beta.1",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "bundleIdentifier": "com.basecamppreparedness.mobile",
+      "buildNumber": "1",
+      "supportsTablet": false,
+      "infoPlist": {
+        "MinimumOSVersion": "17.0",
+        "NSCameraUsageDescription": "Scan Basecamp asset QR codes and barcodes for inventory updates.",
+        "NSLocalNetworkUsageDescription": "Connect to the self-hosted Basecamp server on your local network.",
+        "NSPhotoLibraryUsageDescription": "Attach evidence photos and documents to Basecamp records.",
+        "NSPhotoLibraryAddUsageDescription": "Save Basecamp evidence images when you choose to export them."
+      }
+    },
+    "extra": {
+      "basecamp": {
+        "minimumIosVersion": "17.0",
+        "installChannel": "TestFlight",
+        "serverUrlSetup": "manual_url_or_pairing_qr",
+        "authModel": "local_username_password"
+      }
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "cli": {
+    "version": ">= 22.2.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "simulator": {
+      "channel": "simulator",
+      "ios": {
+        "simulator": true
+      }
+    },
+    "testflight": {
+      "distribution": "store",
+      "channel": "testflight",
+      "autoIncrement": "buildNumber"
+    }
+  },
+  "submit": {
+    "testflight": {
+      "ios": {}
+    }
+  }
+}

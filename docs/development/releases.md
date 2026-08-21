@@ -46,6 +46,26 @@ pnpm ops:export
 Run `pnpm ops:restore` against a disposable restore target before calling the
 release self-hosting ready.
 
+For mobile distribution releases, also run:
+
+```bash
+pnpm --filter @basecamp/mobile dev
+pnpm --filter @basecamp/mobile expo:config
+```
+
+When Expo and Apple credentials are available for a beta release, also run:
+
+```bash
+pnpm --filter @basecamp/mobile build:ios:testflight
+pnpm --filter @basecamp/mobile submit:ios:testflight
+```
+
+Record the install channel, iOS version, marketing version, iOS build number,
+TestFlight expiration posture, server URL mode, validation environment, and
+whether a physical iPhone install was completed. Do not close a v1 mobile
+blocker that requires physical iPhone proof unless that device validation has
+actually been recorded.
+
 For PostgreSQL persistence releases, also validate against a disposable
 PostgreSQL database:
 

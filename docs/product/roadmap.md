@@ -255,8 +255,10 @@ M7 impact audit:
   paths.
 - M6 is affected operationally. Deployment docs now require first-admin account
   creation, optional fallback admin-token setup, and user disable instructions.
-- v1.0 still needs PostgreSQL API runtime promotion, full physical iPhone
-  validation, and final MVP release criteria.
+- PostgreSQL API runtime promotion is now complete in M11. v1.0 still needs
+  cloud-pilot backup/restore proof, mobile distribution and field workflow
+  validation, cloud pilot reset/observability controls, and final MVP release
+  criteria.
 
 ### M8 - Recovery And Homelab Boundary
 
@@ -301,8 +303,10 @@ M8 impact audit:
   inclusion status, and restore drills must verify admin status after restore.
 - M7 is affected operationally. Cloud pilot auth is now explicitly backed up and
   restored through the database backup path.
-- v1.0 still needs PostgreSQL API runtime promotion, physical iPhone field
-  validation, and the final MVP readiness checklist.
+- PostgreSQL API runtime promotion is now complete in M11. v1.0 still needs
+  cloud-pilot backup/restore proof, physical iPhone field validation, cloud
+  pilot reset/observability controls, and final MVP release-candidate
+  validation.
 
 ### M9 - MVP Readiness Gate
 
@@ -472,8 +476,10 @@ Primary work:
 
 Current blocker map:
 
-- PostgreSQL API runtime adapter promotion and cloud-pilot validation.
-- Installable iPhone beta distribution path.
+- PostgreSQL cloud-pilot validation, including backup/restore proof against the
+  promoted PostgreSQL runtime.
+- Installable iPhone beta distribution path. Expo/EAS/TestFlight configuration
+  exists, but physical iPhone TestFlight install validation is still required.
 - Mobile field data capture, offline sync, and evidence upload.
 - Physical iPhone field validation.
 - Cloud pilot reset, seed, and observability controls.
