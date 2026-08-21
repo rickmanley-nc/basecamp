@@ -1415,9 +1415,12 @@ Primary deployment profiles:
 - `local-dev`: contributor machine, local SQLite, fast iteration, no production
   claims.
 - `cloud-pilot`: v1 MVP server for the admin and one trusted friend using real
-  data. Current target is a bare-metal Supermicro 1U server running Ubuntu 24.04
-  with 12 GB or 16 GB RAM, admin-created username/password accounts, no SSO,
-  local disk backups, logs/metrics, and a clear reset/seed path for QA.
+  data. Current target is an x86_64/amd64 server running Ubuntu 22.04 LTS with
+  12 GB or 16 GB RAM, admin-created username/password accounts, no SSO, local
+  disk backups, logs/metrics, and a clear reset/seed path for QA. Ubuntu 22.04
+  LTS is accepted for v1 while it remains in standard security maintenance
+  through May 2027; migration to Ubuntu 24.04 LTS is deferred until the admin
+  explicitly requests it.
 - `homelab`: post-MVP admin-controlled home network deployment, likely LAN-only
   at first, with UniFi handling IP assignment, hostname, DNS, and routing. TLS
   should be added when this profile comes online or any remote access is enabled.

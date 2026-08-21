@@ -21,8 +21,10 @@ today. See [ADR 0009](../adr/0009-self-hosting-beta-sqlite-ops.md) and
 
 - `local-dev`: contributor machine, local SQLite, and fast iteration.
 - `cloud-pilot`: v1 MVP server used by the admin and one trusted friend with
-  real data. The current target is a bare-metal Supermicro 1U server running
-  Ubuntu 24.04 with 12 GB or 16 GB RAM.
+  real data. The current accepted target is an x86_64/amd64 server running
+  Ubuntu 22.04 LTS with 12 GB or 16 GB RAM. Ubuntu 22.04 LTS remains under
+  standard security maintenance through May 2027; migration to Ubuntu 24.04 LTS
+  is deferred until the admin explicitly requests it.
 - `homelab`: later admin-controlled home network deployment. Expected network
   management is UniFi-provided IP assignment, hostname, DNS, and routing.
 

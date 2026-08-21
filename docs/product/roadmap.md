@@ -229,11 +229,12 @@ Primary work:
 - PostgreSQL production persistence path.
 - Evidence/document storage abstraction with filesystem storage for the v1 cloud
   pilot and later SAN/NAS or object storage options.
-- Cloud pilot deployment profile for real-user testing on the Ubuntu 24.04
-  bare-metal server with real data, local disk backups, reset/seed controls, and
+- Cloud pilot deployment profile for real-user testing on an x86_64/amd64 Ubuntu
+  22.04 LTS server with real data, local disk backups, reset/seed controls, and
   logs/metrics.
-- Post-MVP homelab migration constraints, including UniFi-managed LAN/DNS/routing
-  and future TLS/SAN/NAS expectations.
+- Post-MVP homelab migration constraints, including UniFi-managed
+  LAN/DNS/routing, future TLS/SAN/NAS expectations, and Ubuntu 24.04 LTS
+  migration when the admin explicitly requests it.
 - Production authentication and secret-management baseline using admin-created
   local username/password accounts, not SSO.
 - Backup/restore proof for database, storage, and admin configuration across
