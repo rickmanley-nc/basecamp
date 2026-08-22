@@ -51,8 +51,10 @@ v1 blockers in known limitations.
   queue quest progress locally before a server is configured.
 - The mobile app can optionally connect to the cloud pilot server by manual URL
   entry or a documented pairing flow.
-- Mobile-start and web-start bootstrap paths are explicit, so local mobile
-  progress and server-created assignments can meet without silent data loss.
+- Mobile-start and web-start bootstrap paths are explicit: Sync shows the merge
+  plan, starter quest progress uses stable quest IDs, server assignments refresh
+  after sign-in, and duplicate starter progress is idempotent or visible as a
+  conflict.
 - The mobile app signs in with the v1 local username/password model; required
   SSO is not allowed.
 - Home, Capture, Scan, Quests, Inventory, and Offline screens exist as native
@@ -158,17 +160,13 @@ v1 blockers in known limitations.
 
 Physical iPhone results should use the canonical report in
 [Basecamp iPhone Field Validation Report](../ops/iphone-field-validation-report.md)
-so issues #75, #76, and #77 can be reviewed without exposing private server,
-device, or household details.
+so issues #75, #76, #77, and #94 can be reviewed without exposing private
+server, device, or household details.
 
 ## Open v1 Blockers
 
 The v1.0 milestone should remain open until these blockers are complete:
 
-- Mobile-first first-run onboarding. The app must start locally with category
-  selection and a starter quest instead of requiring server sign-in.
-- Two-way mobile/web bootstrap and pairing. A user who starts on mobile or web
-  must have a clear v1 path to connect the two states safely.
 - Mobile field data capture, offline sync, and evidence upload. Native screens,
   local queues, and server upload plumbing exist, but the blocker remains open
   until simulator plus physical iPhone validation prove the implemented

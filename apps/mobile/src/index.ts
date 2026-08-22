@@ -38,6 +38,7 @@ export {
   previewScanWorkflow,
   queueAssetActionCommand,
   queueQuickCaptureCommand,
+  queueQuestStatusCommand,
   queueScanCommand,
   restoreMobileOutbox,
   routeForScannedCode,

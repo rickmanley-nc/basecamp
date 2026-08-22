@@ -479,15 +479,14 @@ Primary work:
   accepted deployment profiles.
 - Local iPhone build proof before v1.
 - Mobile-first local quest onboarding before v1.
-- Two-way mobile/web bootstrap and pairing before v1.
+- Two-way mobile/web bootstrap and pairing before v1, with a visible Sync plan
+  and stable starter quest IDs.
 - Physical iPhone testing for field data capture before v1.
 
 Current blocker map:
 
 - Mobile-first first-run onboarding. The app must start locally with category
   selection and a starter quest instead of requiring server sign-in.
-- Two-way mobile/web bootstrap and pairing. Mobile-start and web-start users
-  need a clear path to connect local progress and server-created work.
 - Mobile field data capture, offline sync, and evidence upload. Native field
   tabs, storage boundaries, scan/quick-capture queueing, evidence upload, and
   reconnect sync plumbing exist, but simulator and physical iPhone validation

@@ -83,6 +83,22 @@ Mobile storage boundary:
   `POST /api/evidence/upload` so persisted metadata uses deployment-owned
   `storageKey` values instead of phone-local file paths.
 
+## Bootstrap And Sync
+
+Basecamp Mobile supports two v1 starting points:
+
+- Mobile-start: the user chooses a category, starts a local starter quest, and
+  queues quest progress on the phone before a server is configured.
+- Web-start: the user signs in to an existing server account and refreshes
+  server-created quests, inventory, and readiness context onto the phone.
+
+The Sync screen shows the merge plan before upload: local starter quest, queued
+commands, pending evidence, and server quest context. Starter quest buttons queue
+stable quest IDs, not only display titles, so mobile-start progress can attach
+to the server deterministically. Repeated starter progress is accepted
+idempotently when the server is already at or beyond that state; true changed
+target conflicts stay visible in the outbox.
+
 ## Navigation
 
 M4 defines six primary routes:

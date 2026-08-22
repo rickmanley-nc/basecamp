@@ -1,6 +1,8 @@
 import type { DashboardSummary, EvidenceUploadRequest } from "@basecamp/api";
+import type { QuestAction } from "@basecamp/domain";
 import {
   createAssetActionCommand,
+  createOfflineCommand,
   createCommandOutbox,
   createOfflineReadModel,
   createScanWorkflow,
@@ -226,6 +228,39 @@ export function queueAssetActionCommand(input: {
   };
 }
 
+export function queueQuestStatusCommand(input: {
+  outbox: CommandOutbox;
+  questId: string;
+  questTitle: string;
+  action: QuestAction;
+  now?: string;
+  notes?: string;
+}): MobileQueuedCommandResult {
+  const now = input.now ?? new Date().toISOString();
+  const command = createOfflineCommand({
+    clientId: input.outbox.clientId,
+    localSequence: input.outbox.nextSequence,
+    createdAt: now,
+    entityType: "quest",
+    entityId: input.questId,
+    intent: {
+      type: "quest.set_status",
+      questId: input.questId,
+      questTitle: input.questTitle,
+      action: input.action,
+      ...(input.notes === undefined ? {} : { notes: input.notes })
+    }
+  });
+  const result = enqueueCommand(input.outbox, command, now);
+
+  return {
+    outbox: result.outbox,
+    command: result.queued.command,
+    title: `${titleCase(input.action)} ${input.questTitle}`,
+    summary: `${input.questTitle} queued for sync.`
+  };
+}
+
 export function createPendingEvidenceUpload(input: {
   kind: MobilePendingEvidenceUpload["kind"];
   entityType: MobilePendingEvidenceUpload["entityType"];
@@ -371,4 +406,8 @@ function sanitizeFileName(fileName: string): string {
 
 function sanitizeStableId(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "upload";
+}
+
+function titleCase(value: string): string {
+  return value.replace(/\b\w/g, (letter) => letter.toUpperCase());
 }

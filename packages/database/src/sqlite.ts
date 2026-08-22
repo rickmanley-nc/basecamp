@@ -1728,11 +1728,8 @@ function applyAcceptedOfflineCommand(
     return;
   }
 
-  if (intent.type === "quest.set_status" && intent.questId !== undefined) {
-    applyPersistedQuestAction(database, seed, intent.questId, intent.action, {
-      now,
-      ...(intent.notes === undefined ? {} : { reason: intent.notes })
-    });
+  if (intent.type === "quest.set_status") {
+    applyAcceptedQuestSync(database, seed, command, now);
     return;
   }
 
@@ -1822,6 +1819,82 @@ function applyAcceptedOfflineCommand(
       ...(intent.notes === undefined ? {} : { lessons: intent.notes })
     });
   }
+}
+
+function applyAcceptedQuestSync(
+  database: BasecampDatabase,
+  seed: BasecampSeed,
+  command: OfflineCommand,
+  now: string
+): void {
+  const intent = command.intent;
+
+  if (intent.type !== "quest.set_status") {
+    return;
+  }
+
+  const questId = resolveSyncQuestId(seed, intent);
+
+  if (questId === undefined) {
+    return;
+  }
+
+  const current = getQuestInstance(database, questId);
+
+  if (isQuestSyncAlreadyApplied(current?.status, intent.action)) {
+    return;
+  }
+
+  const reason = intent.notes ?? `Mobile sync ${intent.action}.`;
+
+  if (intent.action === "complete" && !canCompleteQuestStatus(current?.status)) {
+    applyPersistedQuestAction(database, seed, questId, "start", {
+      now,
+      reason: "Mobile sync prepared quest for completion."
+    });
+  }
+
+  applyPersistedQuestAction(database, seed, questId, intent.action, {
+    now,
+    reason
+  });
+}
+
+function resolveSyncQuestId(
+  seed: BasecampSeed,
+  intent: Extract<OfflineCommand["intent"], { type: "quest.set_status" }>
+): QuestId | undefined {
+  if (intent.questId !== undefined) {
+    return intent.questId;
+  }
+
+  if (intent.questTitle === undefined) {
+    return undefined;
+  }
+
+  const normalizedTitle = slugify(intent.questTitle);
+
+  return seed.quests.find((quest) => slugify(quest.title) === normalizedTitle)?.id;
+}
+
+function isQuestSyncAlreadyApplied(status: QuestStatus | undefined, action: QuestAction): boolean {
+  if (status === undefined) {
+    return false;
+  }
+
+  if (action === "start") {
+    return status === "active" || status === "complete";
+  }
+
+  if (action === "complete") {
+    return status === "complete";
+  }
+
+  return false;
+}
+
+function canCompleteQuestStatus(status: QuestStatus | undefined): boolean {
+  return status === "active" || status === "reopened";
 }
 
 function currentEntityVersionFor(database: BasecampDatabase, command: OfflineCommand): number | undefined {

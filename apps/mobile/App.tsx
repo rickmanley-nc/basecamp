@@ -43,6 +43,7 @@ import {
   previewScanWorkflow,
   queueAssetActionCommand,
   queueQuickCaptureCommand,
+  queueQuestStatusCommand,
   queueScanCommand,
   routeForScannedCode,
   type MobilePendingEvidenceUpload
@@ -73,6 +74,13 @@ interface StarterCategory {
   accent: string;
   icon: string;
   hook: string;
+}
+
+interface BootstrapPlan {
+  title: string;
+  description: string;
+  rows: Array<{ label: string; value: string }>;
+  warning?: string;
 }
 
 const starterCategoryIds = [
@@ -182,6 +190,18 @@ export default function App() {
   const blockedEvidenceCount = pendingEvidence.filter((upload) => upload.uploadStatus !== "uploaded").length;
   const canSignIn =
     !isBusy && serverUrl.trim().length > 0 && username.trim().length > 0 && password.length > 0;
+  const bootstrapPlan = useMemo(
+    () =>
+      createBootstrapPlan({
+        journey,
+        outbox,
+        pendingEvidence,
+        selectedStarter,
+        session,
+        summary
+      }),
+    [journey, outbox, pendingEvidence, selectedStarter, session, summary]
+  );
   const beaconScale = beaconPulse.interpolate({
     inputRange: [0, 1],
     outputRange: [1, 1.35]
@@ -284,18 +304,10 @@ export default function App() {
       await saveMobileSession(restoredSession);
       setPassword("");
       setSession(restoredSession);
-      if (journey !== undefined) {
-        const syncedJourney: StoredMobileJourney = {
-          ...journey,
-          mode: "synced"
-        };
-        await saveMobileJourney(syncedJourney);
-        setJourney(syncedJourney);
-      }
-      setAppMode("console");
-      setStatus(`Signed in as ${login.user.username}.`);
+      setAppMode(journey === undefined && pendingCommandCount === 0 && blockedEvidenceCount === 0 ? "console" : "sync");
+      setStatus(`Connected as ${login.user.username}. Review the sync plan before uploading local work.`);
       await refreshDashboard(restoredSession).catch((error: unknown) => {
-        setStatus(error instanceof Error ? `Signed in. ${error.message}` : "Signed in. Dashboard refresh failed.");
+        setStatus(error instanceof Error ? `Connected. ${error.message}` : "Connected. Dashboard refresh failed.");
       });
     } catch (error) {
       setSession(undefined);
@@ -353,6 +365,20 @@ export default function App() {
     });
   }
 
+  async function markJourneySynced() {
+    if (journey === undefined || journey.mode === "synced") {
+      return;
+    }
+
+    const syncedJourney: StoredMobileJourney = {
+      ...journey,
+      mode: "synced"
+    };
+
+    await saveMobileJourney(syncedJourney);
+    setJourney(syncedJourney);
+  }
+
   function queueQuickCapture() {
     if (quickText.trim().length === 0) {
       setStatus("Quick Capture is empty.");
@@ -394,7 +420,13 @@ export default function App() {
       return;
     }
 
-    const queued = queueQuickCaptureCommand(outbox, `started ${selectedStarter.quest.title}`);
+    const queued = queueQuestStatusCommand({
+      outbox,
+      questId: selectedStarter.quest.id,
+      questTitle: selectedStarter.quest.title,
+      action: "start",
+      notes: `Started locally from ${selectedStarter.category.name} onboarding.`
+    });
     setActiveRoute("capture");
     setQuickText(`Completed first step for ${selectedStarter.quest.title}`);
     commitOutbox(queued.outbox, `${selectedStarter.quest.title} started locally.`);
@@ -643,7 +675,15 @@ export default function App() {
 
       const syncResponse = (await response.json()) as Parameters<typeof applyMobileSyncResponse>[1];
       const nextOutbox = applyMobileSyncResponse(outbox, syncResponse);
-      commitOutbox(nextOutbox, `Synced ${request.commands.length} command(s).`);
+      if (syncResponse.conflicts.length === 0) {
+        await markJourneySynced();
+      }
+      commitOutbox(
+        nextOutbox,
+        syncResponse.conflicts.length === 0
+          ? `Synced ${request.commands.length} command(s).`
+          : `${syncResponse.conflicts.length} sync conflict(s) need review.`
+      );
       await refreshDashboard(session);
     } catch (error) {
       const nextOutbox = markMobileSyncFailure(outbox, error instanceof Error ? error.message : "Sync failed.");
@@ -820,6 +860,21 @@ export default function App() {
         <Text style={styles.bodyText}>
           Local quests and evidence stay on this iPhone until you connect a self-hosted Basecamp server.
         </Text>
+        <View style={styles.resultBox}>
+          <Text style={styles.resultTitle}>{bootstrapPlan.title}</Text>
+          <Text style={styles.metaText}>{bootstrapPlan.description}</Text>
+          <View style={styles.planRows}>
+            {bootstrapPlan.rows.map((row) => (
+              <View key={row.label} style={styles.planRow}>
+                <Text style={styles.planLabel}>{row.label}</Text>
+                <Text style={styles.planValue}>{row.value}</Text>
+              </View>
+            ))}
+          </View>
+          {bootstrapPlan.warning === undefined ? null : (
+            <Text style={styles.warningText}>{bootstrapPlan.warning}</Text>
+          )}
+        </View>
         {session === undefined ? null : (
           <View style={styles.resultBox}>
             <Text style={styles.resultTitle}>Connected</Text>
@@ -828,47 +883,55 @@ export default function App() {
             </Text>
           </View>
         )}
-        <Field label="Server URL">
-          <TextInput
-            autoCapitalize="none"
-            autoCorrect={false}
-            inputMode="url"
-            onChangeText={setServerUrl}
-            placeholder="https://basecamp.example"
-            returnKeyType="next"
-            style={styles.input}
-            textContentType="URL"
-            value={serverUrl}
-          />
-          <Text style={styles.metaText}>{normalizedServerUrl ?? "Waiting for server URL"}</Text>
-        </Field>
-        <Field label="Username">
-          <TextInput
-            autoCapitalize="none"
-            autoCorrect={false}
-            onChangeText={setUsername}
-            placeholder="admin-created username"
-            returnKeyType="next"
-            style={styles.input}
-            textContentType="username"
-            value={username}
-          />
-        </Field>
-        <Field label="Password">
-          <TextInput
-            autoCapitalize="none"
-            autoCorrect={false}
-            onChangeText={setPassword}
-            placeholder="password"
-            returnKeyType="done"
-            secureTextEntry
-            style={styles.input}
-            textContentType="password"
-            value={password}
-          />
-        </Field>
+        {session === undefined ? (
+          <>
+            <Field label="Server URL">
+              <TextInput
+                autoCapitalize="none"
+                autoCorrect={false}
+                inputMode="url"
+                onChangeText={setServerUrl}
+                placeholder="https://basecamp.example"
+                returnKeyType="next"
+                style={styles.input}
+                textContentType="URL"
+                value={serverUrl}
+              />
+              <Text style={styles.metaText}>{normalizedServerUrl ?? "Waiting for server URL"}</Text>
+            </Field>
+            <Field label="Username">
+              <TextInput
+                autoCapitalize="none"
+                autoCorrect={false}
+                onChangeText={setUsername}
+                placeholder="admin-created username"
+                returnKeyType="next"
+                style={styles.input}
+                textContentType="username"
+                value={username}
+              />
+            </Field>
+            <Field label="Password">
+              <TextInput
+                autoCapitalize="none"
+                autoCorrect={false}
+                onChangeText={setPassword}
+                placeholder="password"
+                returnKeyType="done"
+                secureTextEntry
+                style={styles.input}
+                textContentType="password"
+                value={password}
+              />
+            </Field>
+          </>
+        ) : null}
         <ActionRow>
-          <PrimaryButton disabled={!canSignIn} label="Connect" loading={isBusy} onPress={() => void signIn()} />
+          {session === undefined ? (
+            <PrimaryButton disabled={!canSignIn} label="Connect" loading={isBusy} onPress={() => void signIn()} />
+          ) : (
+            <PrimaryButton disabled={isBusy} label="Sync Now" loading={isBusy} onPress={() => void syncNow()} />
+          )}
           <SecondaryButton label="Back" onPress={() => setAppMode(journey === undefined ? "onboarding" : "console")} />
           {session === undefined ? null : <SecondaryButton label="Disconnect" onPress={() => void signOut()} />}
         </ActionRow>
@@ -1043,7 +1106,13 @@ export default function App() {
                   <Text style={styles.metaText}>Started locally from {selectedStarter.category.name}.</Text>
                 </View>
                 <SecondaryButton label="Done" onPress={() => {
-                  const queued = queueQuickCaptureCommand(outbox, `completed ${selectedStarter.quest.title}`);
+                  const queued = queueQuestStatusCommand({
+                    outbox,
+                    questId: selectedStarter.quest.id,
+                    questTitle: selectedStarter.quest.title,
+                    action: "complete",
+                    notes: `Completed locally from ${selectedStarter.category.name} mobile quest.`
+                  });
                   commitOutbox(queued.outbox, `${selectedStarter.quest.title} queued.`);
                 }} />
               </View>
@@ -1056,7 +1125,13 @@ export default function App() {
                   <Text style={styles.metaText}>{quest.status}</Text>
                 </View>
                 <SecondaryButton label="Done" onPress={() => {
-                  const queued = queueQuickCaptureCommand(outbox, `completed ${quest.title}`);
+                  const queued = queueQuestStatusCommand({
+                    outbox,
+                    questId: quest.id,
+                    questTitle: quest.title,
+                    action: "complete",
+                    notes: "Completed from mobile active quest list."
+                  });
                   commitOutbox(queued.outbox, `${quest.title} queued.`);
                 }} />
               </View>
@@ -1233,6 +1308,66 @@ function findStarterCategory(
   return {
     ...categoryStarter,
     quest
+  };
+}
+
+function createBootstrapPlan(input: {
+  journey: StoredMobileJourney | undefined;
+  outbox: CommandOutbox;
+  pendingEvidence: MobilePendingEvidenceUpload[];
+  selectedStarter: StarterCategory | undefined;
+  session: RestoredMobileSession | undefined;
+  summary: DashboardSummary;
+}): BootstrapPlan {
+  const pendingCommands = input.outbox.queued.filter(
+    (queued) => queued.status === "pending" || queued.status === "failed" || queued.status === "conflict"
+  );
+  const pendingEvidence = input.pendingEvidence.filter((upload) => upload.uploadStatus !== "uploaded");
+  const serverQuestCount = input.summary.activeQuests.length;
+  const starterTitle = input.selectedStarter?.quest.title ?? "No starter quest selected";
+
+  if (input.journey !== undefined && input.journey.mode === "local") {
+    return {
+      title: "Mobile Start",
+      description: "This iPhone has local progress. Connect, review this plan, then sync when you are ready.",
+      rows: [
+        { label: "Local Quest", value: starterTitle },
+        { label: "Queued Commands", value: String(pendingCommands.length) },
+        { label: "Pending Evidence", value: String(pendingEvidence.length) },
+        { label: "Server Quests", value: `${serverQuestCount} visible after sign-in` }
+      ],
+      warning:
+        "If the server already changed the same quest, Basecamp keeps the item visible as a conflict instead of silently overwriting it."
+    };
+  }
+
+  if (input.session === undefined && pendingCommands.length === 0 && pendingEvidence.length === 0) {
+    return {
+      title: "Web Or Server Start",
+      description: "No local field work is waiting. Connecting will pull server-created quests and inventory onto this iPhone.",
+      rows: [
+        { label: "Local Quest", value: "None yet" },
+        { label: "Queued Commands", value: "0" },
+        { label: "Pending Evidence", value: "0" },
+        { label: "Server Quests", value: "Loaded after sign-in" }
+      ]
+    };
+  }
+
+  const hasConflict = pendingCommands.some((queued) => queued.status === "conflict");
+
+  return {
+    title: "Paired",
+    description: "This iPhone can upload queued work and refresh server-created assignments.",
+    rows: [
+      { label: "Local Quest", value: input.journey === undefined ? "None selected" : starterTitle },
+      { label: "Queued Commands", value: String(pendingCommands.length) },
+      { label: "Pending Evidence", value: String(pendingEvidence.length) },
+      { label: "Server Quests", value: String(serverQuestCount) }
+    ],
+    ...(hasConflict
+      ? { warning: "One or more queued commands needs human review before the field kit is fully reconciled." }
+      : {})
   };
 }
 
@@ -1762,6 +1897,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18
   },
+  warningText: {
+    color: "#8a5a18",
+    fontSize: 13,
+    fontWeight: "700",
+    lineHeight: 18
+  },
   resultBox: {
     gap: 7,
     borderColor: "#d9d1c2",
@@ -1773,6 +1914,30 @@ const styles = StyleSheet.create({
     color: "#20251f",
     fontSize: 16,
     fontWeight: "800"
+  },
+  planRows: {
+    gap: 6
+  },
+  planRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10,
+    justifyContent: "space-between"
+  },
+  planLabel: {
+    color: "#596b42",
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 0,
+    textTransform: "uppercase"
+  },
+  planValue: {
+    color: "#20251f",
+    flex: 1,
+    fontSize: 13,
+    fontWeight: "800",
+    lineHeight: 18,
+    textAlign: "right"
   },
   assetActions: {
     flexDirection: "row",

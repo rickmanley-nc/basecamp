@@ -134,27 +134,33 @@ selected Apple-supported install path:
 8. Choose a preparedness category and open the starter quest.
 9. Start the quest and confirm the app can queue local progress before sync is
    configured.
-10. Open Sync, enter the Basecamp server URL, and sign in with the
-   admin-created local username and password.
-11. Grant permissions only when prompted:
+10. Open Sync and confirm the plan describes the local starter quest, queued
+   command count, pending evidence count, and the server data that will refresh
+   after sign-in.
+11. Enter the Basecamp server URL and sign in with the admin-created local
+   username and password.
+12. Confirm the app stays on the Sync plan after sign-in when local work is
+   waiting, then tap Sync.
+13. Grant permissions only when prompted:
    - Local Network for LAN-only self-hosted sync.
    - Camera for barcode and QR scanning.
    - Photos for evidence attachment.
    - Notifications for maintenance and sync reminders.
-12. Run first sync while connected to the server.
-13. Confirm Home, Quests, Inventory, Maintenance, and Offline data appear.
-14. Turn on airplane mode.
-15. Open Offline and confirm cached quests, inventory, critical BOMs,
+14. Run first sync while connected to the server.
+15. Confirm Home, Quests, Inventory, Maintenance, and Offline data appear.
+16. Confirm server-created active quests refresh onto the phone after sign-in.
+17. Turn on airplane mode.
+18. Open Offline and confirm cached quests, inventory, critical BOMs,
     maintenance, and references still appear.
-16. Create a Quick Capture entry while offline.
-17. Reconnect, sync, and confirm the queued command is accepted or shown as a
+19. Create a Quick Capture entry while offline.
+20. Reconnect, sync, and confirm the queued command is accepted or shown as a
     user-visible conflict.
 
 ## Physical iPhone Validation Checklist
 
-Use this checklist for issues #75, #76, and #77 once a TestFlight or stable
-iPhone build is available. Run it against the cloud-pilot server unless the
-issue explicitly names another validation target.
+Use this checklist for issues #75, #76, #77, and #94 once a TestFlight or
+stable iPhone build is available. Run it against the cloud-pilot server unless
+the issue explicitly names another validation target.
 
 Preflight:
 
@@ -174,7 +180,8 @@ Test criteria:
 | --- | --- | --- |
 | Install | Install the locally produced build through the selected Apple-supported path and open it. | App installs, opens without crashing, and shows the mobile-first Basecamp onboarding flow. |
 | First-run local quest | Open the app without entering a server URL, choose a preparedness category, and start the starter quest. | The app does not require server sign-in, persists the selected quest locally, and queues quest progress offline. |
-| Server URL | Open Sync, enter the cloud-pilot server URL, and continue. | URL is accepted; invalid URLs show a clear error and do not save credentials. |
+| Mobile/web bootstrap | Review the Sync plan, connect to the server, sync mobile-start local quest progress, then confirm web-start server assignments refresh onto the phone. | Mobile-start quest progress uploads with a stable quest ID; web-start active quests refresh after sign-in; duplicate starter progress is accepted idempotently or shown as a visible conflict. |
+| Server URL | Open Sync, enter the cloud-pilot server URL, and continue. | URL is accepted from the optional Sync path; invalid URLs show a clear error and do not save credentials. |
 | Sign-in | Sign in with an admin-created local username/password account. | Sign-in succeeds; password field clears; token is stored securely; Home refreshes from the server. |
 | First Sync | While online, refresh Home/Offline data. | Home, Quests, Inventory, and Offline screens show server-backed data or an explicit empty state. |
 | Local Network | If iOS prompts for Local Network access, allow it and retry sync. | LAN/private server sync works after permission is granted. If denied, the failure is understandable. |
@@ -209,7 +216,7 @@ Evidence to record:
 
 Use the canonical report template in
 [Basecamp iPhone Field Validation Report](./iphone-field-validation-report.md)
-when posting results back to issues #75, #76, or #77.
+when posting results back to issues #75, #76, #77, or #94.
 
 Current local preview for contributors:
 
