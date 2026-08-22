@@ -64,10 +64,12 @@ v1 blockers in known limitations.
 - Barcode and Basecamp QR scans work with Camera permission on a physical
   iPhone.
 - Evidence photo/document capture stores deployment-owned evidence bytes and
-  syncs metadata without exposing private device or workstation paths.
+  syncs metadata without exposing private device or workstation paths; pending
+  or failed evidence remains visible and retryable.
 - Local quest and command state works before first sync. Offline read data
   includes active quests, inventory, critical BOMs, maintenance, and references
-  after first sync.
+  after first sync, with a visible Offline cached-data snapshot for field
+  validation.
 - Offline command outbox survives app restart and reconnects to the server.
 - Reconnect sync either applies queued commands idempotently or shows
   user-visible conflicts.
@@ -168,9 +170,9 @@ server, device, or household details.
 The v1.0 milestone should remain open until these blockers are complete:
 
 - Mobile field data capture, offline sync, and evidence upload. Native screens,
-  local queues, and server upload plumbing exist, but the blocker remains open
-  until simulator plus physical iPhone validation prove the implemented
-  behavior.
+  local queues, retryable evidence upload, cached offline field-data visibility,
+  and server upload plumbing exist, but the blocker remains open until simulator
+  plus physical iPhone validation prove the implemented behavior.
 - Physical iPhone field validation.
 - Final v1 release-candidate validation and release notes.
 

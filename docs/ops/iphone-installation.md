@@ -150,8 +150,8 @@ selected Apple-supported install path:
 15. Confirm Home, Quests, Inventory, Maintenance, and Offline data appear.
 16. Confirm server-created active quests refresh onto the phone after sign-in.
 17. Turn on airplane mode.
-18. Open Offline and confirm cached quests, inventory, critical BOMs,
-    maintenance, and references still appear.
+18. Open Offline and confirm the Cached Field Data snapshot shows active
+    quests, inventory items, critical BOMs, maintenance, and references.
 19. Create a Quick Capture entry while offline.
 20. Reconnect, sync, and confirm the queued command is accepted or shown as a
     user-visible conflict.
@@ -186,11 +186,11 @@ Test criteria:
 | First Sync | While online, refresh Home/Offline data. | Home, Quests, Inventory, and Offline screens show server-backed data or an explicit empty state. |
 | Local Network | If iOS prompts for Local Network access, allow it and retry sync. | LAN/private server sync works after permission is granted. If denied, the failure is understandable. |
 | Quick Capture Online | From Capture, queue an inventory-style entry such as adding water. Sync while online. | Command appears in the outbox, sync attempts, and the server accepts it or shows a user-visible conflict. |
-| Evidence Photo | From Capture, select or take a photo and upload it while online. | Permission prompt appears when expected; upload succeeds; server stores deployment-owned evidence bytes; no phone-local URI appears in server/export metadata. |
-| Evidence Document | Attach a document if available. | Document picker opens, upload succeeds or gives a clear actionable error. |
+| Evidence Photo | From Capture, select or take a photo and upload it while online. If upload fails, use the evidence Retry action after reconnecting. | Permission prompt appears when expected; upload succeeds or stays retryable; server stores deployment-owned evidence bytes; no phone-local URI appears in server/export metadata. |
+| Evidence Document | Attach a document if available. If upload fails, use the evidence Retry action after reconnecting. | Document picker opens, upload succeeds or gives a clear actionable retry state. |
 | Basecamp QR Scan | From Scan, grant Camera permission and scan a Basecamp asset QR tag. | Asset workflow appears with inspect, maintain, move, adjust quantity, report issue, and instructions actions. |
 | Barcode Scan | Scan a commercial barcode. | Inventory confirmation appears with barcode context, quantity, location, and notes fields. |
-| Offline Cache | Turn on airplane mode and open Home, Quests, Inventory, and Offline. | Previously synced data remains visible enough for field use; online-only failures do not erase cached data. |
+| Offline Cache | Turn on airplane mode and open Home, Quests, Inventory, and Offline. | Previously synced data remains visible enough for field use, including the Offline cached-data snapshot; online-only failures do not erase cached data. |
 | Offline Queue | While still offline, create a Quick Capture entry and scan or manually enter a code. Force-close and reopen the app. | Pending commands survive app restart and remain visible in Offline/outbox state. |
 | Reconnect Sync | Turn airplane mode off, return to the same network, and sync. | Pending commands upload idempotently or show a user-visible conflict; the outbox does not duplicate accepted commands. |
 | Conflict Visibility | If a conflict appears, open it and read the message. | Conflict explains what needs human review without exposing internal payloads or secrets. |
@@ -208,7 +208,11 @@ Evidence to record:
 - Database kind reported by server status when known.
 - Whether Local Network, Camera, Photos, and Documents flows were prompted and
   allowed or denied.
+- Cached Field Data counts for active quests, inventory items, critical BOMs,
+  maintenance, and references.
 - Pass/fail result for each checklist row.
+- Accepted command count, conflict count, upload result, or evidence retry
+  result when relevant.
 - Screenshots only when useful, with private hostnames/IPs, usernames,
   locations, and preparedness-sensitive details redacted.
 - Any app crash, stuck spinner, unclear copy, or sync result that was not

@@ -94,16 +94,16 @@ export const iphoneValidationRows: IPhoneValidationRow[] = [
     issues: [76, 77],
     environment: "physical-iphone",
     steps: "From Capture, take or select a photo and upload it while online.",
-    passCriteria: "Permission prompt appears when expected; upload succeeds; no phone-local URI appears in server metadata.",
-    evidenceToRecord: ["Photos or Camera permission result", "storage result", "URI leak check"]
+    passCriteria: "Permission prompt appears when expected; upload succeeds or stays retryable; no phone-local URI appears in server metadata.",
+    evidenceToRecord: ["Photos or Camera permission result", "storage result", "retry result", "URI leak check"]
   },
   {
     area: "Evidence document",
     issues: [76, 77],
     environment: "physical-iphone",
     steps: "Attach a document if one is available on the iPhone.",
-    passCriteria: "Document picker opens, upload succeeds or gives a clear actionable error.",
-    evidenceToRecord: ["picker result", "upload result"]
+    passCriteria: "Document picker opens, upload succeeds or gives a clear actionable retry state.",
+    evidenceToRecord: ["picker result", "upload result", "retry result"]
   },
   {
     area: "Basecamp QR scan",
@@ -126,7 +126,7 @@ export const iphoneValidationRows: IPhoneValidationRow[] = [
     issues: [76, 77],
     environment: "physical-iphone",
     steps: "Turn on airplane mode and open Home, Quests, Inventory, and Offline.",
-    passCriteria: "Previously synced data remains visible enough for field use; online-only failures do not erase cached data.",
+    passCriteria: "Previously synced data remains visible enough for field use, including the Offline cached-data snapshot; online-only failures do not erase cached data.",
     evidenceToRecord: ["offline visible data", "failure text if any"]
   },
   {

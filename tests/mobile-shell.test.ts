@@ -5,6 +5,7 @@ import {
   createEvidenceUploadRequest,
   createIphoneValidationReport,
   createMobileAppShell,
+  createMobileFieldValidationSnapshot,
   createMobileFieldScreens,
   createMobileLoginRequest,
   createPendingEvidenceUpload,
@@ -261,6 +262,85 @@ describe("mobile app shell", () => {
     });
     expect(JSON.stringify(request)).not.toContain("file://");
     expect(JSON.stringify(request)).not.toContain("/private/var/mobile");
+  });
+
+  it("summarizes offline field data and retryable evidence for physical validation", () => {
+    const shell = createMobileAppShell(createDashboardSummary(basecampSeed, {
+      questInstances: [
+        {
+          id: "quest-instance-water",
+          templateId: "water-store-24-hour-drinking-water",
+          status: "active",
+          selectedByUser: true,
+          categoryPursuitState: "active",
+          progressPercent: 10,
+          startedAt: "2026-08-21T00:00:00.000Z"
+        }
+      ]
+    }), {
+      clientId: "iphone-validation",
+      generatedAt: "2026-08-21T00:00:00.000Z",
+      cursor: "sync:7"
+    });
+    const link = defaultEvidenceLink();
+    const pendingEvidence = createPendingEvidenceUpload({
+      kind: "photo",
+      entityType: link.entityType,
+      entityId: link.entityId,
+      title: "Shelf photo",
+      fileName: "shelf.jpg",
+      contentType: "image/jpeg",
+      localUri: "file:///private/var/mobile/Containers/Data/Application/example/shelf.jpg",
+      capturedAt: "2026-08-21T00:03:00.000Z"
+    });
+    const uploadedEvidence = {
+      ...pendingEvidence,
+      localId: "pending-evidence-uploaded",
+      uploadStatus: "uploaded" as const,
+      uploadedStorageKey: "evidence/quest/manual-review/shelf.jpg"
+    };
+    let outbox = queueQuickCaptureCommand(
+      shell.offline.outbox,
+      "added 1 gallon of water",
+      "2026-08-21T00:04:00.000Z"
+    ).outbox;
+
+    outbox = applyMobileSyncResponse(outbox, {
+      clientId: "iphone-validation",
+      nextCursor: "sync:8",
+      accepted: [],
+      conflicts: [
+        {
+          id: "sync-conflict-inventory",
+          commandId: "iphone-validation-000001",
+          entityType: "inventory",
+          policy: "user_visible_conflict",
+          reason: "Inventory changed before sync.",
+          userVisible: true
+        }
+      ]
+    });
+
+    const snapshot = createMobileFieldValidationSnapshot({
+      readModel: shell.offline.readModel,
+      outbox,
+      pendingEvidence: [pendingEvidence, uploadedEvidence]
+    });
+
+    expect(snapshot.rows.map((row) => row.label)).toEqual([
+      "Active Quests",
+      "Inventory Items",
+      "Critical BOMs",
+      "Maintenance",
+      "References"
+    ]);
+    expect(snapshot.rows.find((row) => row.label === "Active Quests")?.value).toBe("1");
+    expect(Number(snapshot.rows.find((row) => row.label === "References")?.value)).toBeGreaterThan(0);
+    expect(snapshot.pendingCommands).toBe(1);
+    expect(snapshot.conflictCommands).toBe(1);
+    expect(snapshot.pendingEvidence).toBe(1);
+    expect(snapshot.uploadedEvidence).toBe(1);
+    expect(snapshot.retryableEvidence).toBe(1);
   });
 
   it("applies sync acknowledgements and user-visible conflicts to the mobile outbox", () => {

@@ -16,6 +16,7 @@ import {
   type CommandOutbox,
   type MobileRoute,
   type OfflineCommand,
+  type OfflineReadModel,
   type ScanInput,
   type ScanWorkflow,
   type SyncBatchResponse
@@ -63,6 +64,15 @@ export interface MobilePendingEvidenceUpload {
   lastError?: string;
 }
 
+export interface MobileFieldValidationSnapshot {
+  rows: Array<{ label: string; value: string }>;
+  pendingCommands: number;
+  conflictCommands: number;
+  pendingEvidence: number;
+  uploadedEvidence: number;
+  retryableEvidence: number;
+}
+
 export function createMobileFieldSession(input: {
   summary: DashboardSummary;
   clientId: string;
@@ -82,6 +92,34 @@ export function createMobileFieldSession(input: {
     }),
     outbox: input.restoredOutbox ?? createCommandOutbox(input.clientId),
     screens: createMobileFieldScreens()
+  };
+}
+
+export function createMobileFieldValidationSnapshot(input: {
+  readModel: OfflineReadModel;
+  outbox: CommandOutbox;
+  pendingEvidence: MobilePendingEvidenceUpload[];
+}): MobileFieldValidationSnapshot {
+  const queuedCommands = input.outbox.queued.filter(
+    (queued) => queued.status === "pending" || queued.status === "failed" || queued.status === "conflict"
+  );
+  const conflictCommands = queuedCommands.filter((queued) => queued.status === "conflict").length;
+  const pendingEvidence = input.pendingEvidence.filter((upload) => upload.uploadStatus !== "uploaded");
+  const uploadedEvidence = input.pendingEvidence.filter((upload) => upload.uploadStatus === "uploaded");
+
+  return {
+    rows: [
+      { label: "Active Quests", value: String(input.readModel.activeQuests.length) },
+      { label: "Inventory Items", value: String(input.readModel.inventory.items.length) },
+      { label: "Critical BOMs", value: String(input.readModel.criticalBoms.length) },
+      { label: "Maintenance", value: String(input.readModel.maintenance.length) },
+      { label: "References", value: String(input.readModel.references.length) }
+    ],
+    pendingCommands: queuedCommands.length,
+    conflictCommands,
+    pendingEvidence: pendingEvidence.length,
+    uploadedEvidence: uploadedEvidence.length,
+    retryableEvidence: pendingEvidence.length
   };
 }
 

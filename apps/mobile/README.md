@@ -72,7 +72,8 @@ confirmation, and sample QR scan target. The native Expo entrypoint covers
 mobile-first onboarding, local category selection, starter quest launch, optional
 server URL entry, local username/password sign-in, tabbed field screens, Quick
 Capture queueing, CameraView scan handling, photo/document evidence selection,
-evidence upload, persistent journey/outbox storage, and reconnect sync attempts.
+evidence upload with per-item retry, persistent journey/outbox storage, cached
+offline field-data summaries, and reconnect sync attempts.
 
 Mobile storage boundary:
 
@@ -98,6 +99,11 @@ stable quest IDs, not only display titles, so mobile-start progress can attach
 to the server deterministically. Repeated starter progress is accepted
 idempotently when the server is already at or beyond that state; true changed
 target conflicts stay visible in the outbox.
+
+The Offline screen shows the cached read-model buckets required by the physical
+iPhone checklist: active quests, inventory items, critical BOMs, maintenance,
+and references. Evidence rows remain local until upload succeeds, and pending or
+failed evidence can be retried directly after a server connection exists.
 
 ## Navigation
 
@@ -141,9 +147,10 @@ Local validation:
 Physical iPhone validation remains the v1 release gate for the current app
 experience. The local iOS build path has been proven, but Camera permission,
 QR/barcode scanning, Photos/Documents access, Local Network permission, local
-journey persistence, offline storage across app restart, evidence upload, and
-reconnect sync must be verified on a physical iPhone for the release candidate.
-Android validation is tracked after v1.
+journey persistence, Offline cached-data visibility, offline storage across app
+restart, evidence upload/retry, and reconnect sync must be verified on a
+physical iPhone for the release candidate. Android validation is tracked after
+v1.
 The exact v1 requirements are tracked in
 [Basecamp v1.0 MVP Readiness](../../docs/product/v1-mvp-readiness.md) and the
 v1.0 GitHub milestone blocker issues.
