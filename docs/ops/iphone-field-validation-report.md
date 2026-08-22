@@ -90,11 +90,11 @@ Do not include passwords, tokens, private hostnames, private IPs, pairing secret
 | First sync | Home, Quests, Inventory, and Offline screens show server-backed data or an explicit empty state. |
 | Local Network | LAN/private server sync works after permission is granted. If denied, the failure is understandable. |
 | Quick Capture online | Command appears in the outbox, sync attempts, and the server accepts it or shows a conflict. |
-| Evidence photo | Permission prompt appears when expected; upload succeeds; no phone-local URI appears in server metadata. |
-| Evidence document | Document picker opens, upload succeeds or gives a clear actionable error. |
+| Evidence photo | Permission prompt appears when expected; upload succeeds or stays retryable; no phone-local URI appears in server metadata. |
+| Evidence document | Document picker opens, upload succeeds or gives a clear actionable retry state. |
 | Basecamp QR scan | Asset workflow appears with inspect, maintain, move, adjust quantity, report issue, and instructions actions. |
 | Barcode scan | Inventory confirmation appears with barcode context, quantity, location, and notes fields. |
-| Offline cache | Previously synced data remains visible enough for field use; online-only failures do not erase cached data. |
+| Offline cache | Previously synced data remains visible enough for field use, including the Offline cached-data snapshot; online-only failures do not erase cached data. |
 | Offline queue restart | Pending commands survive app restart and remain visible in Offline/outbox state. |
 | Reconnect sync | Pending commands upload idempotently or show a user-visible conflict; accepted commands are not duplicated. |
 | Conflict visibility | Conflict explains what needs human review without exposing internal payloads or secrets. |
@@ -113,8 +113,11 @@ Record only public-safe facts:
 - First-run category chosen, starter quest shown, and local queue result.
 - Sync plan shown, mobile-start sync result, web-start refresh result, and
   duplicate or conflict result.
+- Offline cached-data snapshot counts for active quests, inventory items,
+  critical BOMs, maintenance, and references.
 - Pass/fail result and short notes for each row.
-- Accepted command count, conflict count, or upload result when relevant.
+- Accepted command count, conflict count, upload result, or evidence retry
+  result when relevant.
 - Bugs, blockers, and documentation gaps that should become follow-up issues.
 
 ## Source Of Truth

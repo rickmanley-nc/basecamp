@@ -139,6 +139,8 @@ Primary work:
 - Durable command outbox.
 - Sync API v1.
 - Conflict policy tests.
+- Offline cached-data validation surface and evidence retry controls for
+  physical iPhone field testing.
 - Physical iPhone camera, installation, first-run local quest, Local Network,
   offline storage, and reconnect validation are documented. Android validation
   is tracked post-v1.

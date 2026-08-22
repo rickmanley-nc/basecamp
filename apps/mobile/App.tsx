@@ -31,6 +31,7 @@ import {
 import {
   applyMobileSyncResponse,
   createEvidenceUploadRequest,
+  createMobileFieldValidationSnapshot,
   createMobileFieldScreens,
   createMobileFieldSession,
   createMobileLoginRequest,
@@ -183,6 +184,15 @@ export default function App() {
         restoredOutbox: outbox
       }),
     [normalizedServerUrl, outbox, session, summary]
+  );
+  const fieldValidationSnapshot = useMemo(
+    () =>
+      createMobileFieldValidationSnapshot({
+        readModel: fieldSession.readModel,
+        outbox,
+        pendingEvidence
+      }),
+    [fieldSession.readModel, outbox, pendingEvidence]
   );
   const pendingCommandCount = outbox.queued.filter(
     (queued) => queued.status === "pending" || queued.status === "failed"
@@ -622,6 +632,36 @@ export default function App() {
     return nextUploads;
   }
 
+  async function retryEvidenceUpload(pending: MobilePendingEvidenceUpload) {
+    if (session === undefined) {
+      setAppMode("sync");
+      setStatus("Connect a Basecamp server before uploading evidence.");
+      return;
+    }
+
+    setIsBusy(true);
+    setStatus(`Uploading evidence: ${pending.fileName}`);
+
+    try {
+      await uploadPendingEvidenceItem(pending);
+    } catch (error) {
+      const nextUploads = pendingEvidence.map((upload) =>
+        upload.localId === pending.localId
+          ? {
+              ...upload,
+              uploadStatus: "failed" as const,
+              lastError: error instanceof Error ? error.message : "Evidence upload failed."
+            }
+          : upload
+      );
+
+      commitPendingEvidence(nextUploads);
+      setStatus(error instanceof Error ? error.message : "Evidence upload failed.");
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
   async function syncNow() {
     if (session === undefined) {
       setAppMode("sync");
@@ -653,10 +693,15 @@ export default function App() {
       }
 
       const request = createSyncBatchRequest(outbox, fieldSession.readModel.cursor);
+      const failedEvidenceCount = uploads.filter((upload) => upload.uploadStatus === "failed").length;
 
       if (request.commands.length === 0) {
         await refreshDashboard(session);
-        setStatus("No commands to sync.");
+        setStatus(
+          failedEvidenceCount === 0
+            ? "No commands to sync."
+            : `No commands to sync. ${failedEvidenceCount} evidence upload(s) need retry.`
+        );
         return;
       }
 
@@ -681,7 +726,9 @@ export default function App() {
       commitOutbox(
         nextOutbox,
         syncResponse.conflicts.length === 0
-          ? `Synced ${request.commands.length} command(s).`
+          ? failedEvidenceCount === 0
+            ? `Synced ${request.commands.length} command(s).`
+            : `Synced ${request.commands.length} command(s). ${failedEvidenceCount} evidence upload(s) need retry.`
           : `${syncResponse.conflicts.length} sync conflict(s) need review.`
       );
       await refreshDashboard(session);
@@ -1046,7 +1093,11 @@ export default function App() {
             <SecondaryButton label="Photo" onPress={() => void capturePhotoEvidence()} />
             <SecondaryButton label="Document" onPress={() => void pickDocumentEvidence()} />
           </ActionRow>
-          <EvidenceList uploads={pendingEvidence} />
+          <EvidenceList
+            canRetry={session !== undefined && !isBusy}
+            onRetry={(upload) => void retryEvidenceUpload(upload)}
+            uploads={pendingEvidence}
+          />
         </View>
       );
     }
@@ -1171,6 +1222,27 @@ export default function App() {
             ? "Queued field work stays local until you connect a Basecamp server."
             : "Queued field work syncs when the server accepts the batch."}
         </Text>
+        <View style={styles.resultBox}>
+          <Text style={styles.resultTitle}>Cached Field Data</Text>
+          <View style={styles.planRows}>
+            {fieldValidationSnapshot.rows.map((row) => (
+              <View key={row.label} style={styles.planRow}>
+                <Text style={styles.planLabel}>{row.label}</Text>
+                <Text style={styles.planValue}>{row.value}</Text>
+              </View>
+            ))}
+          </View>
+          <Text style={styles.metaText}>
+            {fieldSession.readModel.cursor === undefined
+              ? `Generated ${fieldSession.readModel.generatedAt}`
+              : `Cursor ${fieldSession.readModel.cursor}`}
+          </Text>
+        </View>
+        <View style={styles.metrics}>
+          <Metric label="Pending" value={String(fieldValidationSnapshot.pendingCommands)} />
+          <Metric label="Conflicts" value={String(fieldValidationSnapshot.conflictCommands)} />
+          <Metric label="Evidence" value={String(fieldValidationSnapshot.pendingEvidence)} />
+        </View>
         <ActionRow>
           <PrimaryButton
             disabled={isBusy}
@@ -1432,7 +1504,11 @@ function Metric(props: { label: string; value: string }) {
   );
 }
 
-function EvidenceList(props: { uploads: MobilePendingEvidenceUpload[] }) {
+function EvidenceList(props: {
+  canRetry: boolean;
+  onRetry: (upload: MobilePendingEvidenceUpload) => void;
+  uploads: MobilePendingEvidenceUpload[];
+}) {
   if (props.uploads.length === 0) {
     return <Text style={styles.metaText}>No evidence queued.</Text>;
   }
@@ -1441,10 +1517,17 @@ function EvidenceList(props: { uploads: MobilePendingEvidenceUpload[] }) {
     <View style={styles.list}>
       {props.uploads.slice(0, 4).map((upload) => (
         <View key={upload.localId} style={styles.queueRow}>
-          <Text style={styles.rowTitle}>{upload.title}</Text>
-          <Text style={styles.metaText}>
-            {upload.uploadStatus}, {upload.fileName}
-          </Text>
+          <View style={styles.listRowHeader}>
+            <View style={styles.listText}>
+              <Text style={styles.rowTitle}>{upload.title}</Text>
+              <Text style={styles.metaText}>
+                {upload.uploadStatus}, {upload.fileName}
+              </Text>
+            </View>
+            {upload.uploadStatus === "uploaded" ? null : (
+              <SecondaryButton disabled={!props.canRetry} label="Retry" onPress={() => props.onRetry(upload)} />
+            )}
+          </View>
           {upload.lastError === undefined ? null : <Text style={styles.errorText}>{upload.lastError}</Text>}
         </View>
       ))}
@@ -1995,6 +2078,12 @@ const styles = StyleSheet.create({
     borderTopColor: "#ece7da",
     borderTopWidth: 1,
     paddingTop: 10
+  },
+  listRowHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10,
+    justifyContent: "space-between"
   },
   listText: {
     flex: 1,
