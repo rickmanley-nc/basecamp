@@ -17,6 +17,7 @@ import {
   previewScanWorkflow,
   queueAssetActionCommand,
   queueQuickCaptureCommand,
+  queueQuestStatusCommand,
   queueScanCommand,
   restoreMobileOutbox,
   routeForScannedCode,
@@ -200,13 +201,37 @@ describe("mobile app shell", () => {
       }
     });
 
+    const questQueued = queueQuestStatusCommand({
+      outbox,
+      questId: "water-calculate-household-requirements",
+      questTitle: "Calculate Household Water Requirements",
+      action: "start",
+      notes: "Started from local mobile onboarding.",
+      now: "2026-08-21T00:03:00.000Z"
+    });
+
+    outbox = questQueued.outbox;
+
+    expect(questQueued.command).toMatchObject({
+      commandId: "mobile-field-test-000004",
+      entityType: "quest",
+      entityId: "water-calculate-household-requirements",
+      intent: {
+        type: "quest.set_status",
+        questId: "water-calculate-household-requirements",
+        questTitle: "Calculate Household Water Requirements",
+        action: "start"
+      }
+    });
+
     const restored = restoreMobileOutbox(serializeMobileOutbox(outbox), "fallback-client");
 
     expect(restored).toEqual(outbox);
     expect(createSyncBatchRequest(restored).commands.map((command) => command.commandId)).toEqual([
       "mobile-field-test-000001",
       "mobile-field-test-000002",
-      "mobile-field-test-000003"
+      "mobile-field-test-000003",
+      "mobile-field-test-000004"
     ]);
   });
 
@@ -275,6 +300,7 @@ describe("mobile app shell", () => {
     const requiredAreas = [
       "Install",
       "First-run local quest",
+      "Mobile/web bootstrap",
       "Server URL",
       "Sign-in",
       "First sync",
@@ -311,6 +337,7 @@ describe("mobile app shell", () => {
     expect(report).toContain("Do not include passwords, tokens, private hostnames, private IPs");
     expect(report).toContain("| Install |  | physical-iphone; issues #75, #77, #93 | |");
     expect(report).toContain("| First-run local quest |  | physical-iphone; issues #77, #93 | |");
+    expect(report).toContain("| Mobile/web bootstrap |  | physical-iphone; issues #76, #77, #94 | |");
     expect(report).toContain("| Lost device/user disable procedure |  | cloud-pilot; issues #75, #77 | |");
     expect(report).not.toMatch(/Android|apk|aab/i);
     expect(report).not.toMatch(/file:\/\/|\/private\/var\/mobile/);
@@ -327,7 +354,7 @@ describe("mobile app shell", () => {
       expect(reportDoc).toContain(row.passCriteria);
     }
 
-    expect(reportDoc).toContain("issues #75, #76, and #77");
+    expect(reportDoc).toContain("issues #75, #76, #77, and #94");
     expect(reportDoc).toContain("#93 for the mobile-first local quest onboarding gate");
     expect(reportDoc).toContain("Do not include passwords, tokens");
     expect(reportDoc).not.toMatch(/Android|apk|aab/i);

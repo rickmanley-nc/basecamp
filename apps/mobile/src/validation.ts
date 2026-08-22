@@ -1,4 +1,4 @@
-export type IPhoneValidationIssue = 75 | 76 | 77 | 93;
+export type IPhoneValidationIssue = 75 | 76 | 77 | 93 | 94;
 
 export type IPhoneValidationEnvironment = "cloud-pilot" | "physical-iphone" | "simulator";
 
@@ -40,6 +40,14 @@ export const iphoneValidationRows: IPhoneValidationRow[] = [
     steps: "Open the app without entering a server URL, choose a preparedness category, and start the starter quest.",
     passCriteria: "The app does not require server sign-in, persists the selected quest locally, and queues quest progress offline.",
     evidenceToRecord: ["category chosen", "starter quest shown", "local queue result"]
+  },
+  {
+    area: "Mobile/web bootstrap",
+    issues: [76, 77, 94],
+    environment: "physical-iphone",
+    steps: "Review the Sync plan, connect to the server, sync mobile-start local quest progress, then confirm web-start server assignments refresh onto the phone.",
+    passCriteria: "Mobile-start quest progress uploads with a stable quest ID; web-start active quests refresh after sign-in; duplicate starter progress is accepted idempotently or shown as a visible conflict.",
+    evidenceToRecord: ["sync plan shown", "mobile-start sync result", "web-start refresh result", "duplicate or conflict result"]
   },
   {
     area: "Server URL",

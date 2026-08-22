@@ -241,6 +241,77 @@ describe("database seed import", () => {
     database.close();
   });
 
+  it("bootstraps mobile-start quest progress into web-start server state idempotently", () => {
+    const database = createDatabase();
+
+    applyMigrations(database);
+    importSeed(database, basecampSeed);
+
+    const mobileTitleStart = createOfflineCommand({
+      clientId: "iphone-bootstrap",
+      localSequence: 1,
+      createdAt: "2026-08-22T00:00:00.000Z",
+      entityType: "quest",
+      intent: {
+        type: "quest.set_status",
+        questTitle: "Calculate Household Water Requirements",
+        action: "start",
+        notes: "Started locally before server pairing."
+      }
+    });
+
+    const mobileStart = createOfflineCommand({
+      clientId: "iphone-bootstrap",
+      localSequence: 2,
+      createdAt: "2026-08-22T00:01:00.000Z",
+      entityType: "quest",
+      entityId: "water-calculate-household-requirements",
+      intent: {
+        type: "quest.set_status",
+        questId: "water-calculate-household-requirements",
+        questTitle: "Calculate Household Water Requirements",
+        action: "start",
+        notes: "Repeated local starter command after pairing."
+      }
+    });
+
+    const first = applySyncCommandBatch(
+      database,
+      basecampSeed,
+      {
+        clientId: "iphone-bootstrap",
+        commands: [mobileTitleStart]
+      },
+      "2026-08-22T00:02:00.000Z"
+    );
+    const second = applySyncCommandBatch(
+      database,
+      basecampSeed,
+      {
+        clientId: "iphone-bootstrap",
+        sinceCursor: first.nextCursor,
+        commands: [mobileStart]
+      },
+      "2026-08-22T00:03:00.000Z"
+    );
+    const progress = readHouseholdProgress(database);
+    const quest = progress.questInstances.find(
+      (candidate) => candidate.templateId === "water-calculate-household-requirements"
+    );
+
+    expect(first.accepted).toHaveLength(1);
+    expect(first.conflicts).toEqual([]);
+    expect(second.accepted).toHaveLength(1);
+    expect(second.conflicts).toEqual([]);
+    expect(quest).toMatchObject({
+      status: "active",
+      selectedByUser: true
+    });
+    expect(listQuestEvents(database).filter((event) => event.templateId === "water-calculate-household-requirements")).toHaveLength(1);
+
+    database.close();
+  });
+
   it("persists M5 evidence, skill training, drill templates, and drill runs", () => {
     const database = createDatabase();
 

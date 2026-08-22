@@ -11,8 +11,8 @@ comment, to the relevant v1 issues:
 - #77 for physical iPhone field validation.
 - #93 for the mobile-first local quest onboarding gate.
 
-Use the same report format across issues #75, #76, and #77 so each issue has a
-specific progress or resolution comment instead of only a linked PR.
+Use the same report format across issues #75, #76, #77, and #94 so each issue
+has a specific progress or resolution comment instead of only a linked PR.
 
 This report is intentionally public-safe. Do not include passwords, tokens,
 private hostnames, private IP addresses, pairing secrets, phone-local file URIs,
@@ -53,6 +53,7 @@ Do not include passwords, tokens, private hostnames, private IPs, pairing secret
 | --- | --- | --- | --- |
 | Install |  | physical-iphone; issues #75, #77, #93 | |
 | First-run local quest |  | physical-iphone; issues #77, #93 | |
+| Mobile/web bootstrap |  | physical-iphone; issues #76, #77, #94 | |
 | Server URL |  | physical-iphone; issues #76, #77 | |
 | Sign-in |  | physical-iphone; issues #76, #77 | |
 | First sync |  | physical-iphone; issues #76, #77 | |
@@ -83,6 +84,7 @@ Do not include passwords, tokens, private hostnames, private IPs, pairing secret
 | --- | --- |
 | Install | App installs, opens without crashing, and shows the mobile-first Basecamp onboarding flow. |
 | First-run local quest | The app does not require server sign-in, persists the selected quest locally, and queues quest progress offline. |
+| Mobile/web bootstrap | Mobile-start quest progress uploads with a stable quest ID; web-start active quests refresh after sign-in; duplicate starter progress is accepted idempotently or shown as a visible conflict. |
 | Server URL | URL is accepted from the optional Sync path; invalid URLs show a clear error and do not save credentials. |
 | Sign-in | Sign-in succeeds; password field clears; token is stored securely; Home refreshes from the server. |
 | First sync | Home, Quests, Inventory, and Offline screens show server-backed data or an explicit empty state. |
@@ -109,6 +111,8 @@ Record only public-safe facts:
 - Backup confirmation before destructive checks.
 - Permission prompt results for Local Network, Camera, Photos, and Documents.
 - First-run category chosen, starter quest shown, and local queue result.
+- Sync plan shown, mobile-start sync result, web-start refresh result, and
+  duplicate or conflict result.
 - Pass/fail result and short notes for each row.
 - Accepted command count, conflict count, or upload result when relevant.
 - Bugs, blockers, and documentation gaps that should become follow-up issues.
