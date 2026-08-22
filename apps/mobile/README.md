@@ -5,6 +5,7 @@ Basecamp rather than replacing the web application.
 
 Responsibilities:
 
+- Mobile-first first run with local category selection and starter quests.
 - Quick Capture with confirmation-first workflows.
 - Barcode and QR scanning for commercial items and Basecamp asset tags.
 - Inventory updates, photos, task completion, drill recording, and maintenance completion.
@@ -68,15 +69,16 @@ release-blocking. The Android command remains for post-v1 development.
 
 The preview prints the current mobile stack, tab labels, sample Quick Capture
 confirmation, and sample QR scan target. The native Expo entrypoint covers
+mobile-first onboarding, local category selection, starter quest launch, optional
 server URL entry, local username/password sign-in, tabbed field screens, Quick
 Capture queueing, CameraView scan handling, photo/document evidence selection,
-evidence upload, persistent outbox storage, and reconnect sync attempts.
+evidence upload, persistent journey/outbox storage, and reconnect sync attempts.
 
 Mobile storage boundary:
 
 - Session token: Expo SecureStore.
-- Non-secret session display data, command outbox, and pending evidence drafts:
-  AsyncStorage.
+- Non-secret session display data, local journey selection, command outbox, and
+  pending evidence drafts: AsyncStorage.
 - Evidence bytes: uploaded to the Basecamp server through
   `POST /api/evidence/upload` so persisted metadata uses deployment-owned
   `storageKey` values instead of phone-local file paths.
@@ -120,11 +122,12 @@ Local validation:
 - `pnpm --filter @basecamp/mobile ios` on a Mac with full Xcode.
 - `pnpm check`
 
-Physical iPhone validation is pending until a locally produced iPhone build is
-installed. Camera permission, QR/barcode scanning, Photos/Documents access,
-Local Network permission, offline storage across app restart, evidence upload,
-and reconnect sync must be verified on a physical iPhone when native field
-screens and distribution are available. Android validation is tracked after v1.
+Physical iPhone validation remains the v1 release gate for the current app
+experience. The local iOS build path has been proven, but Camera permission,
+QR/barcode scanning, Photos/Documents access, Local Network permission, local
+journey persistence, offline storage across app restart, evidence upload, and
+reconnect sync must be verified on a physical iPhone for the release candidate.
+Android validation is tracked after v1.
 The exact v1 requirements are tracked in
 [Basecamp v1.0 MVP Readiness](../../docs/product/v1-mvp-readiness.md) and the
 v1.0 GitHub milestone blocker issues.

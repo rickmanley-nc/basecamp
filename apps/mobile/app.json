@@ -5,11 +5,13 @@
     "scheme": "basecamp",
     "version": "1.0.0-beta.1",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "bundleIdentifier": "com.basecamppreparedness.mobile",
       "buildNumber": "1",
+      "icon": "./assets/icon.png",
       "supportsTablet": false,
       "infoPlist": {
         "MinimumOSVersion": "17.0",
@@ -22,9 +24,18 @@
     "android": {
       "package": "com.basecamppreparedness.mobile",
       "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#142421"
+      },
       "permissions": [
         "CAMERA"
       ]
+    },
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#142421"
     },
     "extra": {
       "basecamp": {

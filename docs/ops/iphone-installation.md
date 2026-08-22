@@ -1,6 +1,6 @@
 # Basecamp iPhone Installation Guide
 
-Last updated: 2026-08-21
+Last updated: 2026-08-22
 
 This guide is the operator runbook for installing the Basecamp mobile companion
 on an iPhone.
@@ -15,20 +15,23 @@ by that gate.
 ## Current Status
 
 Basecamp Mobile now has an Expo React Native entrypoint, iOS app metadata, and
-local native build scripts. The app can accept an admin-controlled Basecamp
-server URL and sign in with the local username/password model. Native Home,
-Capture, Scan, Quests, Inventory, and Offline screens exist, with Quick Capture
-queueing, camera scan handling, photo/document evidence selection, persistent
-local outbox storage, and reconnect sync attempts.
+local native build scripts. The app opens with mobile-first onboarding, allows a
+user to choose a preparedness category and start a starter quest locally, and can
+later accept an admin-controlled Basecamp server URL for sync with the local
+username/password model. Native Home, Capture, Scan, Quests, Inventory, and
+Offline screens exist, with Quick Capture queueing, camera scan handling,
+photo/document evidence selection, persistent local journey/outbox storage, and
+reconnect sync attempts.
 
 The selected v1 build path is a locally produced iOS artifact from an
-admin-controlled Mac with the full Xcode app installed. Physical iPhone
-installation is still pending until Apple signing is configured and a local
-build is installed through an Apple-supported path.
+admin-controlled Mac with the full Xcode app installed. The local Xcode
+development install path has been proven on a physical iPhone; the remaining v1
+gate is field validation of the current mobile-first app experience, capture,
+evidence, offline restart, and reconnect sync behavior.
 
-The v1 mobile-build blocker must remain open until the local iOS path is
-followed on a physical iPhone and the issue records the iOS version, app build,
-install path, validation environment, and pass/fail notes.
+Physical iPhone validation remains open until the current app records the iOS
+version, app build, install path, validation environment, first-run local quest
+result, and pass/fail notes for field workflows.
 
 Current beta metadata:
 
@@ -42,10 +45,12 @@ Current beta metadata:
   or TestFlight after a local archive is uploaded through an Apple-supported
   path.
 - Auth model: local username/password; SSO is not required or configured.
-- Server URL setup: manual URL entry now; pairing QR remains future work.
+- First-run setup: local category selection and starter quest.
+- Server URL setup: optional manual URL entry now; pairing QR remains future
+  work.
 - Secret storage: session token in Expo SecureStore.
-- Offline storage: non-secret session display data, command outbox, and pending
-  evidence drafts in AsyncStorage.
+- Offline storage: non-secret session display data, local journey selection,
+  command outbox, and pending evidence drafts in AsyncStorage.
 
 ## Target Distribution Paths
 
@@ -124,20 +129,25 @@ selected Apple-supported install path:
    admin-provided link or email.
 5. Install Basecamp Mobile through the selected install path.
 6. Open Basecamp Mobile.
-7. Enter the Basecamp server URL.
-8. Sign in with the admin-created local username and password.
-9. Grant permissions only when prompted:
+7. Confirm Basecamp Mobile opens to the local-first onboarding flow rather than
+   a required sign-in form.
+8. Choose a preparedness category and open the starter quest.
+9. Start the quest and confirm the app can queue local progress before sync is
+   configured.
+10. Open Sync, enter the Basecamp server URL, and sign in with the
+   admin-created local username and password.
+11. Grant permissions only when prompted:
    - Local Network for LAN-only self-hosted sync.
    - Camera for barcode and QR scanning.
    - Photos for evidence attachment.
    - Notifications for maintenance and sync reminders.
-10. Run first sync while connected to the server.
-11. Confirm Home, Quests, Inventory, Maintenance, and Offline data appear.
-12. Turn on airplane mode.
-13. Open Offline and confirm cached quests, inventory, critical BOMs,
+12. Run first sync while connected to the server.
+13. Confirm Home, Quests, Inventory, Maintenance, and Offline data appear.
+14. Turn on airplane mode.
+15. Open Offline and confirm cached quests, inventory, critical BOMs,
     maintenance, and references still appear.
-14. Create a Quick Capture entry while offline.
-15. Reconnect, sync, and confirm the queued command is accepted or shown as a
+16. Create a Quick Capture entry while offline.
+17. Reconnect, sync, and confirm the queued command is accepted or shown as a
     user-visible conflict.
 
 ## Physical iPhone Validation Checklist
@@ -162,8 +172,9 @@ Test criteria:
 
 | Area | Steps | Pass Criteria |
 | --- | --- | --- |
-| Install | Install the locally produced build through the selected Apple-supported path and open it. | App installs, opens without crashing, and shows the server URL/sign-in flow. |
-| Server URL | Enter the cloud-pilot server URL and continue. | URL is accepted; invalid URLs show a clear error and do not save credentials. |
+| Install | Install the locally produced build through the selected Apple-supported path and open it. | App installs, opens without crashing, and shows the mobile-first Basecamp onboarding flow. |
+| First-run local quest | Open the app without entering a server URL, choose a preparedness category, and start the starter quest. | The app does not require server sign-in, persists the selected quest locally, and queues quest progress offline. |
+| Server URL | Open Sync, enter the cloud-pilot server URL, and continue. | URL is accepted; invalid URLs show a clear error and do not save credentials. |
 | Sign-in | Sign in with an admin-created local username/password account. | Sign-in succeeds; password field clears; token is stored securely; Home refreshes from the server. |
 | First Sync | While online, refresh Home/Offline data. | Home, Quests, Inventory, and Offline screens show server-backed data or an explicit empty state. |
 | Local Network | If iOS prompts for Local Network access, allow it and retry sync. | LAN/private server sync works after permission is granted. If denied, the failure is understandable. |
@@ -213,7 +224,8 @@ Expected preview result:
 - Screens include Home, Capture, Scan, Quests, Inventory, and Offline.
 - Sample Quick Capture confirms an inventory command.
 - Sample QR scan opens an asset workflow target.
-- Native app entrypoint shows server URL entry and local sign-in.
+- Native app entrypoint shows mobile-first onboarding, category selection, and
+  optional server sync sign-in.
 - Native field screens can queue Quick Capture commands, process manual scan
   payloads, store pending evidence drafts, and attempt sync after sign-in.
 
@@ -260,11 +272,12 @@ Use an admin-controlled server URL:
 Do not publish private LAN addresses, pairing tokens, or server secrets in
 issues, PRs, releases, or docs.
 
-## Sign-In
+## Optional Sync Sign-In
 
-The current native entrypoint supports manual server URL entry and local
-username/password sign-in against `POST /api/auth/login`. Required SSO is not
-part of v1 because the eventual off-grid deployment must keep local auth usable.
+The current native entrypoint does not require sign-in to begin. It supports
+manual server URL entry and local username/password sign-in against
+`POST /api/auth/login` from the optional Sync path. Required SSO is not part of
+v1 because the eventual off-grid deployment must keep local auth usable.
 
 Pairing QR remains future work. When it is added, pairing payloads must avoid
 public issues, PRs, releases, and docs unless values are anonymized placeholders.
@@ -327,26 +340,27 @@ security event:
 
 ## Physical Scanner Test
 
-Status: pending until a locally built signed iPhone build with native scanner
-screens exists.
+Status: pending for the current mobile-first build until scanner behavior is
+retested on a physical iPhone.
 
 When available, run this on a physical iPhone:
 
 1. Install the current locally produced iPhone build through the selected
    Apple-supported path.
-2. Connect to an admin-controlled Basecamp server URL.
-3. Grant Camera permission when prompted by Scan.
-4. Scan a Basecamp asset QR tag.
-5. Expected: the matching asset opens with inspect, maintain, move, adjust
+2. Choose a starter category and start a local quest.
+3. Connect to an admin-controlled Basecamp server URL when testing sync.
+4. Grant Camera permission when prompted by Scan.
+5. Scan a Basecamp asset QR tag.
+6. Expected: the matching asset opens with inspect, maintain, move, adjust
    quantity, report issue, and view instructions actions.
-6. Scan a commercial barcode.
-7. Expected: an inventory confirmation appears with barcode, quantity, location,
+7. Scan a commercial barcode.
+8. Expected: an inventory confirmation appears with barcode, quantity, location,
    and notes fields.
-8. Turn on airplane mode and repeat the QR scan using cached asset data.
-9. Expected: cached asset data opens and actions queue locally.
-10. Reconnect and sync.
-11. Expected: queued commands are accepted or shown as user-visible conflicts.
-12. Record pass/fail notes, iOS version, build number, server URL mode, and any
+9. Turn on airplane mode and repeat the QR scan using cached asset data.
+10. Expected: cached asset data opens and actions queue locally.
+11. Reconnect and sync.
+12. Expected: queued commands are accepted or shown as user-visible conflicts.
+13. Record pass/fail notes, iOS version, build number, server URL mode, and any
     screenshots requested by the issue or release checklist.
 
 ## Physical Device Testing
@@ -362,7 +376,8 @@ Each mobile issue that needs device testing should provide:
 
 - The install path to use.
 - The minimum iOS version.
-- The Basecamp server URL or pairing method to test.
+- The local-first category/quest flow to test.
+- The Basecamp server URL or pairing method to test when sync is in scope.
 - Required test data or seed state.
 - Step-by-step actions for the iPhone.
 - Expected results.
@@ -378,10 +393,11 @@ The M4 mobile foundation cannot close until documentation covers:
 - TestFlight invite or public-link flow only when TestFlight is used as a
   connected distribution channel.
 - Stable release install path.
-- Server URL discovery or manual entry.
-- Pairing/sign-in flow.
+- Local-first category selection and starter quest flow.
+- Optional server URL discovery or manual entry.
+- Optional pairing/sign-in flow.
 - Required iOS permissions and why each one is needed.
-- Offline-first setup and first-sync requirement.
+- Offline-first setup before sync.
 - How to confirm the app can read data offline.
 - How to confirm queued changes sync after reconnecting.
 - How to update the app.
@@ -395,10 +411,11 @@ The install guide should include fixes for:
 
 - The iPhone cannot reach the server on the local network.
 - The app cannot pair with the server.
+- Local quest selection does not persist after restart.
 - Camera permission was denied before scanning a QR code.
 - Local Network permission was denied.
 - A TestFlight build expired, when TestFlight is used.
-- Offline data is missing because first sync was not completed.
+- Synced offline reference data is missing because first sync was not completed.
 - Sync is stuck because the server URL changed.
 
 ## External References

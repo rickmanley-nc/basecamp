@@ -80,10 +80,11 @@ M4 adds mobile/offline sync commands:
 - `pnpm --filter @basecamp/mobile android`
 
 The mobile preview is a local TypeScript app-shell check. The Expo entrypoint
-supports server URL entry, local username/password sign-in, native field tabs,
-Quick Capture queueing, CameraView scan handling, photo/document evidence
-selection, SecureStore token storage, AsyncStorage outbox persistence, evidence
-upload, and reconnect sync attempts.
+supports mobile-first onboarding, local category selection, starter quest
+launch, optional server URL entry, local username/password sign-in, native field
+tabs, Quick Capture queueing, CameraView scan handling, photo/document evidence
+selection, SecureStore token storage, AsyncStorage journey/outbox persistence,
+evidence upload, and reconnect sync attempts.
 
 The v1 mobile build path is local/admin-controlled for iPhone:
 
@@ -94,10 +95,10 @@ The v1 mobile build path is local/admin-controlled for iPhone:
 Android remains post-v1. The `android` script is retained for future local
 build work, but Android validation should not block the web plus iPhone launch.
 
-Physical iPhone checks for install, Camera permission, Photos/Documents access,
-Local Network permission, offline device storage across app restart, evidence
-upload, and reconnect sync remain pending until a locally produced iPhone build
-is installed.
+Physical iPhone checks for the current app still need first-run local quest
+validation, Camera permission, Photos/Documents access, Local Network
+permission, offline device storage across app restart, evidence upload, and
+reconnect sync.
 
 M5 adds drills, skills, evidence, and reports:
 

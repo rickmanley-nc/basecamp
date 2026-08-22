@@ -57,7 +57,7 @@ describe("mobile app shell", () => {
       "inventory",
       "offline"
     ]);
-    expect(shell.offline.firstSyncRequired).toBe(true);
+    expect(shell.offline.firstSyncRequired).toBe(false);
     expect(shell.offline.readModel.references.length).toBeGreaterThan(0);
     expect(shell.sampleCapture.command.intent).toMatchObject({
       type: "inventory.adjust_quantity",
@@ -113,8 +113,11 @@ describe("mobile app shell", () => {
 
     expect(appConfig.expo.name).toBe(mobileDistribution.appName);
     expect(appConfig.expo.version).toBe(mobileDistribution.appVersion);
+    expect(appConfig.expo.icon).toBe("./assets/icon.png");
+    expect(appConfig.expo.splash.image).toBe("./assets/icon.png");
     expect(appConfig.expo.ios.bundleIdentifier).toBe(mobileDistribution.iosBundleIdentifier);
     expect(appConfig.expo.ios.buildNumber).toBe(mobileDistribution.iosBuildNumber);
+    expect(appConfig.expo.ios.icon).toBe("./assets/icon.png");
     expect(appConfig.expo.ios.infoPlist.MinimumOSVersion).toBe(mobileDistribution.minimumIosVersion);
     expect(appConfig.expo.android.package).toBe(mobileDistribution.androidPackageIdentifier);
     expect(appConfig.expo.android.versionCode).toBe(mobileDistribution.androidVersionCode);
@@ -271,6 +274,7 @@ describe("mobile app shell", () => {
   it("provides a public-safe physical iPhone validation report for the v1 gate", () => {
     const requiredAreas = [
       "Install",
+      "First-run local quest",
       "Server URL",
       "Sign-in",
       "First sync",
@@ -288,7 +292,7 @@ describe("mobile app shell", () => {
       "Lost device/user disable procedure"
     ];
     const report = createIphoneValidationReport({
-      date: "2026-08-21",
+      date: "2026-08-22",
       tester: "admin",
       iphoneModel: "iPhone test device",
       iosVersion: "17.x",
@@ -305,7 +309,8 @@ describe("mobile app shell", () => {
     expect(iphoneValidationRows.every((row) => row.environment !== "simulator")).toBe(true);
     expect(report).toContain("## Physical iPhone Validation");
     expect(report).toContain("Do not include passwords, tokens, private hostnames, private IPs");
-    expect(report).toContain("| Install |  | physical-iphone; issues #75, #77 | |");
+    expect(report).toContain("| Install |  | physical-iphone; issues #75, #77, #93 | |");
+    expect(report).toContain("| First-run local quest |  | physical-iphone; issues #77, #93 | |");
     expect(report).toContain("| Lost device/user disable procedure |  | cloud-pilot; issues #75, #77 | |");
     expect(report).not.toMatch(/Android|apk|aab/i);
     expect(report).not.toMatch(/file:\/\/|\/private\/var\/mobile/);
@@ -323,6 +328,7 @@ describe("mobile app shell", () => {
     }
 
     expect(reportDoc).toContain("issues #75, #76, and #77");
+    expect(reportDoc).toContain("#93 for the mobile-first local quest onboarding gate");
     expect(reportDoc).toContain("Do not include passwords, tokens");
     expect(reportDoc).not.toMatch(/Android|apk|aab/i);
     expect(reportDoc).not.toMatch(/file:\/\/|\/private\/var\/mobile/);

@@ -1,6 +1,6 @@
 # Basecamp v1.0 MVP Readiness
 
-Last updated: 2026-08-21
+Last updated: 2026-08-22
 
 This checklist defines when Basecamp is ready to be called a v1 MVP for real
 household preparedness use. It is intentionally stricter than "the app runs":
@@ -45,8 +45,14 @@ v1 blockers in known limitations.
   admin-controlled build host.
 - The iOS app can install on a physical iPhone through an Apple-supported path
   after a local Xcode build.
-- The mobile app can connect to the cloud pilot server by manual URL entry or a
-  documented pairing flow.
+- First launch opens a mobile-first Basecamp experience, not a required server
+  sign-in form.
+- The mobile app can choose a preparedness category, open a starter quest, and
+  queue quest progress locally before a server is configured.
+- The mobile app can optionally connect to the cloud pilot server by manual URL
+  entry or a documented pairing flow.
+- Mobile-start and web-start bootstrap paths are explicit, so local mobile
+  progress and server-created assignments can meet without silent data loss.
 - The mobile app signs in with the v1 local username/password model; required
   SSO is not allowed.
 - Home, Capture, Scan, Quests, Inventory, and Offline screens exist as native
@@ -57,8 +63,9 @@ v1 blockers in known limitations.
   iPhone.
 - Evidence photo/document capture stores deployment-owned evidence bytes and
   syncs metadata without exposing private device or workstation paths.
-- Offline read data includes active quests, inventory, critical BOMs,
-  maintenance, and references after first sync.
+- Local quest and command state works before first sync. Offline read data
+  includes active quests, inventory, critical BOMs, maintenance, and references
+  after first sync.
 - Offline command outbox survives app restart and reconnects to the server.
 - Reconnect sync either applies queued commands idempotently or shows
   user-visible conflicts.
@@ -158,8 +165,10 @@ device, or household details.
 
 The v1.0 milestone should remain open until these blockers are complete:
 
-- Local iPhone app build path. The blocker remains open until a local iOS
-  artifact is produced, installed, and validated on a physical iPhone.
+- Mobile-first first-run onboarding. The app must start locally with category
+  selection and a starter quest instead of requiring server sign-in.
+- Two-way mobile/web bootstrap and pairing. A user who starts on mobile or web
+  must have a clear v1 path to connect the two states safely.
 - Mobile field data capture, offline sync, and evidence upload. Native screens,
   local queues, and server upload plumbing exist, but the blocker remains open
   until simulator plus physical iPhone validation prove the implemented

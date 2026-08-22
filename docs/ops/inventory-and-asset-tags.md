@@ -1,6 +1,6 @@
 # Inventory And Asset Tags
 
-Last updated: 2026-08-21
+Last updated: 2026-08-22
 
 This guide covers the M3 local workflow for inventory entry, location maturity,
 asset tags, and maintenance. It uses admin-controlled names and URLs only.
@@ -72,10 +72,9 @@ mobile QR/barcode scan workflow contract so a Basecamp asset QR payload opens
 the matching asset actions and a commercial barcode creates an inventory
 confirmation command.
 
-Physical iPhone camera validation remains pending until a signed mobile build
-with native scanner screens exists. Real Camera permission, Local Network
-permission, offline scan behavior, and reconnect sync must be validated on a
-physical iPhone when that build is available.
+Physical iPhone camera validation remains pending for the current mobile-first
+build. Real Camera permission, Local Network permission, offline scan behavior,
+and reconnect sync must be validated on a physical iPhone before v1 release.
 
 ## Maintenance
 
