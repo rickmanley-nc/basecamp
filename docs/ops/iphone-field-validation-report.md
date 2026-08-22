@@ -1,6 +1,6 @@
 # Basecamp iPhone Field Validation Report
 
-Last updated: 2026-08-21
+Last updated: 2026-08-22
 
 Use this report when validating Basecamp Mobile on a physical iPhone for the v1
 cloud-pilot launch. Attach the completed report, or paste it as a GitHub issue
@@ -9,6 +9,7 @@ comment, to the relevant v1 issues:
 - #75 for the local iPhone build and install path.
 - #76 for mobile field capture, offline sync, and evidence upload.
 - #77 for physical iPhone field validation.
+- #93 for the mobile-first local quest onboarding gate.
 
 Use the same report format across issues #75, #76, and #77 so each issue has a
 specific progress or resolution comment instead of only a linked PR.
@@ -50,7 +51,8 @@ Do not include passwords, tokens, private hostnames, private IPs, pairing secret
 
 | Area | Pass/Fail | Scope | Notes |
 | --- | --- | --- | --- |
-| Install |  | physical-iphone; issues #75, #77 | |
+| Install |  | physical-iphone; issues #75, #77, #93 | |
+| First-run local quest |  | physical-iphone; issues #77, #93 | |
 | Server URL |  | physical-iphone; issues #76, #77 | |
 | Sign-in |  | physical-iphone; issues #76, #77 | |
 | First sync |  | physical-iphone; issues #76, #77 | |
@@ -79,8 +81,9 @@ Do not include passwords, tokens, private hostnames, private IPs, pairing secret
 
 | Area | Pass Criteria |
 | --- | --- |
-| Install | App installs, opens without crashing, and shows the server URL/sign-in flow. |
-| Server URL | URL is accepted; invalid URLs show a clear error and do not save credentials. |
+| Install | App installs, opens without crashing, and shows the mobile-first Basecamp onboarding flow. |
+| First-run local quest | The app does not require server sign-in, persists the selected quest locally, and queues quest progress offline. |
+| Server URL | URL is accepted from the optional Sync path; invalid URLs show a clear error and do not save credentials. |
 | Sign-in | Sign-in succeeds; password field clears; token is stored securely; Home refreshes from the server. |
 | First sync | Home, Quests, Inventory, and Offline screens show server-backed data or an explicit empty state. |
 | Local Network | LAN/private server sync works after permission is granted. If denied, the failure is understandable. |
@@ -105,6 +108,7 @@ Record only public-safe facts:
 - Server URL mode, deployment profile, and database kind.
 - Backup confirmation before destructive checks.
 - Permission prompt results for Local Network, Camera, Photos, and Documents.
+- First-run category chosen, starter quest shown, and local queue result.
 - Pass/fail result and short notes for each row.
 - Accepted command count, conflict count, or upload result when relevant.
 - Bugs, blockers, and documentation gaps that should become follow-up issues.

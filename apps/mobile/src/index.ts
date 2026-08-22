@@ -133,7 +133,7 @@ export function createMobileAppShell(
       }
     ],
     offline: {
-      firstSyncRequired: true,
+      firstSyncRequired: false,
       readModel,
       outbox: createCommandOutbox(clientId)
     },
@@ -160,7 +160,7 @@ function screenForRoute(
       label: "Home",
       badgeCount: activeQuests.length + inventory.maintenanceDue.length,
       primaryAction: "Review today's field work",
-      emptyState: "Sync with the server to load active work."
+      emptyState: "Choose a starter quest locally or sync with a server to load assigned work."
     };
   }
 
@@ -190,7 +190,7 @@ function screenForRoute(
       label: "Quests",
       badgeCount: activeQuests.length,
       primaryAction: "Open active quest",
-      emptyState: "No active quests are cached yet."
+      emptyState: "Choose a starter quest locally or sync with a server to load assigned quests."
     };
   }
 
@@ -209,6 +209,6 @@ function screenForRoute(
     label: "Offline",
     badgeCount: inventory.maintenanceDue.length,
     primaryAction: "Review cached readiness data",
-    emptyState: "Complete first sync before relying on offline mode."
+    emptyState: "Local capture works before server sync; reconnect when you are ready to upload."
   };
 }

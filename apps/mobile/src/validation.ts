@@ -1,4 +1,4 @@
-export type IPhoneValidationIssue = 75 | 76 | 77;
+export type IPhoneValidationIssue = 75 | 76 | 77 | 93;
 
 export type IPhoneValidationEnvironment = "cloud-pilot" | "physical-iphone" | "simulator";
 
@@ -27,18 +27,26 @@ export interface IPhoneValidationReportInput {
 export const iphoneValidationRows: IPhoneValidationRow[] = [
   {
     area: "Install",
-    issues: [75, 77],
+    issues: [75, 77, 93],
     environment: "physical-iphone",
     steps: "Install the locally produced build through the selected Apple-supported path and open it.",
-    passCriteria: "App installs, opens without crashing, and shows the server URL/sign-in flow.",
+    passCriteria: "App installs, opens without crashing, and shows the mobile-first Basecamp onboarding flow.",
     evidenceToRecord: ["iPhone model", "iOS version", "Basecamp Mobile build", "install channel"]
+  },
+  {
+    area: "First-run local quest",
+    issues: [77, 93],
+    environment: "physical-iphone",
+    steps: "Open the app without entering a server URL, choose a preparedness category, and start the starter quest.",
+    passCriteria: "The app does not require server sign-in, persists the selected quest locally, and queues quest progress offline.",
+    evidenceToRecord: ["category chosen", "starter quest shown", "local queue result"]
   },
   {
     area: "Server URL",
     issues: [76, 77],
     environment: "physical-iphone",
     steps: "Enter the cloud-pilot server URL using only the public-safe URL mode in report notes.",
-    passCriteria: "URL is accepted; invalid URLs show a clear error and do not save credentials.",
+    passCriteria: "URL is accepted from the optional Sync path; invalid URLs show a clear error and do not save credentials.",
     evidenceToRecord: ["server URL mode", "deployment profile"]
   },
   {

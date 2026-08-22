@@ -1,6 +1,6 @@
 # Basecamp Mobile Build And Installation Guide
 
-Last updated: 2026-08-21
+Last updated: 2026-08-22
 
 This guide defines the mobile build path for Basecamp Mobile. v1 launches with
 the web app and iPhone app. Android is deferred to the post-v1 Android milestone
@@ -29,17 +29,21 @@ Basecamp v1 requires a locally produced iPhone artifact:
 Basecamp Mobile currently has:
 
 - Expo React Native app metadata.
+- Non-default Basecamp app icon metadata.
+- Mobile-first onboarding with local category selection and starter quests.
 - Native field screens for Home, Capture, Scan, Quests, Inventory, and Offline.
 - Manual server URL entry.
 - Local username/password sign-in.
 - Camera scan handling.
 - Photo/document evidence selection.
-- Secure token storage and AsyncStorage-backed outbox state.
+- Secure token storage and AsyncStorage-backed journey/outbox state.
 - Reconnect sync attempts.
 
-The v1 blocker remains open until a local iPhone artifact is produced,
-installed, and validated on a physical iPhone. Android validation is tracked by
-the post-v1 Android milestone.
+The local iPhone build path has been proven with a physical development install.
+The v1 blocker remains open for full physical iPhone field validation of the
+current mobile-first app experience, capture, offline queue restart, evidence
+upload, and reconnect sync. Android validation is tracked by the post-v1 Android
+milestone.
 
 ## Shared Checks
 
@@ -167,9 +171,9 @@ Each platform test report should record:
 - Install path.
 - Server URL mode: LAN, VPN, or secure remote.
 - Deployment profile, normally `cloud-pilot`.
-- Pass/fail notes for sign-in, first sync, camera scan, evidence capture,
-  offline cache, offline queue restart, reconnect sync, conflict visibility,
-  and sign-out.
+- Pass/fail notes for install, first-run local quest start, optional sign-in,
+  first sync, camera scan, evidence capture, offline cache, offline queue
+  restart, reconnect sync, conflict visibility, and sign-out.
 
 Do not record passwords, tokens, private IPs, private hostnames, device UDIDs,
 pairing secrets, screenshots with sensitive preparedness data, or workstation

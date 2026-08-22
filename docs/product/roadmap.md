@@ -1,6 +1,6 @@
 # Basecamp Roadmap
 
-Last updated: 2026-08-21
+Last updated: 2026-08-22
 
 ## Source Of Truth
 
@@ -124,7 +124,8 @@ Status: complete once `v0.5.0` is released.
 Outcome:
 
 - Mobile supports field use, scanning, Quick Capture, offline reference, and
-  reliable sync back to the self-hosted server.
+  reliable sync back to the self-hosted server while allowing a local-first
+  mobile start before sync is configured.
 
 Primary work:
 
@@ -138,9 +139,9 @@ Primary work:
 - Durable command outbox.
 - Sync API v1.
 - Conflict policy tests.
-- Physical iPhone camera, installation, Local Network, offline storage, and
-  reconnect validation are documented and pending until a local/admin-controlled
-  iPhone build exists. Android validation is tracked post-v1.
+- Physical iPhone camera, installation, first-run local quest, Local Network,
+  offline storage, and reconnect validation are documented. Android validation
+  is tracked post-v1.
 
 ### M5 - Drills, Skills And Validation
 
@@ -249,18 +250,18 @@ M7 impact audit:
   rules.
 - M3 is affected only by access control. Location, inventory, and multiple home
   base progression remain the same, but real pilot entry now requires login.
-- M4 is affected operationally. Mobile field-data capture must sign in to the
-  same local account model for v1, and physical iPhone validation remains
-  required before v1. Android validation is deferred to v1.1 because no Android
-  test phone is currently available.
+- M4 is affected operationally. Mobile field-data capture can start locally for
+  v1, then sign in to the same local account model when sync is configured.
+  Physical iPhone validation remains required before v1. Android validation is
+  deferred to v1.1 because no Android test phone is currently available.
 - M5 is affected by evidence portability. Evidence records now support
   deployment-owned storage keys, and portable exports suppress host filesystem
   paths.
 - M6 is affected operationally. Deployment docs now require first-admin account
   creation, optional fallback admin-token setup, and user disable instructions.
-- PostgreSQL API runtime promotion and cloud-pilot backup/restore proof are now
-  complete. v1.0 still needs local iPhone mobile build and field workflow
-  validation plus final MVP release criteria.
+- PostgreSQL API runtime promotion, cloud-pilot backup/restore proof, and local
+  iPhone build proof are now complete. v1.0 still needs mobile-first onboarding,
+  field workflow validation, and final MVP release criteria.
 
 ### M8 - Recovery And Homelab Boundary
 
@@ -385,9 +386,10 @@ Validation:
 
 M10 impact audit:
 
-- M0 through M5 are unaffected functionally. Domain workflows, content, web
-  dashboard behavior, inventory, maintenance, mobile shell, sync fixtures,
-  drills, skills, and evidence records keep the same product contracts.
+- M0 through M3 and M5 are unaffected functionally. Domain workflows, content,
+  web dashboard behavior, inventory, maintenance, drills, skills, and evidence
+  records keep the same product contracts. M4 is affected by the local-first
+  mobile start model.
 - M6 through M8 are affected operationally. Deployment, backup, restore,
   security, and cloud-pilot docs distinguish SQLite local/beta use from
   PostgreSQL production persistence.
@@ -439,17 +441,18 @@ M11 impact audit:
   active database kind instead of assuming SQLite.
 - M9 is affected by the mobile build correction. PostgreSQL API runtime
   promotion, cloud-pilot backup/restore proof, and reset/seed/observability
-  controls are closed. The remaining v1 blockers are local iPhone build
-  validation, physical iPhone validation, and final release-candidate
-  validation. Android is tracked by v1.1.
+  controls are closed. The remaining v1 blockers are mobile-first onboarding,
+  mobile field capture/sync validation, physical iPhone validation, and final
+  release-candidate validation. Android is tracked by v1.1.
 
 ### v1.0 - MVP Readiness
 
 Outcome:
 
 - Basecamp is useful for a real household preparedness program.
-- The web app is the source of truth.
-- Mobile supports practical field workflows.
+- The web app and mobile app can both create real user progress, with sync
+  bridging the two when a server is configured.
+- Mobile supports practical local-first field workflows.
 - Self-hosting and backups are documented and tested.
 - Server/web deployment and iPhone mobile installation instructions are tested
   or explicitly validated for the release path.
@@ -475,12 +478,16 @@ Primary work:
 - Backup/restore proof for database, storage, and admin configuration across
   accepted deployment profiles.
 - Local iPhone build proof before v1.
+- Mobile-first local quest onboarding before v1.
+- Two-way mobile/web bootstrap and pairing before v1.
 - Physical iPhone testing for field data capture before v1.
 
 Current blocker map:
 
-- Local iPhone app build path. The artifact must be produced, installed, and
-  validated on a physical iPhone.
+- Mobile-first first-run onboarding. The app must start locally with category
+  selection and a starter quest instead of requiring server sign-in.
+- Two-way mobile/web bootstrap and pairing. Mobile-start and web-start users
+  need a clear path to connect local progress and server-created work.
 - Mobile field data capture, offline sync, and evidence upload. Native field
   tabs, storage boundaries, scan/quick-capture queueing, evidence upload, and
   reconnect sync plumbing exist, but simulator and physical iPhone validation

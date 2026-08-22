@@ -6,13 +6,16 @@ import {
   type EvidenceUploadResponse
 } from "@basecamp/api";
 import { basecampSeed } from "@basecamp/content";
+import type { PreparednessCategory, QuestTemplate } from "@basecamp/domain";
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from "expo-camera";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import * as ImagePicker from "expo-image-picker";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
+  Animated,
+  Easing,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -46,30 +49,102 @@ import {
 } from "./src";
 import {
   clearMobileSession,
+  loadMobileJourney,
   loadMobileSession,
   loadOutbox,
   loadPendingEvidence,
+  saveMobileJourney,
   saveMobileSession,
   saveOutbox,
   savePendingEvidence,
-  type RestoredMobileSession
+  type RestoredMobileSession,
+  type StoredMobileJourney
 } from "./src/native-storage";
 import { createCommandOutbox, mobileRoutes, type CommandOutbox, type MobileRoute, type ScanWorkflow } from "@basecamp/sync";
 
 const clientId = "mobile-field-client";
 const generatedAt = "2026-08-21T00:00:00.000Z";
 
+type AppMode = "onboarding" | "quest" | "console" | "sync";
+
+interface StarterCategory {
+  category: PreparednessCategory;
+  quest: QuestTemplate;
+  accent: string;
+  icon: string;
+  hook: string;
+}
+
+const starterCategoryIds = [
+  "water",
+  "medical",
+  "power",
+  "communications",
+  "home-resilience",
+  "evacuation",
+  "food",
+  "shelter"
+] as const;
+
+const categoryThemes: Record<string, { accent: string; icon: string; hook: string }> = {
+  water: {
+    accent: "#1f7a8c",
+    icon: "H2O",
+    hook: "Start with the resource you miss fastest."
+  },
+  medical: {
+    accent: "#b94145",
+    icon: "MED",
+    hook: "Make supplies findable before stress does the searching."
+  },
+  power: {
+    accent: "#b7791f",
+    icon: "PWR",
+    hook: "Turn outage plans into tested capability."
+  },
+  communications: {
+    accent: "#4f46a5",
+    icon: "COM",
+    hook: "Build contact paths that still work under pressure."
+  },
+  "home-resilience": {
+    accent: "#2f855a",
+    icon: "HOME",
+    hook: "Harden the place that carries most of the load."
+  },
+  evacuation: {
+    accent: "#c05621",
+    icon: "GO",
+    hook: "Make leaving deliberate instead of improvised."
+  },
+  food: {
+    accent: "#6b7f22",
+    icon: "FOOD",
+    hook: "Create simple depth in what you can eat and cook."
+  },
+  shelter: {
+    accent: "#73523f",
+    icon: "SHEL",
+    hook: "Keep people warm, dry, and protected."
+  }
+};
+
 export default function App() {
+  const beaconPulse = useRef(new Animated.Value(0)).current;
   const [serverUrl, setServerUrl] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState("Ready");
   const [isBusy, setIsBusy] = useState(false);
+  const [appMode, setAppMode] = useState<AppMode>("onboarding");
+  const [journey, setJourney] = useState<StoredMobileJourney | undefined>();
   const [session, setSession] = useState<RestoredMobileSession | undefined>();
   const [summary, setSummary] = useState<DashboardSummary>(() => createDashboardSummary(basecampSeed));
   const [outbox, setOutbox] = useState<CommandOutbox>(() => createCommandOutbox(clientId));
   const [pendingEvidence, setPendingEvidence] = useState<MobilePendingEvidenceUpload[]>([]);
   const [activeRoute, setActiveRoute] = useState<MobileRoute>("home");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("water");
+  const [selectedQuestId, setSelectedQuestId] = useState<string | undefined>();
   const [quickText, setQuickText] = useState("Bought four gallons of water");
   const [manualScan, setManualScan] = useState("basecamp://assets/asset-backup-generator");
   const [lastScan, setLastScan] = useState<ScanWorkflow | undefined>();
@@ -84,6 +159,11 @@ export default function App() {
     }
   }, [serverUrl]);
   const fieldScreens = useMemo(() => createMobileFieldScreens(), []);
+  const starterCategories = useMemo(() => createStarterCategories(), []);
+  const selectedStarter = useMemo(
+    () => findStarterCategory(starterCategories, selectedCategoryId, selectedQuestId),
+    [selectedCategoryId, selectedQuestId, starterCategories]
+  );
   const fieldSession = useMemo(
     () =>
       createMobileFieldSession({
@@ -102,15 +182,48 @@ export default function App() {
   const blockedEvidenceCount = pendingEvidence.filter((upload) => upload.uploadStatus !== "uploaded").length;
   const canSignIn =
     !isBusy && serverUrl.trim().length > 0 && username.trim().length > 0 && password.length > 0;
+  const beaconScale = beaconPulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.35]
+  });
+  const beaconOpacity = beaconPulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.38, 0]
+  });
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(beaconPulse, {
+          toValue: 1,
+          duration: 1600,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true
+        }),
+        Animated.timing(beaconPulse, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true
+        })
+      ])
+    );
+
+    loop.start();
+
+    return () => {
+      loop.stop();
+    };
+  }, [beaconPulse]);
 
   useEffect(() => {
     let mounted = true;
 
     void (async () => {
-      const [restoredSession, restoredOutbox, restoredEvidence] = await Promise.all([
+      const [restoredSession, restoredOutbox, restoredEvidence, restoredJourney] = await Promise.all([
         loadMobileSession(),
         loadOutbox(clientId),
-        loadPendingEvidence()
+        loadPendingEvidence(),
+        loadMobileJourney()
       ]);
 
       if (!mounted) {
@@ -121,6 +234,15 @@ export default function App() {
         setSession(restoredSession);
         setServerUrl(restoredSession.serverUrl);
         setUsername(restoredSession.user.username);
+      }
+
+      if (restoredJourney !== undefined) {
+        setJourney(restoredJourney);
+        setSelectedCategoryId(restoredJourney.categoryId);
+        setSelectedQuestId(restoredJourney.questId);
+        setAppMode(restoredSession === undefined ? "quest" : "console");
+      } else if (restoredSession !== undefined) {
+        setAppMode("console");
       }
 
       if (restoredOutbox !== undefined) {
@@ -162,6 +284,15 @@ export default function App() {
       await saveMobileSession(restoredSession);
       setPassword("");
       setSession(restoredSession);
+      if (journey !== undefined) {
+        const syncedJourney: StoredMobileJourney = {
+          ...journey,
+          mode: "synced"
+        };
+        await saveMobileJourney(syncedJourney);
+        setJourney(syncedJourney);
+      }
+      setAppMode("console");
       setStatus(`Signed in as ${login.user.username}.`);
       await refreshDashboard(restoredSession).catch((error: unknown) => {
         setStatus(error instanceof Error ? `Signed in. ${error.message}` : "Signed in. Dashboard refresh failed.");
@@ -177,12 +308,13 @@ export default function App() {
   async function signOut() {
     await clearMobileSession();
     setSession(undefined);
-    setStatus("Signed out.");
+    setAppMode(journey === undefined ? "onboarding" : "console");
+    setStatus("Sync disconnected. Local field work stays on this iPhone.");
   }
 
   async function refreshDashboard(activeSession = session) {
     if (activeSession === undefined) {
-      setStatus("Sign in first.");
+      setStatus("Connect a Basecamp server first.");
       return;
     }
 
@@ -230,6 +362,43 @@ export default function App() {
     const queued = queueQuickCaptureCommand(outbox, quickText);
     setQuickText("");
     commitOutbox(queued.outbox, `${queued.title} queued.`);
+  }
+
+  async function chooseStarterCategory(categoryId: string) {
+    const starter = findStarterCategory(starterCategories, categoryId);
+
+    if (starter === undefined) {
+      setStatus("That category is not ready for mobile start yet.");
+      return;
+    }
+
+    const nextJourney: StoredMobileJourney = {
+      categoryId: starter.category.id,
+      questId: starter.quest.id,
+      startedAt: new Date().toISOString(),
+      mode: session === undefined ? "local" : "synced"
+    };
+
+    setSelectedCategoryId(starter.category.id);
+    setSelectedQuestId(starter.quest.id);
+    setJourney(nextJourney);
+    setAppMode("quest");
+    await saveMobileJourney(nextJourney);
+    setStatus(`${starter.category.name} starter quest is ready.`);
+  }
+
+  function startSelectedQuest() {
+    if (selectedStarter === undefined) {
+      setStatus("Choose a category first.");
+      setAppMode("onboarding");
+      return;
+    }
+
+    const queued = queueQuickCaptureCommand(outbox, `started ${selectedStarter.quest.title}`);
+    setActiveRoute("capture");
+    setQuickText(`Completed first step for ${selectedStarter.quest.title}`);
+    commitOutbox(queued.outbox, `${selectedStarter.quest.title} started locally.`);
+    setAppMode("console");
   }
 
   function processScanValue(value: string) {
@@ -389,7 +558,7 @@ export default function App() {
     sourceUploads = pendingEvidence
   ): Promise<MobilePendingEvidenceUpload[]> {
     if (session === undefined) {
-      throw new Error("Sign in before uploading evidence.");
+      throw new Error("Connect a Basecamp server before uploading evidence.");
     }
 
     const payload =
@@ -423,7 +592,8 @@ export default function App() {
 
   async function syncNow() {
     if (session === undefined) {
-      setStatus("Sign in first.");
+      setAppMode("sync");
+      setStatus("Connect a Basecamp server before syncing.");
       return;
     }
 
@@ -485,30 +655,179 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle={appMode === "onboarding" ? "light-content" : "dark-content"} />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.keyboardAvoidingView}
       >
-        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-          <View style={styles.header}>
-            <View>
-              <Text style={styles.eyebrow}>{mobileDistribution.buildPath}</Text>
-              <Text style={styles.title}>Basecamp Mobile</Text>
-            </View>
-            <Text style={styles.statusText}>{status}</Text>
-          </View>
+        <ScrollView
+          contentContainerStyle={[styles.container, appMode === "onboarding" ? styles.onboardingContainer : undefined]}
+          keyboardShouldPersistTaps="handled"
+        >
+          {appMode === "onboarding" ? (
+            renderOnboarding()
+          ) : (
+            <>
+              <View style={styles.header}>
+                <View>
+                  <Text style={styles.eyebrow}>{mobileDistribution.buildPath}</Text>
+                  <Text style={styles.title}>Basecamp Mobile</Text>
+                </View>
+                <Text style={styles.statusText}>{status}</Text>
+              </View>
 
-          {session === undefined ? renderSignIn() : renderFieldConsole()}
+              {appMode === "sync" ? renderSyncSetup() : appMode === "quest" ? renderQuestFlow() : renderFieldConsole()}
+            </>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 
-  function renderSignIn() {
+  function renderOnboarding() {
+    return (
+      <View style={styles.onboarding}>
+        <View style={styles.hero}>
+          <View style={styles.heroCopy}>
+            <Text style={styles.heroKicker}>Basecamp Mobile</Text>
+            <Text style={styles.heroTitle}>Begin where you are.</Text>
+            <Text style={styles.heroText}>
+              Pick a first preparedness quest, capture progress in the field, and sync with a server when you decide.
+            </Text>
+          </View>
+          <View style={styles.heroMap} accessibilityLabel="Basecamp route beacon">
+            <View style={styles.ridgeLarge} />
+            <View style={styles.ridgeSmall} />
+            <View style={styles.routeSegmentPrimary} />
+            <View style={styles.routeSegmentSecondary} />
+            <Animated.View
+              style={[
+                styles.beaconPulse,
+                {
+                  opacity: beaconOpacity,
+                  transform: [{ scale: beaconScale }]
+                }
+              ]}
+            />
+            <View style={styles.beaconDot} />
+            <View style={[styles.waypoint, styles.waypointOne]} />
+            <View style={[styles.waypoint, styles.waypointTwo]} />
+          </View>
+        </View>
+
+        <View style={styles.onboardingSection}>
+          <Text style={styles.sectionTitle}>Choose a first quest</Text>
+          <View style={styles.categoryGrid}>
+            {starterCategories.map((starter) => (
+              <Pressable
+                accessibilityRole="button"
+                key={starter.category.id}
+                onPress={() => {
+                  void chooseStarterCategory(starter.category.id);
+                }}
+                style={({ pressed }) => [
+                  styles.categoryCard,
+                  { borderColor: starter.accent },
+                  pressed ? styles.categoryCardPressed : undefined
+                ]}
+              >
+                <View style={[styles.categoryIcon, { backgroundColor: starter.accent }]}>
+                  <Text style={styles.categoryIconText}>{starter.icon}</Text>
+                </View>
+                <View style={styles.categoryText}>
+                  <Text style={styles.categoryName}>{starter.category.name}</Text>
+                  <Text style={styles.categoryHook}>{starter.hook}</Text>
+                  <Text style={styles.questMeta}>
+                    {starter.quest.estimatedMinutes} min, {starter.quest.xp} XP
+                  </Text>
+                </View>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.onboardingActions}>
+          <SecondaryButton label="Connect Server" onPress={() => setAppMode("sync")} />
+          <SecondaryButton label="Open Field Kit" onPress={() => setAppMode("console")} />
+        </View>
+      </View>
+    );
+  }
+
+  function renderQuestFlow() {
+    if (selectedStarter === undefined) {
+      return (
+        <View style={styles.panel}>
+          <Text style={styles.panelTitle}>Choose a category</Text>
+          <Text style={styles.bodyText}>Select a preparedness category to start locally.</Text>
+          <PrimaryButton label="Choose Category" onPress={() => setAppMode("onboarding")} />
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.console}>
+        <View style={[styles.questHero, { borderColor: selectedStarter.accent }]}>
+          <View style={styles.questHeader}>
+            <View style={[styles.categoryIcon, { backgroundColor: selectedStarter.accent }]}>
+              <Text style={styles.categoryIconText}>{selectedStarter.icon}</Text>
+            </View>
+            <View style={styles.listText}>
+              <Text style={styles.eyebrow}>{selectedStarter.category.name}</Text>
+              <Text style={styles.questTitle}>{selectedStarter.quest.title}</Text>
+            </View>
+          </View>
+          <Text style={styles.bodyText}>{selectedStarter.quest.whyItMatters}</Text>
+          <View style={styles.questStats}>
+            <Metric label="Minutes" value={String(selectedStarter.quest.estimatedMinutes)} />
+            <Metric label="XP" value={String(selectedStarter.quest.xp)} />
+            <Metric label="Level" value={String(selectedStarter.quest.targetLevel)} />
+          </View>
+          <View style={styles.resultBox}>
+            <Text style={styles.resultTitle}>Validation</Text>
+            <Text style={styles.metaText}>{selectedStarter.quest.validation}</Text>
+          </View>
+          {selectedStarter.quest.accomplishments === undefined ? null : (
+            <View style={styles.chipRow}>
+              {selectedStarter.quest.accomplishments.slice(0, 3).map((accomplishment) => (
+                <View key={accomplishment} style={styles.infoChip}>
+                  <Text style={styles.infoChipText}>{accomplishment}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+          <ActionRow>
+            <PrimaryButton label="Start Quest" onPress={startSelectedQuest} />
+            <SecondaryButton label="Capture Evidence" onPress={() => {
+              setActiveRoute("capture");
+              setAppMode("console");
+              void capturePhotoEvidence();
+            }} />
+            <SecondaryButton label="Field Kit" onPress={() => setAppMode("console")} />
+            <SecondaryButton label="Sync" onPress={() => setAppMode("sync")} />
+          </ActionRow>
+        </View>
+
+        <SecondaryButton label="Change Category" onPress={() => setAppMode("onboarding")} />
+      </View>
+    );
+  }
+
+  function renderSyncSetup() {
     return (
       <View style={styles.panel}>
-        <Text style={styles.panelTitle}>Sign In</Text>
+        <Text style={styles.panelTitle}>Sync With Your Server</Text>
+        <Text style={styles.bodyText}>
+          Local quests and evidence stay on this iPhone until you connect a self-hosted Basecamp server.
+        </Text>
+        {session === undefined ? null : (
+          <View style={styles.resultBox}>
+            <Text style={styles.resultTitle}>Connected</Text>
+            <Text style={styles.metaText}>
+              {session.user.displayName} at {session.serverUrl}
+            </Text>
+          </View>
+        )}
         <Field label="Server URL">
           <TextInput
             autoCapitalize="none"
@@ -548,28 +867,37 @@ export default function App() {
             value={password}
           />
         </Field>
-        <PrimaryButton disabled={!canSignIn} label="Sign In" loading={isBusy} onPress={() => void signIn()} />
+        <ActionRow>
+          <PrimaryButton disabled={!canSignIn} label="Connect" loading={isBusy} onPress={() => void signIn()} />
+          <SecondaryButton label="Back" onPress={() => setAppMode(journey === undefined ? "onboarding" : "console")} />
+          {session === undefined ? null : <SecondaryButton label="Disconnect" onPress={() => void signOut()} />}
+        </ActionRow>
       </View>
     );
   }
 
   function renderFieldConsole() {
-    const activeSession = session;
-
-    if (activeSession === undefined) {
-      return null;
-    }
+    const localStatus =
+      selectedStarter === undefined
+        ? "Saved on this iPhone until you connect a Basecamp server."
+        : `${selectedStarter.category.name}: ${selectedStarter.quest.title}`;
 
     return (
       <View style={styles.console}>
         <View style={styles.sessionBar}>
           <View>
-            <Text style={styles.sessionName}>{activeSession.user.displayName}</Text>
-            <Text style={styles.metaText}>{activeSession.serverUrl}</Text>
+            <Text style={styles.sessionName}>{session?.user.displayName ?? "Local Field Kit"}</Text>
+            <Text style={styles.metaText}>{session?.serverUrl ?? localStatus}</Text>
           </View>
-          <Pressable accessibilityRole="button" onPress={() => void signOut()} style={styles.smallButton}>
-            <Text style={styles.smallButtonText}>Sign Out</Text>
-          </Pressable>
+          {session === undefined ? (
+            <Pressable accessibilityRole="button" onPress={() => setAppMode("sync")} style={styles.smallButton}>
+              <Text style={styles.smallButtonText}>Sync</Text>
+            </Pressable>
+          ) : (
+            <Pressable accessibilityRole="button" onPress={() => void signOut()} style={styles.smallButton}>
+              <Text style={styles.smallButtonText}>Sign Out</Text>
+            </Pressable>
+          )}
         </View>
 
         <View style={styles.metrics}>
@@ -604,19 +932,36 @@ export default function App() {
       return (
         <View style={styles.panel}>
           <Text style={styles.panelTitle}>Today</Text>
-          <Text style={styles.bodyText}>{summary.preparednessLevel}</Text>
           <Text style={styles.bodyText}>
-            {summary.activeQuests.length} active quest(s), {summary.inventory.maintenanceDue.length} maintenance item(s)
-            due.
+            {session === undefined ? "Local-only field work" : summary.preparednessLevel}
+          </Text>
+          <Text style={styles.bodyText}>
+            {selectedStarter === undefined
+              ? `${summary.activeQuests.length} active quest(s), ${summary.inventory.maintenanceDue.length} maintenance item(s) due.`
+              : `Current quest: ${selectedStarter.quest.title}.`}
           </Text>
           <ActionRow>
-        <PrimaryButton
-          disabled={isBusy}
-          label="Refresh"
-          loading={isBusy}
-          onPress={() => void refreshDashboardSafely()}
-        />
-            <SecondaryButton disabled={isBusy} label="Sync" onPress={() => void syncNow()} />
+            <PrimaryButton
+              disabled={isBusy}
+              label={session === undefined ? "Open Quest" : "Refresh"}
+              loading={isBusy}
+              onPress={() => {
+                if (session === undefined) {
+                  setAppMode(selectedStarter === undefined ? "onboarding" : "quest");
+                  return;
+                }
+
+                void refreshDashboardSafely();
+              }}
+            />
+            <SecondaryButton disabled={isBusy} label={session === undefined ? "Connect Sync" : "Sync"} onPress={() => {
+              if (session === undefined) {
+                setAppMode("sync");
+                return;
+              }
+
+              void syncNow();
+            }} />
           </ActionRow>
         </View>
       );
@@ -689,7 +1034,20 @@ export default function App() {
         <View style={styles.panel}>
           <Text style={styles.panelTitle}>Active Quests</Text>
           {fieldSession.readModel.activeQuests.length === 0 ? (
-            <Text style={styles.metaText}>No active quests cached.</Text>
+            selectedStarter === undefined ? (
+              <Text style={styles.metaText}>No active quests cached.</Text>
+            ) : (
+              <View style={styles.listRow}>
+                <View style={styles.listText}>
+                  <Text style={styles.rowTitle}>{selectedStarter.quest.title}</Text>
+                  <Text style={styles.metaText}>Started locally from {selectedStarter.category.name}.</Text>
+                </View>
+                <SecondaryButton label="Done" onPress={() => {
+                  const queued = queueQuickCaptureCommand(outbox, `completed ${selectedStarter.quest.title}`);
+                  commitOutbox(queued.outbox, `${selectedStarter.quest.title} queued.`);
+                }} />
+              </View>
+            )
           ) : (
             fieldSession.readModel.activeQuests.slice(0, 5).map((quest) => (
               <View key={quest.id} style={styles.listRow}>
@@ -733,9 +1091,30 @@ export default function App() {
     return (
       <View style={styles.panel}>
         <Text style={styles.panelTitle}>Offline</Text>
+        <Text style={styles.bodyText}>
+          {session === undefined
+            ? "Queued field work stays local until you connect a Basecamp server."
+            : "Queued field work syncs when the server accepts the batch."}
+        </Text>
         <ActionRow>
-          <PrimaryButton disabled={isBusy} label="Sync" loading={isBusy} onPress={() => void syncNow()} />
-          <SecondaryButton label="Refresh" onPress={() => void refreshDashboardSafely()} />
+          <PrimaryButton
+            disabled={isBusy}
+            label={session === undefined ? "Connect Sync" : "Sync"}
+            loading={isBusy}
+            onPress={() => {
+              if (session === undefined) {
+                setAppMode("sync");
+                return;
+              }
+
+              void syncNow();
+            }}
+          />
+          <SecondaryButton
+            disabled={session === undefined}
+            label="Refresh"
+            onPress={() => void refreshDashboardSafely()}
+          />
         </ActionRow>
         {outbox.queued.length === 0 ? (
           <Text style={styles.metaText}>Outbox empty.</Text>
@@ -780,6 +1159,81 @@ export default function App() {
       </View>
     );
   }
+}
+
+function createStarterCategories(): StarterCategory[] {
+  return starterCategoryIds.flatMap((categoryId) => {
+    const category = basecampSeed.categories.find((candidate) => candidate.id === categoryId);
+    const quest = starterQuestForCategory(categoryId);
+    const theme = categoryThemes[categoryId];
+
+    if (category === undefined || quest === undefined || theme === undefined) {
+      return [];
+    }
+
+    return [
+      {
+        category,
+        quest,
+        accent: theme.accent,
+        icon: theme.icon,
+        hook: theme.hook
+      }
+    ];
+  });
+}
+
+function starterQuestForCategory(categoryId: string): QuestTemplate | undefined {
+  return basecampSeed.quests
+    .filter((quest) => quest.categoryId === categoryId)
+    .sort((left, right) => {
+      if (left.targetLevel !== right.targetLevel) {
+        return left.targetLevel - right.targetLevel;
+      }
+
+      const priorityDelta = priorityRank(left.priority) - priorityRank(right.priority);
+
+      if (priorityDelta !== 0) {
+        return priorityDelta;
+      }
+
+      return left.estimatedMinutes - right.estimatedMinutes;
+    })[0];
+}
+
+function priorityRank(priority: QuestTemplate["priority"]): number {
+  if (priority === "high") {
+    return 0;
+  }
+
+  if (priority === "medium") {
+    return 1;
+  }
+
+  return 2;
+}
+
+function findStarterCategory(
+  starters: StarterCategory[],
+  categoryId: string,
+  questId?: string
+): StarterCategory | undefined {
+  const categoryStarter = starters.find((starter) => starter.category.id === categoryId);
+
+  if (categoryStarter === undefined || questId === undefined || categoryStarter.quest.id === questId) {
+    return categoryStarter;
+  }
+
+  const quest = basecampSeed.quests.find((candidate) => candidate.id === questId);
+
+  if (quest === undefined) {
+    return categoryStarter;
+  }
+
+  return {
+    ...categoryStarter,
+    quest
+  };
 }
 
 function Field(props: { label: string; children: ReactNode }) {
@@ -886,7 +1340,7 @@ function uploadedEvidenceUpload(upload: MobilePendingEvidenceUpload, storageKey:
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#f5f2ea"
+    backgroundColor: "#eef3ef"
   },
   keyboardAvoidingView: {
     flex: 1
@@ -895,6 +1349,198 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     gap: 18,
     padding: 18
+  },
+  onboardingContainer: {
+    backgroundColor: "#142421",
+    padding: 0
+  },
+  onboarding: {
+    flex: 1,
+    gap: 20,
+    paddingBottom: 24
+  },
+  hero: {
+    minHeight: 430,
+    justifyContent: "space-between",
+    backgroundColor: "#142421",
+    paddingBottom: 28,
+    paddingHorizontal: 22,
+    paddingTop: 48
+  },
+  heroCopy: {
+    gap: 12,
+    maxWidth: 420
+  },
+  heroKicker: {
+    color: "#9ec6b7",
+    fontSize: 13,
+    fontWeight: "800",
+    letterSpacing: 0,
+    textTransform: "uppercase"
+  },
+  heroTitle: {
+    color: "#fffdf8",
+    fontSize: 42,
+    fontWeight: "900",
+    letterSpacing: 0,
+    lineHeight: 46
+  },
+  heroText: {
+    color: "#d9e6df",
+    fontSize: 17,
+    lineHeight: 24
+  },
+  heroMap: {
+    height: 190,
+    overflow: "hidden",
+    position: "relative"
+  },
+  ridgeLarge: {
+    bottom: 18,
+    height: 96,
+    left: 6,
+    position: "absolute",
+    right: 28,
+    transform: [{ rotate: "-4deg" }],
+    borderColor: "#6fb29a",
+    borderRadius: 8,
+    borderTopWidth: 4
+  },
+  ridgeSmall: {
+    bottom: 56,
+    height: 70,
+    left: 92,
+    position: "absolute",
+    right: 10,
+    transform: [{ rotate: "7deg" }],
+    borderColor: "#f0b35c",
+    borderRadius: 8,
+    borderTopWidth: 4
+  },
+  routeSegmentPrimary: {
+    bottom: 64,
+    height: 4,
+    left: 52,
+    position: "absolute",
+    width: 180,
+    transform: [{ rotate: "-19deg" }],
+    backgroundColor: "#d9e6df",
+    borderRadius: 8
+  },
+  routeSegmentSecondary: {
+    bottom: 98,
+    height: 4,
+    left: 190,
+    position: "absolute",
+    width: 112,
+    transform: [{ rotate: "24deg" }],
+    backgroundColor: "#d9e6df",
+    borderRadius: 8
+  },
+  beaconPulse: {
+    bottom: 116,
+    height: 78,
+    left: 254,
+    position: "absolute",
+    width: 78,
+    borderColor: "#f0b35c",
+    borderRadius: 39,
+    borderWidth: 3
+  },
+  beaconDot: {
+    bottom: 144,
+    height: 22,
+    left: 282,
+    position: "absolute",
+    width: 22,
+    backgroundColor: "#f0b35c",
+    borderColor: "#fffdf8",
+    borderRadius: 11,
+    borderWidth: 3
+  },
+  waypoint: {
+    height: 18,
+    position: "absolute",
+    width: 18,
+    backgroundColor: "#6fb29a",
+    borderColor: "#fffdf8",
+    borderRadius: 9,
+    borderWidth: 3
+  },
+  waypointOne: {
+    bottom: 58,
+    left: 44
+  },
+  waypointTwo: {
+    bottom: 88,
+    left: 172
+  },
+  onboardingSection: {
+    gap: 14,
+    paddingHorizontal: 18
+  },
+  sectionTitle: {
+    color: "#fffdf8",
+    fontSize: 22,
+    fontWeight: "900",
+    letterSpacing: 0
+  },
+  categoryGrid: {
+    gap: 10
+  },
+  categoryCard: {
+    minHeight: 112,
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    backgroundColor: "#fffdf8",
+    padding: 12
+  },
+  categoryCardPressed: {
+    opacity: 0.86
+  },
+  categoryIcon: {
+    alignItems: "center",
+    height: 56,
+    justifyContent: "center",
+    width: 56,
+    borderRadius: 8
+  },
+  categoryIconText: {
+    color: "#fffdf8",
+    fontSize: 13,
+    fontWeight: "900",
+    letterSpacing: 0
+  },
+  categoryText: {
+    flex: 1,
+    gap: 4
+  },
+  categoryName: {
+    color: "#20251f",
+    fontSize: 17,
+    fontWeight: "900",
+    letterSpacing: 0
+  },
+  categoryHook: {
+    color: "#43514a",
+    fontSize: 14,
+    lineHeight: 19
+  },
+  questMeta: {
+    color: "#5f6f68",
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 0,
+    textTransform: "uppercase"
+  },
+  onboardingActions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    paddingHorizontal: 18
   },
   header: {
     gap: 10,
@@ -934,6 +1580,29 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "800",
     letterSpacing: 0
+  },
+  questHero: {
+    gap: 14,
+    borderRadius: 8,
+    borderWidth: 2,
+    backgroundColor: "#fffdf8",
+    padding: 14
+  },
+  questHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 12
+  },
+  questTitle: {
+    color: "#20251f",
+    fontSize: 24,
+    fontWeight: "900",
+    letterSpacing: 0,
+    lineHeight: 29
+  },
+  questStats: {
+    flexDirection: "row",
+    gap: 10
   },
   sessionBar: {
     alignItems: "center",
@@ -1109,6 +1778,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8
+  },
+  chipRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
+  infoChip: {
+    borderColor: "#bfd3c8",
+    borderRadius: 8,
+    borderWidth: 1,
+    backgroundColor: "#eef7f2",
+    paddingHorizontal: 10,
+    paddingVertical: 8
+  },
+  infoChipText: {
+    color: "#1f3d35",
+    fontSize: 12,
+    fontWeight: "800"
   },
   actionChip: {
     borderColor: "#c8c2b4",
