@@ -85,10 +85,15 @@ Repository checks:
 ```bash
 pnpm install
 pnpm --filter @basecamp/mobile dev
+pnpm --filter @basecamp/mobile exec expo install --check
 pnpm --filter @basecamp/mobile expo:config
 pnpm --filter @basecamp/mobile native:prebuild
 pnpm check
 ```
+
+The Expo dependency check must pass before native iOS validation. If it reports
+an expected React or React Native version for the installed Expo SDK, update the
+mobile package and lockfile before running Xcode builds.
 
 Local run on a connected iPhone or simulator:
 

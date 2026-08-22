@@ -72,6 +72,17 @@ Required build host:
 - CocoaPods as required by the generated iOS project.
 - Apple Developer signing access for physical-device installs.
 
+Required repository checks:
+
+```bash
+pnpm --filter @basecamp/mobile exec expo install --check
+pnpm --filter @basecamp/mobile expo:config
+pnpm --filter @basecamp/mobile native:prebuild
+```
+
+Keep the mobile React and React Native versions aligned with the installed Expo
+SDK before attempting a simulator, physical-device, archive, or export build.
+
 The corporate MacBook can be used as an early validation host if IT installs the
 full Xcode app. For durable releases, prefer an admin-controlled Mac build host
 so Basecamp app updates are not dependent on a corporate workstation policy.

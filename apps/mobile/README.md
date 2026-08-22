@@ -114,6 +114,7 @@ components.
 Local validation:
 
 - `pnpm --filter @basecamp/mobile dev`
+- `pnpm --filter @basecamp/mobile exec expo install --check`
 - `pnpm --filter @basecamp/mobile expo:config`
 - `pnpm --filter @basecamp/mobile native:prebuild`
 - `pnpm --filter @basecamp/mobile ios` on a Mac with full Xcode.

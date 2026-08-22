@@ -36,6 +36,8 @@ Basecamp Mobile will use local/admin-controlled build paths:
   built locally with Android SDK/JDK/Gradle tooling.
 - The current React Native and Expo module stack remains acceptable only while
   it supports local native project generation and local platform builds.
+- Expo SDK compatibility checks must pass before generated native iOS projects
+  are used for simulator, physical-device, archive, or export builds.
 - EAS Build and EAS Submit are not required for v1 or Android follow-up work and
   must not be documented as the primary build path.
 - Build credentials, signing keys, provisioning profiles, keystores, device
